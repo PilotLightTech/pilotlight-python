@@ -1,0 +1,21 @@
+
+# directories
+.vs/
+.idea/
+data/
+out/
+
+# python
+scripts/__pycache__/
+sandbox/__pycache__/
+pilotlight/__pycache__/
+
+# debug files
+src/*.pdb
+
+# build scripts
+src/build.bat
+src/build.sh
+
+# misc
+.DS_Store

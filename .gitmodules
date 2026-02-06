@@ -1,0 +1,3 @@
+[submodule "dependencies/cpython"]
+	path = dependencies/cpython
+	url = https://github.com/python/cpython
