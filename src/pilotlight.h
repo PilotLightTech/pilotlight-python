@@ -1,13 +1,13 @@
 /*
-   module_pilotlight.h
+   pilotlight.h
+     - shared header file for all the modules (keep in mind we are actually
+        utilizing unity builds for this project)
 */
 
 /*
 Index of this file:
 // [SECTION] header mess
-// [SECTION] includes
 // [SECTION] forward declarations
-// [SECTION] global data
 // [SECTION] public api
 */
 
@@ -15,8 +15,8 @@ Index of this file:
 // [SECTION] header mess
 //-----------------------------------------------------------------------------
 
-#ifndef PL_MODULE_PILOTLIGHT_H
-#define PL_MODULE_PILOTLIGHT_H
+#ifndef PILOTLIGHT_H
+#define PILOTLIGHT_H
 
 //-----------------------------------------------------------------------------
 // [SECTION] includes
@@ -25,23 +25,28 @@ Index of this file:
 #define PY_SSIZE_T_CLEAN
 #include <Python.h>
 
+#define PL_UNITY_BUILD
+#include "pl_unity_ext.c"
+
 //-----------------------------------------------------------------------------
 // [SECTION] forward declarations
 //-----------------------------------------------------------------------------
 
-// external
-typedef struct _plPythonArgumentPack plPythonArgumentPack; // pl_python.h
+typedef struct _plPythonIntConstantPair
+{
+   const char* pcName;
+   int         iValue;
+} plPythonIntConstantPair;
 
-//-----------------------------------------------------------------------------
-// [SECTION] global data
-//-----------------------------------------------------------------------------
+#define PL_ADD_INT_CONSTANT(X_ARG) {#X_ARG, X_ARG}
 
-extern plPythonArgumentPack* sbtParserPacks;
 
 //-----------------------------------------------------------------------------
 // [SECTION] public api
 //-----------------------------------------------------------------------------
 
-PyMODINIT_FUNC PyInit__pilotlight(void);
+bool pl_parse(char* formatstring, const char** keywords, PyObject* args, PyObject* kwargs, const char* message, ...);
 
-#endif // PL_MODULE_PILOTLIGHT_H
+plVec2 pl_get_vec2_from_python(PyObject*);
+
+#endif // PILOTLIGHT_H

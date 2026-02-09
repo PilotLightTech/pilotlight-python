@@ -2,16 +2,27 @@
 # directories
 .vs/
 .idea/
-data/
 out/
+shader-temp/
+cache/
 
 # python
 scripts/__pycache__/
 sandbox/__pycache__/
 pilotlight/__pycache__/
+pilotlight/pilotlight.pyd
+pilotlight/pilotlight_d.pyd
+pilotlight/imgui.pyd
+pilotlight/imgui_d.pyd
+pilotlight/*.pdb
+pilotlight/*.dll
+pilotlight/*.so
+pilotlight/*.dSYM
+pilotlight/shaders/
 
 # debug files
 src/*.pdb
+sandbox/*.pdb
 
 # build scripts
 src/build.bat

@@ -1,0 +1,171 @@
+name: Build
+
+on:
+
+  schedule:
+    - cron: '0 1 * * 1'
+
+  push:
+
+    branches:
+      - master
+      - dev
+      - feature/*
+      - dev/*
+      - fix/*
+
+  pull_request:
+
+  workflow_dispatch:
+    
+jobs:
+
+  Windows:
+    
+    runs-on: windows-2022
+    strategy:
+      matrix:
+        python-version: [ 3.14 ]
+
+    steps:
+
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Retrieve submodules
+      run: git submodule update --init --recursive
+
+    - name: Install Dependencies
+      run: |
+        Invoke-WebRequest -Uri "https://sdk.lunarg.com/sdk/download/1.3.296.0/windows/VulkanSDK-1.3.296.0-Installer.exe" -OutFile VulkanSDK.exe
+        # ./VulkanSDK.exe --help
+        ./VulkanSDK.exe --accept-licenses --default-answer --root D:/a/VulkanSDK --confirm-command install
+        python -m pip install pl-build
+        cd ..
+        git clone https://github.com/PilotLightTech/pilotlight
+        cd pilotlight-python
+
+    - name: Build Python
+      shell: cmd
+      run: | 
+        cd scripts
+        python gen_build.py
+        build_python_for_win32.bat
+
+    - name: Build Binaries
+      shell: cmd
+      run: |
+        set VULKAN_SDK=D:/a/VulkanSDK
+        cd src
+        call build.bat
+        if %ERRORLEVEL% NEQ 0 exit 1
+
+  MacOS:
+    
+    runs-on: macos-latest
+    env:
+      CXX: g++-10
+    strategy:
+      matrix:
+        python-version: [ 3.14 ]
+
+    steps:
+
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Setup Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Retrieve submodules
+      run: git submodule update --init --recursive
+
+    - name: Install Dependencies
+      run: |
+        curl https://sdk.lunarg.com/sdk/download/1.3.283.0/mac/vulkansdk-macos-1.3.283.0.dmg -o vk.dmg
+        hdiutil attach vk.dmg
+        sudo /Volumes/vulkansdk-macos-1.3.283.0/InstallVulkan.app/Contents/MacOS/InstallVulkan --root ~/VulkanSDK/1.3.283.0 --accept-licenses --default-answer --confirm-command install com.lunarg.vulkan.core com.lunarg.vulkan.usr com.lunarg.vulkan.sdl2 com.lunarg.vulkan.glm com.lunarg.vulkan.volk com.lunarg.vulkan.vma com.lunarg.vulkan.ios
+        python3 -m pip install pl-build
+        cd ..
+        git clone https://github.com/PilotLightTech/pilotlight
+        cd pilotlight-python
+
+    - name: Build Python
+      run: |
+        cd $GITHUB_WORKSPACE
+        cd scripts
+        python3 gen_build.py
+        chmod +x build_python_for_mac.sh
+        ./build_python_for_mac.sh
+
+    - name: Build Binaries
+      run: |
+        cd $GITHUB_WORKSPACE
+        cd src
+        chmod +x build.sh
+        ./build.sh || exit 1
+
+  Ubuntu:
+    
+    runs-on: ubuntu-22.04
+    strategy:
+      matrix:
+        python-version: [ 3.14 ]
+
+    steps:
+
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Setup Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Retrieve submodules
+      run: git submodule update --init --recursive
+
+    - name: Install Dependencies
+      run: |
+        wget -qO- https://packages.lunarg.com/lunarg-signing-key-pub.asc | sudo tee /etc/apt/trusted.gpg.d/lunarg.asc
+        sudo wget -qO /etc/apt/sources.list.d/lunarg-vulkan-1.4.309-jammy.list https://packages.lunarg.com/vulkan/1.4.309/lunarg-vulkan-1.4.309-jammy.list
+        sudo apt update
+        sudo apt install vulkan-sdk
+        sudo apt install libx11-dev
+        sudo apt install libxkbcommon-x11-dev
+        sudo apt install libx11-xcb-dev
+        sudo apt install libxcb-xfixes0-dev
+        sudo apt install libxcb-cursor-dev
+        sudo apt install libxcb-cursor0
+        sudo apt install libxcb-keysyms1-dev
+        sudo apt install libxcursor-dev
+        sudo apt install libxrandr-dev
+        sudo apt install libxinerama-dev
+        sudo apt install libgl-dev
+        sudo apt install libxi-dev
+        python3 -m pip install pl-build
+        cd ..
+        git clone https://github.com/PilotLightTech/pilotlight
+        cd pilotlight-python
+
+    - name: Build Python
+      run: |
+        cd $GITHUB_WORKSPACE
+        cd scripts
+        python3 gen_build.py
+        chmod +x build_python_for_linux.sh
+        ./build_python_for_linux.sh
+
+    - name: Build Binaries
+      run: |
+        cd $GITHUB_WORKSPACE
+        cd src
+        chmod +x build.sh
+        ./build.sh || exit 1

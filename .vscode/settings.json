@@ -1,0 +1,8 @@
+{
+  "files.associations": {
+    "pl_*.h": "c",
+    "pl_*.m": "objective-c",
+    "*.inc": "c"
+   },
+  "python.analysis.extraPaths": ["./build"]
+}

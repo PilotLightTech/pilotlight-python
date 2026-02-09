@@ -5,10 +5,19 @@
             "includePath": [
                 "${workspaceFolder}/**",
                 "${workspaceFolder}/src",
+                "${workspaceFolder}/extensions",
                 "${workspaceFolder}/../pilotlight/libs",
+                "${workspaceFolder}/../pilotlight/extensions",
+                "${workspaceFolder}/../pilotlight/src",
+                "${workspaceFolder}/../pilotlight/shaders",
+                "${workspaceFolder}/../pilotlight/dependencies/stb",
+                "${workspaceFolder}/../pilotlight/dependencies/cgltf",
+                "${workspaceFolder}/../pilotlight/dependencies/imgui",
+                "${workspaceFolder}/../pilotlight/dependencies/glfw/include",
                 "${workspaceFolder}/dependencies/cpython",
                 "${workspaceFolder}/dependencies/cpython/Include",
-                "${workspaceFolder}/dependencies/cpython/PC"
+                "${workspaceFolder}/dependencies/cpython/PC",
+                "${env:VK_SDK_PATH}/Include"
             ],
             "defines": [
                 "_DEBUG",

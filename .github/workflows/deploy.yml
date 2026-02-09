@@ -1,0 +1,262 @@
+name: Deploy
+
+on:
+
+  workflow_dispatch:
+
+      inputs:
+
+        deploy:
+          description: 'Deploy (true will deploy to pypi)'
+          required: true
+          default: 'false'
+
+        deploytest:
+          description: 'Deploy (true will deploy to test pypi)'
+          required: true
+          default: 'false'
+
+jobs:
+
+  build-windows-wheels:
+    
+    runs-on: windows-2022
+    strategy:
+      matrix:
+        python-version: [ 3.14 ]
+
+    steps:
+
+    - uses: actions/checkout@v4
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Show Python build paths
+      shell: cmd
+      run: |
+        python -c "import sys, sysconfig; print(sys.executable); print(sys.version)"
+        python -c "import sysconfig; print('include=', sysconfig.get_paths()['include'])"
+        python -c "import sysconfig; print('platinclude=', sysconfig.get_paths().get('platinclude'))"
+        python -c "import sysconfig; print('EXT_SUFFIX=', sysconfig.get_config_var('EXT_SUFFIX'))"
+        for /f "delims=" %%I in ('python -c "import sysconfig; print(sysconfig.get_paths()[\"include\"]) "') do echo PL_PYTHON_INCLUDES=%%I>>"%GITHUB_ENV%"
+        for /f "delims=" %%I in ('python -c "import sys, os; print(os.path.join(sys.base_prefix, 'libs'))"') do echo PL_PYTHON_LIBS=%%I>>"%GITHUB_ENV%"
+
+    - name: Install Dependencies
+      run: |
+        Invoke-WebRequest -Uri "https://sdk.lunarg.com/sdk/download/1.3.296.0/windows/VulkanSDK-1.3.296.0-Installer.exe" -OutFile VulkanSDK.exe
+        # ./VulkanSDK.exe --help
+        ./VulkanSDK.exe --accept-licenses --default-answer --root D:/a/VulkanSDK --confirm-command install
+        python -m pip install pl-build
+        python -m pip install --upgrade pip twine wheel setuptools
+        cd ..
+        git clone https://github.com/PilotLightTech/pilotlight
+        cd pilotlight-python
+
+    - name: Build Binaries
+      shell: cmd
+      run: |
+        set VULKAN_SDK=D:/a/VulkanSDK
+        echo "%PL_PYTHON_INCLUDES%"
+        cd %GITHUB_WORKSPACE%
+        cd scripts
+        python gen_build.py
+        cd ../src
+        build.bat -c deploy
+        cd ..
+        if not exist pilotlight/pilotlight.pyd exit 1
+
+    - name: Build Wheel
+      shell: cmd
+      run: |
+        cd %GITHUB_WORKSPACE%
+        python -m setup bdist_wheel --plat-name win_amd64 --dist-dir dist
+
+    - name: Upload Windows ${{ matrix.python-version }} Wheel
+      uses: actions/upload-artifact@v4
+      with:
+        name: windowsbuild${{ matrix.python-version }}
+        path: ${{ github.workspace }}/dist/*.whl
+        overwrite: true
+        
+  build-linux-wheels:
+
+    runs-on: ubuntu-22.04
+    env:
+      CXX: g++-10
+    strategy:
+      matrix:
+        python-version: ["3.14"]
+
+    steps:
+
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Setup Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Show Python build paths
+      run: |
+        python -c "import sys, sysconfig; print(sys.executable); print(sys.version)"
+        python -c "import sysconfig; print('include=', sysconfig.get_paths()['include'])"
+        python -c "import sysconfig; print('platinclude=', sysconfig.get_paths().get('platinclude'))"
+        python -c "import sysconfig; print('EXT_SUFFIX=', sysconfig.get_config_var('EXT_SUFFIX'))"
+        echo "PL_PYTHON_INCLUDES=$(python -c 'import sysconfig; print(sysconfig.get_paths()["include"])')" >> "$GITHUB_ENV"
+
+    - name: Install Dependencies
+      run: |
+        wget -qO- https://packages.lunarg.com/lunarg-signing-key-pub.asc | sudo tee /etc/apt/trusted.gpg.d/lunarg.asc
+        sudo wget -qO /etc/apt/sources.list.d/lunarg-vulkan-1.4.309-jammy.list https://packages.lunarg.com/vulkan/1.4.309/lunarg-vulkan-1.4.309-jammy.list
+        sudo apt update
+        sudo apt install vulkan-sdk
+        sudo apt install libx11-dev
+        sudo apt install libxkbcommon-x11-dev
+        sudo apt install libx11-xcb-dev
+        sudo apt install libxcb-xfixes0-dev
+        sudo apt install libxcb-cursor-dev
+        sudo apt install libxcb-cursor0
+        sudo apt install libxcb-keysyms1-dev
+        sudo apt install libxcursor-dev
+        sudo apt install libxrandr-dev
+        sudo apt install libxinerama-dev
+        sudo apt install libgl-dev
+        sudo apt install libxi-dev
+        cd $GITHUB_WORKSPACE
+        cd ..
+        git clone https://github.com/PilotLightTech/pilotlight
+        cd pilotlight-python
+        python -m pip install pl-build
+
+    - name: Build Binaries
+      run: |
+        cd $GITHUB_WORKSPACE
+        echo "$PL_PYTHON_INCLUDES"
+        cd scripts
+        python3 gen_build.py
+        cd ../src
+        chmod +x build.sh
+        ./build.sh -c deploy
+        cd ..
+        test -f ./pilotlight/pilotlight.so || exit 1
+
+    - name: Build Wheel
+      run: |
+        cd $GITHUB_WORKSPACE
+        python -m pip install --upgrade pip twine wheel setuptools
+        python -m setup bdist_wheel --plat-name manylinux1_x86_64 --dist-dir dist
+
+    - name: Upload Linux ${{ matrix.python-version }} Wheel
+      uses: actions/upload-artifact@v4
+      with:
+        name: linuxbuild${{ matrix.python-version }}
+        path: ${{ github.workspace }}/dist/*.whl
+        overwrite: true
+
+  build-apple-wheels:
+
+    runs-on: macos-latest
+    env:
+      CXX: g++-10
+    strategy:
+      matrix:
+        python-version: ["3.14"]
+
+    steps:
+
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Setup Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Show Python build paths
+      run: |
+        python -c "import sys, sysconfig; print(sys.executable); print(sys.version)"
+        python -c "import sysconfig; print('include=', sysconfig.get_paths()['include'])"
+        python -c "import sysconfig; print('platinclude=', sysconfig.get_paths().get('platinclude'))"
+        python -c "import sysconfig; print('EXT_SUFFIX=', sysconfig.get_config_var('EXT_SUFFIX'))"
+        echo "PL_PYTHON_INCLUDES=$(python -c 'import sysconfig; print(sysconfig.get_paths()["include"])')" >> "$GITHUB_ENV"
+        echo "PL_PYTHON_LIBS=$(python -c 'import sysconfig; print(sysconfig.get_paths()["libs"])')" >> "$GITHUB_ENV"
+
+    - name: Install Dependencies
+      run: |
+        curl https://sdk.lunarg.com/sdk/download/1.3.283.0/mac/vulkansdk-macos-1.3.283.0.dmg -o vk.dmg
+        hdiutil attach vk.dmg
+        sudo /Volumes/vulkansdk-macos-1.3.283.0/InstallVulkan.app/Contents/MacOS/InstallVulkan --root ~/VulkanSDK/1.3.283.0 --accept-licenses --default-answer --confirm-command install com.lunarg.vulkan.core com.lunarg.vulkan.usr com.lunarg.vulkan.sdl2 com.lunarg.vulkan.glm com.lunarg.vulkan.volk com.lunarg.vulkan.vma com.lunarg.vulkan.ios
+        cd $GITHUB_WORKSPACE
+        cd ..
+        git clone https://github.com/PilotLightTech/pilotlight
+        cd pilotlight-python
+        python -m pip install pl-build
+
+    - name: Build Binaries
+      run: |
+        cd $GITHUB_WORKSPACE
+        echo "$PL_PYTHON_INCLUDES"
+        echo "$PL_PYTHON_LIBS"
+        cd scripts
+        python3 gen_build.py
+        cd ../src
+        chmod +x build.sh
+        ./build.sh -c deploy
+        cd ..
+        test -f ./pilotlight/pilotlight.so || exit 1
+        
+    - name: Build Wheel
+      run: |
+        cd $GITHUB_WORKSPACE
+        python -m pip install --upgrade pip twine wheel setuptools
+        python -m setup bdist_wheel --plat-name macosx_15_0_arm64 --dist-dir dist
+
+    - name: Upload Mac ${{ matrix.python-version }} Wheel
+      uses: actions/upload-artifact@v4
+      with:
+        name: macbuild${{ matrix.python-version }}
+        path: ${{ github.workspace }}/dist/*.whl
+        overwrite: true
+
+  deploy-packages:
+
+    needs: [build-windows-wheels, build-linux-wheels, build-apple-wheels]
+    runs-on: windows-2022
+
+    steps:
+
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Set up Python 3.14
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.14"
+
+    - name: Install Dependencies
+      run: |
+        python -m pip install --upgrade pip setuptools wheel twine
+
+    - name: Download artifacts
+      uses: actions/download-artifact@v4
+
+    - name: PyPi Deployment
+      shell: cmd
+      if: ${{contains(github.event.inputs.deploy, 'true') && github.ref == 'refs/heads/master'}}
+      run: |
+        python -m twine upload windowsbuild*/* -u __token__ -p ${{ secrets.PYPI_API_TOKEN }} --skip-existing
+        python -m twine upload macbuild*/* -u __token__ -p ${{ secrets.PYPI_API_TOKEN }} --skip-existing
+        python -m twine upload linuxbuild*/* -u __token__ -p ${{ secrets.PYPI_API_TOKEN }} --skip-existing
+
+    - name: Test PyPi Deployment
+      shell: cmd
+      if: "contains(github.event.inputs.deploytest, 'true')"
+      run: |
+        dir
+        python -m twine upload --repository testpypi windowsbuild*/* -u __token__ -p ${{ secrets.TEST_PYPI_API_TOKEN }} --skip-existing
+        python -m twine upload --repository testpypi macbuild*/* -u __token__ -p ${{ secrets.TEST_PYPI_API_TOKEN }} --skip-existing
+        python -m twine upload --repository testpypi linuxbuild*/* -u __token__ -p ${{ secrets.TEST_PYPI_API_TOKEN }} --skip-existing
