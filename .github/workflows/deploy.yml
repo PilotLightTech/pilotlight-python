@@ -64,9 +64,8 @@ jobs:
         cd scripts
         python gen_build.py
         cd ../src
-        build.bat -c deploy
-        cd ..
-        if not exist pilotlight/pilotlight.pyd exit 1
+        call build.bat -c deploy
+        if %ERRORLEVEL% NEQ 0 exit 1
 
     - name: Build Wheel
       shell: cmd
@@ -140,9 +139,7 @@ jobs:
         python3 gen_build.py
         cd ../src
         chmod +x build.sh
-        ./build.sh -c deploy
-        cd ..
-        test -f ./pilotlight/pilotlight.so || exit 1
+        ./build.sh -c deploy || exit 1
 
     - name: Build Wheel
       run: |
@@ -205,9 +202,9 @@ jobs:
         python3 gen_build.py
         cd ../src
         chmod +x build.sh
-        ./build.sh -c deploy
-        cd ..
-        test -f ./pilotlight/pilotlight.so || exit 1
+        ./build.sh -c deploy || exit 1
+        cd ../pilotlight
+        ls
         
     - name: Build Wheel
       run: |

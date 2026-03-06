@@ -33,15 +33,15 @@ def setup_package():
 
     metadata = dict(
         name='pilotlight',                                      # Required
-        version="0.1.10",                              # Required
+        version="0.1.13",                              # Required
         author="Jonathan Hoffstadt",       # Optional
         author_email="jonathanhoffstadt@yahoo.com",            # Optional
         description='Pilot Light',  # Required
         # long_description=long_description,                     # Optional
         # long_description_content_type='text/markdown',         # Optional
-        # url='https://github.com/PilotLightTech/pilotlight-python',          # Optional
+        url='https://github.com/PilotLightTech/pilotlight-python',          # Optional
         license = 'MIT',
-        python_requires='>=3.13',
+        python_requires='>=3.14',
         classifiers=[
                 'Development Status :: 3 - Alpha',
                 'Intended Audience :: Education',
@@ -51,7 +51,6 @@ def setup_package():
                 'Operating System :: Microsoft :: Windows :: Windows 10',
                 'Operating System :: POSIX',
                 'Operating System :: Unix',
-                'Programming Language :: Python :: 3.13',
                 'Programming Language :: Python :: 3.14',
                 'Programming Language :: Python :: Implementation :: CPython',
                 'Programming Language :: Python :: 3 :: Only',
@@ -72,8 +71,7 @@ def setup_package():
             "shaders/*.comp",
             "shaders/*.glsl",
             "shaders/*.frag",
-            "shaders/*.vert",
-            "spirv-cross-c-shared.dll"
+            "shaders/*.vert"
             ]
     else:
         metadata['package_data']['pilotlight'] = [
