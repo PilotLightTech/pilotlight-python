@@ -40,6 +40,8 @@ Index of this file:
 #include "pl_graphics_ext_m.c"
 #include "pl_shader_ext_m.c"
 #include "pl_pak_ext_m.c"
+#include "pl_stats_ext_m.c"
+#include "pl_screen_log_ext_m.c"
 #include "pl_core_m.c"
 
 
@@ -207,6 +209,12 @@ static PyMethodDef gatCommands[] =
 
     {"run", (PyCFunction)pl_python_run, METH_O, NULL},
 
+    // core API
+    PL_PYTHON_COMMAND(set_pointer_value, METH_VARARGS, NULL),
+    PL_PYTHON_COMMAND(get_pointer_value, METH_O, NULL),
+    PL_PYTHON_COMMAND(create_bool_pointer, METH_NOARGS, NULL),
+    PL_PYTHON_COMMAND(destroy_bool_pointer, METH_O, NULL),
+
     // window API
     PL_PYTHON_COMMAND(plWindowI_create, METH_VARARGS | METH_KEYWORDS, NULL),
     PL_PYTHON_COMMAND(plWindowI_show, METH_O, NULL),
@@ -242,6 +250,7 @@ static PyMethodDef gatCommands[] =
     PL_PYTHON_COMMAND(plUiI_begin_window, METH_VARARGS | METH_KEYWORDS, NULL),
     PL_PYTHON_COMMAND(plUiI_end_window, METH_VARARGS | METH_KEYWORDS, NULL),
     PL_PYTHON_COMMAND(plUiI_button, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(plUiI_checkbox, METH_VARARGS | METH_KEYWORDS, NULL),
 
     // graphics API
     PL_PYTHON_COMMAND(plGraphicsI_flush_device, METH_VARARGS | METH_KEYWORDS, NULL),
@@ -272,6 +281,14 @@ static PyMethodDef gatCommands[] =
     PL_PYTHON_COMMAND(plPakI_begin_packing, METH_VARARGS, NULL),
     PL_PYTHON_COMMAND(plPakI_add_from_disk, METH_VARARGS, NULL),
     PL_PYTHON_COMMAND(plPakI_end_packing, METH_O, NULL),
+
+    // stats API
+    PL_PYTHON_COMMAND(plStatsI_new_frame, METH_NOARGS, NULL),
+    PL_PYTHON_COMMAND(plStatsI_get_counter, METH_O, NULL),
+
+    // screen log API
+    PL_PYTHON_COMMAND(plScreenLogI_clear, METH_NOARGS, NULL),
+    PL_PYTHON_COMMAND(plScreenLogI_add_message, METH_VARARGS, NULL),
 
     {NULL, NULL, 0, NULL}
 };

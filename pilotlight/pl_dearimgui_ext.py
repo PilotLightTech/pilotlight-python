@@ -1,7 +1,6 @@
 from typing import List, Any, Callable, Union, Tuple
 import pilotlight.imgui as imgui
 
-
 class plDearImGuiI:
 
     def initialize(device, swapchain, renderpass_handle, **kwargs) -> None:
@@ -15,3 +14,13 @@ class plDearImGuiI:
     
     def cleanup(**kwargs) -> None:
         return imgui.plImgui_cleanup(**kwargs)
+
+class ImGui:
+
+    def ShowDemoWindow(bool_pointer = None) -> None:
+        return imgui.plImGui_ShowDemoWindow(bool_pointer)
+    
+class ImPlot:
+
+    def ShowDemoWindow(bool_pointer = None) -> None:
+        return imgui.plImPlot_ShowDemoWindow(bool_pointer)

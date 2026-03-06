@@ -142,10 +142,26 @@ plImgui_cleanup(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-plImgui_test(PyObject* self, PyObject* args, PyObject* kwargs)
+plImGui_ShowDemoWindow(PyObject* self, PyObject* arg)
 {
-    ImGui::ShowDemoWindow();
-    ImPlot::ShowDemoWindow();
+    bool* ptShow = NULL;
+    if(!Py_IsNone(arg))
+    {
+        ptShow = (bool*)PyCapsule_GetPointer(arg, "pb");
+    }
+    ImGui::ShowDemoWindow(ptShow);
+    Py_RETURN_NONE;
+}
+
+PyObject*
+plImPlot_ShowDemoWindow(PyObject* self, PyObject* arg)
+{
+    bool* ptShow = NULL;
+    if(!Py_IsNone(arg))
+    {
+        ptShow = (bool*)PyCapsule_GetPointer(arg, "pb");
+    }
+    ImPlot::ShowDemoWindow(ptShow);
     Py_RETURN_NONE;
 }
 
@@ -154,12 +170,15 @@ plImgui_test(PyObject* self, PyObject* args, PyObject* kwargs)
 
 static PyMethodDef gatCommands[] =
 {
+    // imgui
     PL_PYTHON_COMMAND(plImgui_initialize, METH_VARARGS | METH_KEYWORDS, NULL),
     PL_PYTHON_COMMAND(plImgui_new_frame, METH_VARARGS | METH_KEYWORDS, NULL),
     PL_PYTHON_COMMAND(plImgui_render, METH_VARARGS | METH_KEYWORDS, NULL),
     PL_PYTHON_COMMAND(plImgui_cleanup, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(plImgui_test, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(plImGui_ShowDemoWindow, METH_O, NULL),
 
+    // implot
+    PL_PYTHON_COMMAND(plImPlot_ShowDemoWindow, METH_O, NULL),
 
     {NULL, NULL, 0, NULL}
 };

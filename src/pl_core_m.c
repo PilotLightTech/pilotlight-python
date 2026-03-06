@@ -27,6 +27,72 @@ static PyObject* ptpyIO = NULL;
 //-----------------------------------------------------------------------------
 
 PyObject*
+create_bool_pointer(PyObject* self)
+{
+    bool* ptValue = PL_ALLOC(sizeof(bool));
+    memset(ptValue, 0, sizeof(bool));
+    return PyCapsule_New(ptValue, "pb", NULL);
+}
+
+PyObject*
+destroy_bool_pointer(PyObject* self, PyObject* args)
+{
+    bool* ptValue = PyCapsule_GetPointer(args, "pb");
+    PL_FREE(ptValue);
+    PyCapsule_SetPointer(args, NULL);
+    Py_RETURN_NONE;
+}
+
+PyObject*
+set_pointer_value(PyObject* self, PyObject* args)
+{
+    static const char* apcKeywords[] = {
+        "pointer",
+        "value",
+        NULL,
+    };
+
+    PyObject* ptPythonPointer = NULL;
+    PyObject* ptPythonValue = NULL;
+	if (!pl_parse("OO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+        &ptPythonPointer, &ptPythonValue))
+		return NULL;
+
+    const char* pcName = PyCapsule_GetName(ptPythonPointer);
+    if(strcmp(pcName, "pd") == 0)
+    {
+        double* ptValue = PyCapsule_GetPointer(ptPythonPointer, pcName);
+        *ptValue = PyFloat_AsDouble(ptPythonValue);
+        return PyBool_FromLong(1);
+    }
+    else if(strcmp(pcName, "pb") == 0)
+    {
+        bool* ptValue = PyCapsule_GetPointer(ptPythonPointer, pcName);
+        *ptValue = PyLong_AsLong(ptPythonValue);
+        return PyBool_FromLong(1);
+    }
+    return PyBool_FromLong(0);
+}
+
+PyObject*
+get_pointer_value(PyObject* self, PyObject* ptPythonPointer)
+{
+    const char* pcName = PyCapsule_GetName(ptPythonPointer);
+    if(strcmp(pcName, "pd") == 0)
+    {
+        double* ptValue = PyCapsule_GetPointer(ptPythonPointer, pcName);
+        return PyFloat_FromDouble(*ptValue);
+    }
+    else if(strcmp(pcName, "pb") == 0)
+    {
+        bool* ptValue = PyCapsule_GetPointer(ptPythonPointer, pcName);
+        return PyBool_FromLong(*ptValue);
+    }
+
+    Py_RETURN_NONE;
+}
+
+PyObject*
 plIOI_is_key_pressed(PyObject* self, PyObject* args)
 {
     static const char* apcKeywords[] = {

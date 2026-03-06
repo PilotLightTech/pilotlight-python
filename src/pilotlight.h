@@ -25,6 +25,7 @@ Index of this file:
 #define PY_SSIZE_T_CLEAN
 #include <Python.h>
 
+#define PL_EXPERIMENTAL
 #define PL_UNITY_BUILD
 #include "pl_unity_ext.c"
 

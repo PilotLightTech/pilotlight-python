@@ -22,6 +22,7 @@
             "defines": [
                 "_DEBUG",
                 "UNICODE",
+                "PL_EXPERIMENTAL",
                 "_UNICODE"
             ],
             "windowsSdkVersion": "10.0.26100.0",

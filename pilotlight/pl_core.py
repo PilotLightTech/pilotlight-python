@@ -44,6 +44,20 @@ class plIO:
 # [SECTION] apis
 ########################################################################################################################
 
+class plCoreI:
+
+    def get_pointer_value(pointer):
+        return internal.get_pointer_value(pointer)
+    
+    def set_pointer_value(pointer, value):
+        return internal.set_pointer_value(pointer, value)
+
+    def create_bool_pointer():
+        return internal.create_bool_pointer()
+    
+    def destroy_bool_pointer(pointer):
+        return internal.destroy_bool_pointer(pointer)
+
 class plIOI:
 
     def get_version_string() -> str:
