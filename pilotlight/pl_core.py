@@ -58,6 +58,18 @@ class plCoreI:
     def destroy_bool_pointer(pointer):
         return internal.destroy_bool_pointer(pointer)
 
+    def create_int_pointer():
+        return internal.create_int_pointer()
+    
+    def destroy_int_pointer(pointer):
+        return internal.destroy_int_pointer(pointer)
+
+    def create_float_pointer():
+        return internal.create_float_pointer()
+    
+    def destroy_float_pointer(pointer):
+        return internal.destroy_float_pointer(pointer)
+
 class plIOI:
 
     def get_version_string() -> str:

@@ -35,9 +35,43 @@ create_bool_pointer(PyObject* self)
 }
 
 PyObject*
+create_int_pointer(PyObject* self)
+{
+    int* ptValue = PL_ALLOC(sizeof(int));
+    memset(ptValue, 0, sizeof(int));
+    return PyCapsule_New(ptValue, "pi", NULL);
+}
+
+PyObject*
+create_float_pointer(PyObject* self)
+{
+    float* ptValue = PL_ALLOC(sizeof(float));
+    memset(ptValue, 0, sizeof(float));
+    return PyCapsule_New(ptValue, "pf", NULL);
+}
+
+PyObject*
 destroy_bool_pointer(PyObject* self, PyObject* args)
 {
     bool* ptValue = PyCapsule_GetPointer(args, "pb");
+    PL_FREE(ptValue);
+    PyCapsule_SetPointer(args, NULL);
+    Py_RETURN_NONE;
+}
+
+PyObject*
+destroy_int_pointer(PyObject* self, PyObject* args)
+{
+    int* ptValue = PyCapsule_GetPointer(args, "pi");
+    PL_FREE(ptValue);
+    PyCapsule_SetPointer(args, NULL);
+    Py_RETURN_NONE;
+}
+
+PyObject*
+destroy_float_pointer(PyObject* self, PyObject* args)
+{
+    float* ptValue = PyCapsule_GetPointer(args, "pf");
     PL_FREE(ptValue);
     PyCapsule_SetPointer(args, NULL);
     Py_RETURN_NONE;
@@ -68,6 +102,12 @@ set_pointer_value(PyObject* self, PyObject* args)
     else if(strcmp(pcName, "pb") == 0)
     {
         bool* ptValue = PyCapsule_GetPointer(ptPythonPointer, pcName);
+        *ptValue = PyLong_AsLong(ptPythonValue);
+        return PyBool_FromLong(1);
+    }
+    else if(strcmp(pcName, "pi") == 0)
+    {
+        int* ptValue = PyCapsule_GetPointer(ptPythonPointer, pcName);
         *ptValue = PyLong_AsLong(ptPythonValue);
         return PyBool_FromLong(1);
     }

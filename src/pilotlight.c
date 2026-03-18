@@ -285,7 +285,11 @@ static PyMethodDef gatCommands[] =
     PL_PYTHON_COMMAND(set_pointer_value, METH_VARARGS, NULL),
     PL_PYTHON_COMMAND(get_pointer_value, METH_O, NULL),
     PL_PYTHON_COMMAND(create_bool_pointer, METH_NOARGS, NULL),
+    PL_PYTHON_COMMAND(create_int_pointer, METH_NOARGS, NULL),
+    PL_PYTHON_COMMAND(create_float_pointer, METH_NOARGS, NULL),
     PL_PYTHON_COMMAND(destroy_bool_pointer, METH_O, NULL),
+    PL_PYTHON_COMMAND(destroy_int_pointer, METH_O, NULL),
+    PL_PYTHON_COMMAND(destroy_float_pointer, METH_O, NULL),
 
     // window API
     PL_PYTHON_COMMAND(plWindowI_create, METH_VARARGS | METH_KEYWORDS, NULL),

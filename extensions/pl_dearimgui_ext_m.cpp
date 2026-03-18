@@ -32,10 +32,13 @@ Index of this file:
 #define PY_SSIZE_T_CLEAN
 #include <Python.h>
 #include "imgui.h"
+#define PL_MATH_INCLUDE_FUNCTIONS
+#include "pl_math.h"
 
 #include "pl_graphics_ext.h"
 
 bool pl_parse(const char* formatstring, const char** keywords, PyObject* args, PyObject* kwargs, const char* message, ...);
+static ImVec2 pl__get_vec2_from_python(PyObject* ptValue);
 
 typedef struct _plPythonIntConstantPair
 {
@@ -141,6 +144,27 @@ plImgui_render(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
+plImgui_StyleColorsDark(PyObject* self)
+{
+    ImGui::StyleColorsDark();
+    Py_RETURN_NONE;
+}
+
+PyObject*
+plImgui_StyleColorsLight(PyObject* self)
+{
+    ImGui::StyleColorsLight();
+    Py_RETURN_NONE;
+}
+
+PyObject*
+plImgui_StyleColorsClassic(PyObject* self)
+{
+    ImGui::StyleColorsClassic();
+    Py_RETURN_NONE;
+}
+
+PyObject*
 plImgui_cleanup(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     pl_imgui_cleanup();
@@ -172,7 +196,7 @@ plImPlot_ShowDemoWindow(PyObject* self, PyObject* arg)
 }
 
 PyObject*
-plImgui_begin(PyObject* self, PyObject* args, PyObject* kwargs)
+plImgui_Begin(PyObject* self, PyObject* args, PyObject* kwargs)
 {
 
     static const char* apcKeywords[] = {
@@ -196,10 +220,133 @@ plImgui_begin(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-plImgui_end(PyObject* self)
+plImgui_End(PyObject* self)
 {
     ImGui::End();
     Py_RETURN_NONE;
+}
+
+PyObject*
+plImgui_Button(PyObject* self, PyObject* args, PyObject* kwargs)
+{
+
+    static const char* apcKeywords[] = {
+        "label",
+        "size",
+        nullptr,
+    };
+    const char* pcLabel = nullptr;
+    PyObject* ptSize = nullptr;
+	if (!pl_parse("s|O", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+        &pcLabel, &ptSize))
+		return nullptr;
+    
+    ImVec2 tSize = {};
+    if(!Py_IsNone(ptSize))
+        tSize = pl__get_vec2_from_python(ptSize);
+
+    return PyBool_FromLong(ImGui::Button(pcLabel, tSize));
+}
+
+PyObject*
+plImgui_BeginMenuBar(PyObject* self)
+{
+    return PyBool_FromLong(ImGui::BeginMenuBar());
+}
+
+PyObject*
+plImgui_BeginMainMenuBar(PyObject* self)
+{
+    return PyBool_FromLong(ImGui::BeginMainMenuBar());
+}
+
+PyObject*
+plImgui_EndMenuBar(PyObject* self)
+{
+    ImGui::EndMenuBar();
+    Py_RETURN_NONE;
+}
+
+PyObject*
+plImgui_EndMainMenuBar(PyObject* self)
+{
+    ImGui::EndMainMenuBar();
+    Py_RETURN_NONE;
+}
+
+PyObject*
+plImgui_EndMenu(PyObject* self)
+{
+    ImGui::EndMenu();
+    Py_RETURN_NONE;
+}
+
+PyObject*
+plImgui_BeginMenu(PyObject* self, PyObject* args, PyObject* kwargs)
+{
+
+    static const char* apcKeywords[] = {
+        "label",
+        "enabled",
+        nullptr,
+    };
+    const char* pcLabel = nullptr;
+    int bEnabled = true;
+	if (!pl_parse("s|p", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+        &pcLabel, &bEnabled))
+		return nullptr;
+    
+    return PyBool_FromLong(ImGui::BeginMenu(pcLabel, bEnabled));
+}
+
+PyObject*
+plImgui_MenuItem(PyObject* self, PyObject* args, PyObject* kwargs)
+{
+
+    static const char* apcKeywords[] = {
+        "label",
+        "shortcut",
+        "selected",
+        "enabled",
+        "selected_pointer",
+        nullptr,
+    };
+    const char* pcLabel = nullptr;
+    const char* pcShortcut = nullptr;
+    int bEnabled = false;
+    int bSelected = true;
+    PyObject* ptPointer = nullptr;
+	if (!pl_parse("s|spp$O", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+        &pcLabel, &pcShortcut, &bSelected, &bEnabled, &ptPointer))
+		return nullptr;
+    
+    bool* pbSelected = nullptr;
+    if(!Py_IsNone(ptPointer))
+        pbSelected = (bool*)PyCapsule_GetPointer(ptPointer, "pb");
+
+    if(pbSelected)
+        return PyBool_FromLong(ImGui::MenuItem(pcLabel, pcShortcut, pbSelected, bEnabled));
+    return PyBool_FromLong(ImGui::MenuItem(pcLabel, pcShortcut, bSelected, bEnabled));
+}
+
+PyObject*
+plImgui_Checkbox(PyObject* self, PyObject* args, PyObject* kwargs)
+{
+
+    static const char* apcKeywords[] = {
+        "label",
+        "value_pointer",
+        nullptr,
+    };
+    const char* pcLabel = nullptr;
+    PyObject* ptPointer = nullptr;
+	if (!pl_parse("sO", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+        &pcLabel, &ptPointer))
+		return nullptr;
+    
+    bool* pbSelected = (bool*)PyCapsule_GetPointer(ptPointer, "pb");
+
+    return PyBool_FromLong(ImGui::Checkbox(pcLabel, pbSelected));
 }
 
 
@@ -214,8 +361,24 @@ static PyMethodDef gatCommands[] =
     PL_PYTHON_COMMAND(plImgui_render, METH_VARARGS | METH_KEYWORDS, NULL),
     PL_PYTHON_COMMAND(plImgui_cleanup, METH_VARARGS | METH_KEYWORDS, NULL),
     PL_PYTHON_COMMAND(plImGui_ShowDemoWindow, METH_O, NULL),
-    PL_PYTHON_COMMAND(plImgui_begin, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(plImgui_end, METH_NOARGS, NULL),
+    PL_PYTHON_COMMAND(plImgui_Begin, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(plImgui_End, METH_NOARGS, NULL),
+    PL_PYTHON_COMMAND(plImgui_StyleColorsDark, METH_NOARGS, NULL),
+    PL_PYTHON_COMMAND(plImgui_StyleColorsLight, METH_NOARGS, NULL),
+    PL_PYTHON_COMMAND(plImgui_StyleColorsClassic, METH_NOARGS, NULL),
+
+    // imgui widgets
+    PL_PYTHON_COMMAND(plImgui_Button, METH_VARARGS | METH_KEYWORDS, NULL),
+
+    // imgui menus
+    PL_PYTHON_COMMAND(plImgui_BeginMenuBar, METH_NOARGS, NULL),
+    PL_PYTHON_COMMAND(plImgui_BeginMainMenuBar, METH_NOARGS, NULL),
+    PL_PYTHON_COMMAND(plImgui_EndMenuBar, METH_NOARGS, NULL),
+    PL_PYTHON_COMMAND(plImgui_EndMainMenuBar, METH_NOARGS, NULL),
+    PL_PYTHON_COMMAND(plImgui_EndMenu, METH_NOARGS, NULL),
+    PL_PYTHON_COMMAND(plImgui_BeginMenu, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(plImgui_MenuItem, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(plImgui_Checkbox, METH_VARARGS | METH_KEYWORDS, NULL),
 
     // implot
     PL_PYTHON_COMMAND(plImPlot_ShowDemoWindow, METH_O, NULL),
@@ -299,4 +462,53 @@ pl_parse(const char* formatstring, const char** keywords, PyObject* args, PyObje
     //     mvThrowPythonError(mvErrorCode::mvNone, "Error parsing Dear PyGui command: " + std::string(message));
 
     return check;
+}
+
+static ImVec2
+pl__get_vec2_from_python(PyObject* ptValue)
+{
+    ImVec2 tResult = {};
+
+    if (PyTuple_Check(ptValue))
+    {
+        Py_ssize_t pySize = PyTuple_Size(ptValue);
+        pySize = pl_min(pySize, 2);
+        for (Py_ssize_t i = 0; i < pySize; ++i)
+        {
+            tResult[i] = (float)PyFloat_AsDouble(PyTuple_GetItem(ptValue, i));
+        }
+    }
+
+    else if (PyList_Check(ptValue))
+    {
+        Py_ssize_t pySize = PyList_Size(ptValue);
+        pySize = pl_min(pySize, 2);
+        for (Py_ssize_t i = 0; i < pySize; ++i)
+        {
+            tResult[i] = (float)PyFloat_AsDouble(PyList_GetItem(ptValue, i));
+        }
+    }
+
+    // else if (PyObject_CheckBuffer(ptValue))
+    // {
+    //     Py_buffer buffer_info;
+
+    //     if (!PyObject_GetBuffer(ptValue, &buffer_info,
+    //                             PyBUF_CONTIG_RO | PyBUF_FORMAT))
+    //     {
+
+    //         auto BufferViewer = BufferViewFunctionsFloat(buffer_info);
+    //         items.reserve(buffer_info.len / buffer_info.itemsize);
+
+    //         for (Py_ssize_t i = 0; i < buffer_info.len / buffer_info.itemsize; ++i)
+    //         {
+    //             items.emplace_back(BufferViewer(buffer_info, i));
+    //         }
+    //     }
+    //     PyBuffer_Release(&buffer_info);
+    // }
+    // else
+    //     mvThrowPythonError(mvErrorCode::mvWrongType, "Python value error. Must be List[float].");
+
+    return tResult;
 }

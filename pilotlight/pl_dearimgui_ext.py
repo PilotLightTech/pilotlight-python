@@ -17,14 +17,50 @@ class plDearImGuiI:
 
 class ImGui:
 
+    def StyleColorsDark():
+        return imgui.plImgui_StyleColorsDark()
+    
+    def StyleColorsLight():
+        return imgui.plImgui_StyleColorsLight()
+    
+    def StyleColorsClassic():
+        return imgui.plImgui_StyleColorsClassic()
+
     def ShowDemoWindow(bool_pointer = None) -> None:
         return imgui.plImGui_ShowDemoWindow(bool_pointer)
     
-    def begin(name, bool_pointer = None, flags = imgui.ImGuiWindowFlags_None) -> None:
-        return imgui.plImgui_begin(name, bool_pointer, flags)
+    def Begin(name, bool_pointer = None, flags = imgui.ImGuiWindowFlags_None) -> None:
+        return imgui.plImgui_Begin(name, bool_pointer, flags)
     
-    def end():
-        return imgui.plImgui_end()
+    def End():
+        return imgui.plImgui_End()
+
+    def BeginMenuBar():
+        return imgui.plImgui_BeginMenuBar()
+    
+    def BeginMainMenuBar():
+        return imgui.plImgui_BeginMainMenuBar()
+    
+    def EndMenuBar():
+        return imgui.plImgui_EndMenuBar()
+    
+    def EndMainMenuBar():
+        return imgui.plImgui_EndMainMenuBar()
+    
+    def BeginMenu(label, enabled=True):
+        return imgui.plImgui_BeginMenu(label, enabled)
+    
+    def EndMenu():
+        return imgui.plImgui_EndMenu()
+
+    def MenuItem(label, shortcut="", selected=False, enabled=True, selected_pointer = None):
+        return imgui.plImgui_MenuItem(label, shortcut, selected, enabled, selected_pointer=selected_pointer)
+
+    def Button(label, size=None):
+        return imgui.plImgui_Button(label, size)
+
+    def Checkbox(label, bool_pointer):
+        return imgui.plImgui_Checkbox(label, bool_pointer)
     
 class ImPlot:
 

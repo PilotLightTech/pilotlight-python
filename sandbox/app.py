@@ -138,6 +138,8 @@ class App:
 
         plRendererI.create_directional_light(self.ptComponentLibrary, "direction light")
 
+        ImGui.StyleColorsDark()
+
 
     def pl_app_shutdown(self):
         plGraphicsI.flush_device(plStarterI.get_device())
@@ -198,9 +200,24 @@ class App:
             plUiI.end_window()
 
         # dear imgui API
-        if ImGui.begin("ImGui Window"):
-            pass
-        ImGui.end()
+        if ImGui.BeginMainMenuBar():
+            if ImGui.BeginMenu("File"):
+                ImGui.EndMenu()
+            if ImGui.BeginMenu("Edit", False):
+                ImGui.EndMenu()
+            if ImGui.BeginMenu("Tools"):
+                ImGui.MenuItem("Show ImGui Demo", selected_pointer=self.show_imgui_demo)
+                ImGui.MenuItem("Show ImPlot Demo", selected_pointer=self.show_implot_demo)
+                ImGui.EndMenu()
+            if ImGui.BeginMenu("Help"):
+                ImGui.MenuItem("Check For Update")
+                ImGui.MenuItem("About", "-a")
+                ImGui.EndMenu()
+            ImGui.EndMainMenuBar()
+        if ImGui.Begin("ImGui Window"):
+            if ImGui.Button("Press Me"):
+                print("Pressed Imgui Button")
+        ImGui.End()
 
         render_encoder = plStarterI.begin_main_pass()
 
