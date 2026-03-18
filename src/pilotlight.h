@@ -39,6 +39,12 @@ typedef struct _plPythonIntConstantPair
    int         iValue;
 } plPythonIntConstantPair;
 
+typedef struct _plPythonEntity
+{
+   plEcsTypeKey tKey;
+   plEntity     tEntity;
+} plPythonEntity;
+
 #define PL_ADD_INT_CONSTANT(X_ARG) {#X_ARG, X_ARG}
 
 
@@ -49,5 +55,7 @@ typedef struct _plPythonIntConstantPair
 bool pl_parse(char* formatstring, const char** keywords, PyObject* args, PyObject* kwargs, const char* message, ...);
 
 plVec2 pl_get_vec2_from_python(PyObject*);
+plDVec3 pl_get_dvec3_from_python(PyObject*);
+plPythonEntity pl_get_entity_from_python(PyObject*);
 
 #endif // PILOTLIGHT_H

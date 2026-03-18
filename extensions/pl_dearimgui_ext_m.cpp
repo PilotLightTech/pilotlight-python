@@ -37,6 +37,12 @@ Index of this file:
 
 bool pl_parse(const char* formatstring, const char** keywords, PyObject* args, PyObject* kwargs, const char* message, ...);
 
+typedef struct _plPythonIntConstantPair
+{
+   const char* pcName;
+   int         iValue;
+} plPythonIntConstantPair;
+
 //-----------------------------------------------------------------------------
 // [SECTION] includes
 //-----------------------------------------------------------------------------
@@ -165,8 +171,40 @@ plImPlot_ShowDemoWindow(PyObject* self, PyObject* arg)
     Py_RETURN_NONE;
 }
 
+PyObject*
+plImgui_begin(PyObject* self, PyObject* args, PyObject* kwargs)
+{
+
+    static const char* apcKeywords[] = {
+        "name",
+        "open",
+        "flags",
+        nullptr,
+    };
+    const char* pcText = nullptr;
+    PyObject* ptPointer = nullptr;
+    int iFlags = 0;
+	if (!pl_parse("s|Oi", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+        &pcText, &ptPointer, &iFlags))
+		return nullptr;
+    
+    bool* pbOpen = nullptr;
+    if(!Py_IsNone(ptPointer))
+        pbOpen = (bool*)PyCapsule_GetPointer(ptPointer, "pb");
+
+    return PyBool_FromLong(ImGui::Begin(pcText, pbOpen, iFlags));
+}
+
+PyObject*
+plImgui_end(PyObject* self)
+{
+    ImGui::End();
+    Py_RETURN_NONE;
+}
+
 
 #define PL_PYTHON_COMMAND(ARG, FLAGS, DOCS) {#ARG, (PyCFunction)ARG, FLAGS, DOCS}
+#define PL_ADD_INT_CONSTANT(X_ARG) {#X_ARG, X_ARG}
 
 static PyMethodDef gatCommands[] =
 {
@@ -176,11 +214,41 @@ static PyMethodDef gatCommands[] =
     PL_PYTHON_COMMAND(plImgui_render, METH_VARARGS | METH_KEYWORDS, NULL),
     PL_PYTHON_COMMAND(plImgui_cleanup, METH_VARARGS | METH_KEYWORDS, NULL),
     PL_PYTHON_COMMAND(plImGui_ShowDemoWindow, METH_O, NULL),
+    PL_PYTHON_COMMAND(plImgui_begin, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(plImgui_end, METH_NOARGS, NULL),
 
     // implot
     PL_PYTHON_COMMAND(plImPlot_ShowDemoWindow, METH_O, NULL),
 
     {NULL, NULL, 0, NULL}
+};
+
+static plPythonIntConstantPair gatImguiIntPairs[] = {
+    PL_ADD_INT_CONSTANT(ImGuiWindowFlags_None),
+    PL_ADD_INT_CONSTANT(ImGuiWindowFlags_NoTitleBar),
+    PL_ADD_INT_CONSTANT(ImGuiWindowFlags_NoResize),
+    PL_ADD_INT_CONSTANT(ImGuiWindowFlags_NoMove),
+    PL_ADD_INT_CONSTANT(ImGuiWindowFlags_NoScrollbar),
+    PL_ADD_INT_CONSTANT(ImGuiWindowFlags_NoScrollWithMouse),
+    PL_ADD_INT_CONSTANT(ImGuiWindowFlags_NoCollapse),
+    PL_ADD_INT_CONSTANT(ImGuiWindowFlags_AlwaysAutoResize),
+    PL_ADD_INT_CONSTANT(ImGuiWindowFlags_NoBackground),
+    PL_ADD_INT_CONSTANT(ImGuiWindowFlags_NoSavedSettings),
+    PL_ADD_INT_CONSTANT(ImGuiWindowFlags_NoMouseInputs),
+    PL_ADD_INT_CONSTANT(ImGuiWindowFlags_MenuBar),
+    PL_ADD_INT_CONSTANT(ImGuiWindowFlags_HorizontalScrollbar),
+    PL_ADD_INT_CONSTANT(ImGuiWindowFlags_NoFocusOnAppearing),
+    PL_ADD_INT_CONSTANT(ImGuiWindowFlags_NoBringToFrontOnFocus),
+    PL_ADD_INT_CONSTANT(ImGuiWindowFlags_AlwaysVerticalScrollbar),
+    PL_ADD_INT_CONSTANT(ImGuiWindowFlags_AlwaysHorizontalScrollbar),
+    PL_ADD_INT_CONSTANT(ImGuiWindowFlags_NoNavInputs),
+    PL_ADD_INT_CONSTANT(ImGuiWindowFlags_NoNavFocus),
+    PL_ADD_INT_CONSTANT(ImGuiWindowFlags_UnsavedDocument),
+    PL_ADD_INT_CONSTANT(ImGuiWindowFlags_NoDocking),
+    PL_ADD_INT_CONSTANT(ImGuiWindowFlags_NoNav),
+    PL_ADD_INT_CONSTANT(ImGuiWindowFlags_NoDecoration),
+    PL_ADD_INT_CONSTANT(ImGuiWindowFlags_NoInputs)
+
 };
 
 PyMODINIT_FUNC
@@ -205,6 +273,10 @@ PyInit_imgui(void)
     {
 		return NULL;
     }
+
+    for(uint32_t i = 0; i < PL_ARRAYSIZE(gatImguiIntPairs); i++)
+        PyModule_AddIntConstant(ptModule, gatImguiIntPairs[i].pcName, gatImguiIntPairs[i].iValue);
+
     return ptModule;
 }
 

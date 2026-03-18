@@ -15,3 +15,6 @@ class plUiI:
 
     def checkbox(name, value = None, **kwargs):
         return internal.plUiI_checkbox(name, value, **kwargs)
+    
+    def input_text(name, value, **kwargs):
+        return internal.plUiI_input_text(name, value, **kwargs)

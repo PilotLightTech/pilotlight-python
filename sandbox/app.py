@@ -9,17 +9,54 @@ from pilotlight.pl_core import plIOI
 from pilotlight.pl_core import plWindowI
 from pilotlight.pl_core import * # constants
 
-# extension apis
+# stable extension apis
 from pilotlight.pl_starter_ext import *
 from pilotlight.pl_draw_ext import *
 from pilotlight.pl_ui_ext import *
 from pilotlight.pl_vfs_ext import *
 from pilotlight.pl_shader_ext import *
 from pilotlight.pl_pak_ext import *
-from pilotlight.pl_dearimgui_ext import *
-from pilotlight.pl_graphics_ext import *
 from pilotlight.pl_stats_ext import *
 from pilotlight.pl_screen_log_ext import *
+from pilotlight.pl_ecs_ext import *
+from pilotlight.pl_graphics_ext import *
+from pilotlight.pl_compress_ext import *
+from pilotlight.pl_config_ext import *
+from pilotlight.pl_console_ext import *
+from pilotlight.pl_dds_ext import *
+from pilotlight.pl_dxt_ext import *
+from pilotlight.pl_datetime_ext import *
+from pilotlight.pl_gpu_allocators_ext import *
+from pilotlight.pl_image_ext import *
+from pilotlight.pl_job_ext import *
+from pilotlight.pl_log_ext import *
+from pilotlight.pl_platform_ext import *
+from pilotlight.pl_profile_ext import *
+from pilotlight.pl_rect_pack_ext import *
+from pilotlight.pl_resource_ext import *
+from pilotlight.pl_string_intern_ext import *
+from pilotlight.pl_tools_ext import *
+
+# unstable extension apis
+from pilotlight.pl_dearimgui_ext import *
+from pilotlight.pl_animation_ext import *
+from pilotlight.pl_bvh_ext import *
+from pilotlight.pl_camera_ext import *
+from pilotlight.pl_collision_ext import *
+from pilotlight.pl_ecs_tools_ext import *
+from pilotlight.pl_freelist_ext import *
+from pilotlight.pl_gizmo_ext import *
+from pilotlight.pl_image_ops_ext import *
+from pilotlight.pl_material_ext import *
+from pilotlight.pl_mesh_ext import *
+from pilotlight.pl_model_loader_ext import *
+from pilotlight.pl_physics_ext import *
+from pilotlight.pl_renderer_ext import *
+from pilotlight.pl_script_ext import *
+from pilotlight.pl_shader_variant_ext import *
+from pilotlight.pl_terrain_ext import *
+from pilotlight.pl_terrain_processor_ext import *
+
 
 class App:
 
@@ -28,6 +65,10 @@ class App:
         self.counter = None
         self.show_imgui_demo = None
         self.show_implot_demo = None
+        self.tMainCamera = None
+        self.ptComponentLibrary = None
+        self.some_string_array = bytearray("pizza", 'utf-8')
+        self.some_string_array.resize(256)
 
     def pl_app_load(self):
 
@@ -65,9 +106,43 @@ class App:
         # result = plPakI.add_from_disk(pakFile, "shaders.pak", "C:/dev/pilotlight-python/sandbox/blah.spv", False)
         # plPakI.end_packing(pakFile)
 
+        plShaderVariantI.initialize(plStarterI.get_device())
+
+        plRendererI.initialize(plStarterI.get_device(), plStarterI.get_swapchain())
+
+        plEcsI.initialize()
+        plRendererI.register_ecs_system()
+        plScriptI.register_ecs_system()
+        plCameraI.register_ecs_system()
+        plAnimationI.register_ecs_system()
+        plMeshI.register_ecs_system()
+        plPhysicsI.register_ecs_system()
+        plMaterialI.register_ecs_system()
+        plEcsI.finalize()
+        self.ptComponentLibrary = plEcsI.get_default_library()
+
+        self.tMainCamera = plCameraI.create_perspective(
+            self.ptComponentLibrary,
+            "main camera",
+            [-4.012, 2.984, -1.109],
+            1.04719755,
+            500 / 500,
+            0.1,
+            30.0,
+            True
+            )
+        
+        camera = plEcsI.get_component(self.ptComponentLibrary, plCameraI.get_ecs_type_key(), self.tMainCamera)
+        plCameraI.set_fov(camera, 1.04719755)
+        plCameraI.update(camera)
+
+        plRendererI.create_directional_light(self.ptComponentLibrary, "direction light")
+
 
     def pl_app_shutdown(self):
         plGraphicsI.flush_device(plStarterI.get_device())
+        plEcsI.cleanup()
+        plRendererI.cleanup()
         plDearImGuiI.cleanup()
         plStarterI.cleanup()
         plWindowI.destroy(self.ptWindow)
@@ -102,6 +177,8 @@ class App:
         # ui API
         if plUiI.begin_window("Debug Window"):
 
+            if plUiI.input_text("Input", self.some_string_array):
+                print("String changed")
             if plUiI.button("Press me"):
                 print("Button Pressed")
                 current_value = plCoreI.get_pointer_value(self.counter)
@@ -119,6 +196,11 @@ class App:
                 plCoreI.set_pointer_value(self.show_implot_demo, bCurrentValue)
 
             plUiI.end_window()
+
+        # dear imgui API
+        if ImGui.begin("ImGui Window"):
+            pass
+        ImGui.end()
 
         render_encoder = plStarterI.begin_main_pass()
 

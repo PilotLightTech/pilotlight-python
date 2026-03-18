@@ -39,9 +39,18 @@ Index of this file:
 #include "pl_vfs_ext_m.c"
 #include "pl_graphics_ext_m.c"
 #include "pl_shader_ext_m.c"
+#include "pl_shader_variant_ext_m.c"
 #include "pl_pak_ext_m.c"
 #include "pl_stats_ext_m.c"
 #include "pl_screen_log_ext_m.c"
+#include "pl_ecs_ext_m.c"
+#include "pl_animation_ext_m.c"
+#include "pl_camera_ext_m.c"
+#include "pl_material_ext_m.c"
+#include "pl_mesh_ext_m.c"
+#include "pl_physics_ext_m.c"
+#include "pl_renderer_ext_m.c"
+#include "pl_script_ext_m.c"
 #include "pl_core_m.c"
 
 
@@ -79,6 +88,20 @@ pl_parse(char* formatstring, const char** keywords, PyObject* args, PyObject* kw
     return check;
 }
 
+plPythonEntity
+pl_get_entity_from_python(PyObject* ptValue)
+{
+    plPythonEntity tResult = {0};
+
+    if (PyTuple_Check(ptValue))
+    {
+        tResult.tKey = PyLong_AsUnsignedLong(PyTuple_GetItem(ptValue, 0));
+        tResult.tEntity.uIndex = PyLong_AsUnsignedLong(PyTuple_GetItem(ptValue, 1));
+        tResult.tEntity.uGeneration = PyLong_AsUnsignedLong(PyTuple_GetItem(ptValue, 2));
+    }
+    return tResult;
+}
+
 plVec2
 pl_get_vec2_from_python(PyObject* ptValue)
 {
@@ -102,6 +125,55 @@ pl_get_vec2_from_python(PyObject* ptValue)
         for (Py_ssize_t i = 0; i < pySize; ++i)
         {
             tResult.d[i] = (float)PyFloat_AsDouble(PyList_GetItem(ptValue, i));
+        }
+    }
+
+    // else if (PyObject_CheckBuffer(ptValue))
+    // {
+    //     Py_buffer buffer_info;
+
+    //     if (!PyObject_GetBuffer(ptValue, &buffer_info,
+    //                             PyBUF_CONTIG_RO | PyBUF_FORMAT))
+    //     {
+
+    //         auto BufferViewer = BufferViewFunctionsFloat(buffer_info);
+    //         items.reserve(buffer_info.len / buffer_info.itemsize);
+
+    //         for (Py_ssize_t i = 0; i < buffer_info.len / buffer_info.itemsize; ++i)
+    //         {
+    //             items.emplace_back(BufferViewer(buffer_info, i));
+    //         }
+    //     }
+    //     PyBuffer_Release(&buffer_info);
+    // }
+    // else
+    //     mvThrowPythonError(mvErrorCode::mvWrongType, "Python value error. Must be List[float].");
+
+    return tResult;
+}
+
+plDVec3
+pl_get_dvec3_from_python(PyObject* ptValue)
+{
+    plDVec3 tResult = {0};
+
+    if (PyTuple_Check(ptValue))
+    {
+        Py_ssize_t pySize = PyTuple_Size(ptValue);
+        pySize = pl_min(pySize, 3);
+        for (Py_ssize_t i = 0; i < pySize; ++i)
+        {
+            tResult.d[i] = PyFloat_AsDouble(PyTuple_GetItem(ptValue, i));
+        }
+    }
+
+    else if (PyList_Check(ptValue))
+    {
+        Py_ssize_t pySize = PyList_Size(ptValue);
+        pySize = pl_min(pySize, 3);
+        for (Py_ssize_t i = 0; i < pySize; ++i)
+        {
+            tResult.d[i] = PyFloat_AsDouble(PyList_GetItem(ptValue, i));
         }
     }
 
@@ -251,6 +323,7 @@ static PyMethodDef gatCommands[] =
     PL_PYTHON_COMMAND(plUiI_end_window, METH_VARARGS | METH_KEYWORDS, NULL),
     PL_PYTHON_COMMAND(plUiI_button, METH_VARARGS | METH_KEYWORDS, NULL),
     PL_PYTHON_COMMAND(plUiI_checkbox, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(plUiI_input_text, METH_VARARGS | METH_KEYWORDS, NULL),
 
     // graphics API
     PL_PYTHON_COMMAND(plGraphicsI_flush_device, METH_VARARGS | METH_KEYWORDS, NULL),
@@ -289,6 +362,44 @@ static PyMethodDef gatCommands[] =
     // screen log API
     PL_PYTHON_COMMAND(plScreenLogI_clear, METH_NOARGS, NULL),
     PL_PYTHON_COMMAND(plScreenLogI_add_message, METH_VARARGS, NULL),
+
+    // ecs API
+    PL_PYTHON_COMMAND(plEcsI_initialize, METH_NOARGS, NULL),
+    PL_PYTHON_COMMAND(plEcsI_finalize, METH_NOARGS, NULL),
+    PL_PYTHON_COMMAND(plEcsI_cleanup, METH_NOARGS, NULL),
+    PL_PYTHON_COMMAND(plEcsI_get_default_library, METH_NOARGS, NULL),
+    PL_PYTHON_COMMAND(plEcsI_get_component, METH_VARARGS | METH_KEYWORDS, NULL),
+
+    // animation API
+    PL_PYTHON_COMMAND(plAnimationI_register_ecs_system, METH_NOARGS, NULL),
+
+    // camera API
+    PL_PYTHON_COMMAND(plCameraI_register_ecs_system, METH_NOARGS, NULL),
+    PL_PYTHON_COMMAND(plCameraI_create_perspective, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(plCameraI_set_fov, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(plCameraI_update, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(plCameraI_get_ecs_type_key, METH_NOARGS, NULL),
+
+    // material API
+    PL_PYTHON_COMMAND(plMaterialI_register_ecs_system, METH_NOARGS, NULL),
+
+    // mesh API
+    PL_PYTHON_COMMAND(plMeshI_register_ecs_system, METH_NOARGS, NULL),
+
+    // physics API
+    PL_PYTHON_COMMAND(plPhysicsI_register_ecs_system, METH_NOARGS, NULL),
+
+    // shader variant API
+    PL_PYTHON_COMMAND(plShaderVariantI_initialize, METH_VARARGS | METH_KEYWORDS, NULL),
+
+    // renderer API
+    PL_PYTHON_COMMAND(plRendererI_initialize, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(plRendererI_create_directional_light, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(plRendererI_cleanup, METH_NOARGS, NULL),
+    PL_PYTHON_COMMAND(plRendererI_register_ecs_system, METH_NOARGS, NULL),
+
+    // script API
+    PL_PYTHON_COMMAND(plScriptI_register_ecs_system, METH_NOARGS, NULL),
 
     {NULL, NULL, 0, NULL}
 };

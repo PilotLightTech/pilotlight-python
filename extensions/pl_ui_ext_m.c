@@ -90,3 +90,26 @@ plUiI_checkbox(PyObject* self, PyObject* args, PyObject* kwargs)
         return Py_BuildValue("(pp)", bResult, bValue);
     }
 }
+
+PyObject*
+plUiI_input_text(PyObject* self, PyObject* args, PyObject* kwargs)
+{
+
+    static const char* apcKeywords[] = {
+        "label",
+        "value",
+        NULL,
+    };
+
+    const char* pcName = NULL;
+    PyObject* ptByteObject = NULL;
+	if (!pl_parse("sY", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+        &pcName, &ptByteObject))
+		return NULL;
+
+
+    char* acBuffer = PyByteArray_AsString(ptByteObject);
+    Py_ssize_t szBufferSize = PyByteArray_Size(ptByteObject);
+    bool bResult = gptUI->input_text(pcName, acBuffer, szBufferSize, 0);
+    return Py_BuildValue("p", bResult);
+}
