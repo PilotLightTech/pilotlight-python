@@ -152,10 +152,10 @@ pl_get_vec2_from_python(PyObject* ptValue)
     return tResult;
 }
 
-plDVec3
+plVec3d
 pl_get_dvec3_from_python(PyObject* ptValue)
 {
-    plDVec3 tResult = {0};
+    plVec3d tResult = {0};
 
     if (PyTuple_Check(ptValue))
     {
@@ -321,6 +321,15 @@ static PyMethodDef gatCommands[] =
 
     // draw API
     PL_PYTHON_COMMAND(plDrawI_add_triangle_filled, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(plDrawI_add_triangle, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(plDrawI_add_line, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(plDrawI_add_rect, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(plDrawI_add_rect_rounded, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(plDrawI_add_quad, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(plDrawI_add_circle, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(plDrawI_add_polygon, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(plDrawI_add_bezier_quad, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(plDrawI_add_bezier_cubic, METH_VARARGS | METH_KEYWORDS, NULL),
 
     // ui API
     PL_PYTHON_COMMAND(plUiI_begin_window, METH_VARARGS | METH_KEYWORDS, NULL),
@@ -441,6 +450,9 @@ PyInit_pilotlight(void)
     for(uint32_t i = 0; i < PL_ARRAYSIZE(gatShaderIntPairs); i++)
         PyModule_AddIntConstant(ptModule, gatShaderIntPairs[i].pcName, gatShaderIntPairs[i].iValue);
 
+    for(uint32_t i = 0; i < PL_ARRAYSIZE(gatDrawIntPairs); i++)
+        PyModule_AddIntConstant(ptModule, gatDrawIntPairs[i].pcName, gatDrawIntPairs[i].iValue);
+        
     const plApiRegistryI* ptApiRegistry = pl__python_load();
 
     PyObject* ptApiRegistryCapsule = PyCapsule_New((void*)ptApiRegistry, "plApiRegistryI", NULL);

@@ -33,8 +33,13 @@ int pl_init_python();
 // [SECTION] entry point
 //-----------------------------------------------------------------------------
 
-int main()
+int main(int argc, char *argv[])
 {
+
+    const char* pcAppName = "../sandbox/app.py";
+
+    if(argc > 1)
+        pcAppName = argv[1];
 
    if(pl_init_python() != 0)
    {
@@ -50,7 +55,7 @@ int main()
 		return 1;
 	}
 
-    FILE* ptDataFile = fopen("../sandbox/app.py", "rb");
+    FILE* ptDataFile = fopen(pcAppName, "rb");
 
     // obtain file size
     fseek(ptDataFile, 0, SEEK_END);
@@ -117,6 +122,7 @@ pl_init_python()
     #endif
         "../dependencies/cpython/Lib",
         "..",
+        "../examples",
         "../sandbox"
     };
 

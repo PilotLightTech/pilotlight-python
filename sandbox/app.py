@@ -83,6 +83,7 @@ class App:
         plWindowI.show(self.ptWindow)
 
         starter_flags = PL_STARTER_FLAGS_ALL_EXTENSIONS
+        starter_flags |= PL_STARTER_FLAGS_MSAA
         starter_flags &= ~PL_STARTER_FLAGS_SHADER_EXT
         plStarterI.initialize(self.ptWindow, starter_flags)
 
@@ -170,7 +171,7 @@ class App:
         # drawing API
         fgLayer = plStarterI.get_foreground_layer()
         plDrawI.add_triangle_filled(fgLayer, [50.0, 100.0], [200.0, 0.0], [100.0, 200.0])
-        plDrawI.add_triangle_filled(fgLayer, [50.0, 300.0], [200.0, 200.0], [100.0, 400.0], uColor = 4278255360)
+        plDrawI.add_triangle(fgLayer, [50.0, 300.0], [200.0, 200.0], [100.0, 400.0], color = PL_COLOR_32_WHITE)
 
         # io API
         if plIOI.is_key_pressed(PL_KEY_P):

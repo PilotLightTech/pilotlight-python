@@ -55,7 +55,7 @@ typedef struct _plPythonEntity
 bool pl_parse(char* formatstring, const char** keywords, PyObject* args, PyObject* kwargs, const char* message, ...);
 
 plVec2 pl_get_vec2_from_python(PyObject*);
-plDVec3 pl_get_dvec3_from_python(PyObject*);
+plVec3d pl_get_dvec3_from_python(PyObject*);
 plPythonEntity pl_get_entity_from_python(PyObject*);
 
 #endif // PILOTLIGHT_H
