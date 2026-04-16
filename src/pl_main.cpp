@@ -6,6 +6,7 @@
 Index of this file:
 // [SECTION] includes
 // [SECTION] global data
+// [SECTION] internal enums
 // [SECTION] forward declarations
 // [SECTION] window api
 // [SECTION] glfw callbacks
@@ -121,6 +122,19 @@ plVec2      tLastValidMousePos;
 GLFWwindow* atKeyOwnerWindows[GLFW_KEY_LAST];
 
 //-----------------------------------------------------------------------------
+// [SECTION] internal enums
+//-----------------------------------------------------------------------------
+
+enum _plWindowInternalFlags
+{
+    PL_WINDOW_INTERNAL_FLAG_NONE                            = 0,
+    PL_WINDOW_INTERNAL_FLAG_MAXIMIZE_REQUESTED              = 1 << 0,
+    PL_WINDOW_INTERNAL_FLAG_MINIMIZE_REQUESTED              = 1 << 1,
+    PL_WINDOW_INTERNAL_FLAG_RESIZE_REQUESTED                = 1 << 2,
+    PL_WINDOW_INTERNAL_FLAG_FULL_SCREEN_REQUESTED           = 1 << 3,
+};
+
+//-----------------------------------------------------------------------------
 // [SECTION] forward declarations
 //-----------------------------------------------------------------------------
 
@@ -141,43 +155,208 @@ plKey pl_glfw_key_translate            (int keycode, int scancode);
 // [SECTION] window api
 //-----------------------------------------------------------------------------
 
-void
-pl_set_window_size(plWindow* ptWindow, uint32_t uWidth, uint32_t uHeight)
+bool 
+pl_set_window_attribute(plWindow* ptWindow, plWindowAttribute tAttribute, const plWindowAttributeValue* ptValue)
 {
     GLFWwindow* ptGlfwWindow = (GLFWwindow*)ptWindow->_pBackendData2;
-    glfwSetWindowSize(ptGlfwWindow, (int)uWidth, (int)uHeight);
+    switch (tAttribute)
+    {
+        case PL_WINDOW_ATTRIBUTE_SIZE:
+        {
+            ptWindow->_tInternalFlags |= PL_WINDOW_INTERNAL_FLAG_RESIZE_REQUESTED;
+            // ptWindow->_tInternalFlags |= PL_WINDOW_INTERNAL_FLAG_ATTRIBUTE_CHANGE_REQUESTED; // incase full screen
+            ptWindow->_uRequestedWidth = ptValue->tuVec2.x;
+            ptWindow->_uRequestedHeight = ptValue->tuVec2.y;
+            glfwGetWindowPos(ptGlfwWindow, &ptWindow->_iXPos, &ptWindow->_iYPos);
+            break;
+        }
+
+        case PL_WINDOW_ATTRIBUTE_POSITION:
+        {
+            glfwSetWindowPos(ptGlfwWindow, ptValue->tiVec2.x, ptValue->tiVec2.y);
+            break;
+        }
+        
+        case PL_WINDOW_ATTRIBUTE_MAXIMIZED:
+            ptWindow->_tInternalFlags |= PL_WINDOW_INTERNAL_FLAG_MAXIMIZE_REQUESTED;
+            break;
+
+        case PL_WINDOW_ATTRIBUTE_MINIMIZED:
+            if(ptValue->bValue)
+                ptWindow->_tInternalFlags |= PL_WINDOW_INTERNAL_FLAG_MINIMIZE_REQUESTED;
+            else
+            {
+                ptWindow->_tInternalFlags &= ~PL_WINDOW_INTERNAL_FLAG_MINIMIZE_REQUESTED;
+                glfwRestoreWindow(ptGlfwWindow);
+            }
+            break;
+
+        case PL_WINDOW_ATTRIBUTE_VISIBLE:
+            if(ptValue->bValue)
+                glfwShowWindow(ptGlfwWindow);
+            else
+                glfwHideWindow(ptGlfwWindow);
+            break;
+
+        case PL_WINDOW_ATTRIBUTE_FOCUSED:
+            glfwFocusWindow(ptGlfwWindow);
+            break;
+
+        case PL_WINDOW_ATTRIBUTE_SIZE_LIMITS:
+            glfwSetWindowSizeLimits(ptGlfwWindow, (int)ptValue->tuVec4.x, (int)ptValue->tuVec4.y, (int)ptValue->tuVec4.z, (int)ptValue->tuVec4.w);
+            break;
+
+        default:
+            break;
+    }
+    return true;
 }
 
-void
-pl_set_window_pos(plWindow* ptWindow, int iXPos, int iYPos)
+bool
+pl_get_window_attribute(plWindow* ptWindow, plWindowAttribute tAttribute, plWindowAttributeValue* ptValue)
 {
     GLFWwindow* ptGlfwWindow = (GLFWwindow*)ptWindow->_pBackendData2;
-    glfwSetWindowPos(ptGlfwWindow, iXPos, iYPos);
+    switch (tAttribute)
+    {
+        case PL_WINDOW_ATTRIBUTE_SIZE:
+        {
+            int iWidth = 0;
+            int iHeight = 0;
+            glfwGetWindowSize(ptGlfwWindow, &iWidth, &iHeight);
+            ptValue->tuVec2.x = (uint32_t)iWidth;
+            ptValue->tuVec2.y = (uint32_t)iHeight;
+            break;
+        }
+        
+        case PL_WINDOW_ATTRIBUTE_POSITION:
+        {
+            glfwGetWindowPos(ptGlfwWindow, &ptValue->tiVec2.x, &ptValue->tiVec2.y);
+            break;
+        }
+
+        case PL_WINDOW_ATTRIBUTE_RESIZABLE:
+        {
+            if (glfwGetWindowAttrib(ptGlfwWindow, GLFW_RESIZABLE))
+                ptValue->bValue = true;
+            else 
+                ptValue->bValue = false;
+            break;
+        }
+
+        case PL_WINDOW_ATTRIBUTE_FOCUSED:
+        {
+            if (glfwGetWindowAttrib(ptGlfwWindow, GLFW_FOCUSED))
+                ptValue->bValue = true;
+            else 
+                ptValue->bValue = false;
+            break;
+        }
+
+        case PL_WINDOW_ATTRIBUTE_DECORATED:
+        {
+            if (glfwGetWindowAttrib(ptGlfwWindow, GLFW_DECORATED))
+                ptValue->bValue = true;
+            else 
+                ptValue->bValue = false;
+            break;
+        }
+
+        case PL_WINDOW_ATTRIBUTE_TOP_MOST:
+        {
+            if (glfwGetWindowAttrib(ptGlfwWindow, GLFW_FLOATING))
+                ptValue->bValue = true;
+            else 
+                ptValue->bValue = false;
+            break;
+        }
+
+        case PL_WINDOW_ATTRIBUTE_HOVERED:
+        {
+            if (glfwGetWindowAttrib(ptGlfwWindow, GLFW_HOVERED))
+                ptValue->bValue = true;
+            else 
+                ptValue->bValue = false;
+            break;
+        }
+
+        case PL_WINDOW_ATTRIBUTE_MAXIMIZED:
+        {
+            if (glfwGetWindowAttrib(ptGlfwWindow, GLFW_MAXIMIZED))
+                ptValue->bValue = true;
+            else 
+                ptValue->bValue = false;
+            break;
+        }
+
+        case PL_WINDOW_ATTRIBUTE_MINIMIZED:
+        {
+            if (glfwGetWindowAttrib(ptGlfwWindow, GLFW_ICONIFIED))
+                ptValue->bValue = true;
+            else 
+                ptValue->bValue = false;
+            break;
+        }
+
+        case PL_WINDOW_ATTRIBUTE_VISIBLE:
+        {
+            if (glfwGetWindowAttrib(ptGlfwWindow, GLFW_VISIBLE))
+                ptValue->bValue = true;
+            else 
+                ptValue->bValue = false;
+            break;
+        }
+
+        case PL_WINDOW_ATTRIBUTE_SIZE_LIMITS:
+            return false;
+
+        default:
+            break;
+    }
+    return true;
 }
 
-void
-pl_get_window_size(plWindow* ptWindow, uint32_t* uWidth, uint32_t* uHeight)
+bool
+pl_set_cursor_mode(plWindow* ptWindow, plCursorMode tMode)
 {
     GLFWwindow* ptGlfwWindow = (GLFWwindow*)ptWindow->_pBackendData2;
-    int iWidth = 0;
-    int iHeight = 0;
-    glfwGetWindowSize(ptGlfwWindow, &iWidth, &iHeight);
-    *uWidth = (uint32_t)iWidth;
-    *uHeight = (uint32_t)iHeight;
+    switch(tMode)
+    {
+        case PL_CURSOR_MODE_NORMAL:
+            glfwSetInputMode(ptGlfwWindow, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+            break;
+        case PL_CURSOR_MODE_HIDDEN:
+            glfwSetInputMode(ptGlfwWindow, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
+            break;
+
+        case PL_CURSOR_MODE_CAPTURED:
+            glfwSetInputMode(ptGlfwWindow, GLFW_CURSOR, GLFW_CURSOR_CAPTURED);
+            break;
+
+        case PL_CURSOR_MODE_DISABLED:
+            glfwSetInputMode(ptGlfwWindow, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+            break;
+
+        default:
+            return false;
+            break;
+    }
+    return true;
 }
 
-void
-pl_get_window_pos(plWindow* ptWindow, int* iXPos, int* iYPos)
+plCursorMode
+pl_get_cursor_mode(plWindow* ptWindow)
 {
     GLFWwindow* ptGlfwWindow = (GLFWwindow*)ptWindow->_pBackendData2;
-    glfwGetWindowPos(ptGlfwWindow, iXPos, iYPos);
-}
-
-void
-pl_minimize_window(plWindow* ptWindow)
-{
-    GLFWwindow* ptGlfwWindow = (GLFWwindow*)ptWindow->_pBackendData2;
-    glfwIconifyWindow(ptGlfwWindow);
+    int iMode = glfwGetInputMode(ptGlfwWindow, GLFW_CURSOR);
+    switch(iMode)
+    {
+        case GLFW_CURSOR_NORMAL: return PL_CURSOR_MODE_NORMAL;
+        case GLFW_CURSOR_HIDDEN: return PL_CURSOR_MODE_HIDDEN;
+        case GLFW_CURSOR_CAPTURED: return PL_CURSOR_MODE_CAPTURED;
+        case GLFW_CURSOR_DISABLED: return PL_CURSOR_MODE_DISABLED;
+        default:
+            return PL_CURSOR_MODE_NORMAL;
+    }
 }
 
 void
@@ -188,137 +367,90 @@ pl_show_window(plWindow* ptWindow)
 }
 
 void
-pl_hide_window(plWindow* ptWindow)
+pl_full_screen_window(plWindow* ptWindow, int iMonitor)
 {
     GLFWwindow* ptGlfwWindow = (GLFWwindow*)ptWindow->_pBackendData2;
-    glfwHideWindow(ptGlfwWindow);
+    ptWindow->_tInternalFlags |= PL_WINDOW_INTERNAL_FLAG_FULL_SCREEN_REQUESTED;
+    ptWindow->_iRequestedMonitor = iMonitor;
 }
 
-void
-pl_maximize_window(plWindow* ptWindow)
-{
-    GLFWwindow* ptGlfwWindow = (GLFWwindow*)ptWindow->_pBackendData2;
-    glfwMaximizeWindow(ptGlfwWindow);
-}
-
-void
-pl_restore_window(plWindow* ptWindow)
-{
-    GLFWwindow* ptGlfwWindow = (GLFWwindow*)ptWindow->_pBackendData2;
-    glfwRestoreWindow(ptGlfwWindow);
-}
-
-void
-pl_focus_window(plWindow* ptWindow)
-{
-    GLFWwindow* ptGlfwWindow = (GLFWwindow*)ptWindow->_pBackendData2;
-    glfwFocusWindow(ptGlfwWindow);
-}
-
-void
-pl_hide_cursor(plWindow* ptWindow)
-{
-    GLFWwindow* ptGlfwWindow = (GLFWwindow*)ptWindow->_pBackendData2;
-    glfwSetInputMode(ptGlfwWindow, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
-}
-
-void
-pl_capture_cursor(plWindow* ptWindow)
-{
-    GLFWwindow* ptGlfwWindow = (GLFWwindow*)ptWindow->_pBackendData2;
-    glfwSetInputMode(ptGlfwWindow, GLFW_CURSOR, GLFW_CURSOR_CAPTURED);
-}
-
-void
-pl_normal_cursor(plWindow* ptWindow)
-{
-    GLFWwindow* ptGlfwWindow = (GLFWwindow*)ptWindow->_pBackendData2;
-    glfwSetInputMode(ptGlfwWindow, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-}
-
-void
+bool
 pl_set_raw_mouse_input(plWindow* ptWindow, bool bValue)
 {
     GLFWwindow* ptGlfwWindow = (GLFWwindow*)ptWindow->_pBackendData2;
     if (glfwRawMouseMotionSupported())
+    {
         glfwSetInputMode(ptGlfwWindow, GLFW_RAW_MOUSE_MOTION, bValue ? GLFW_TRUE : GLFW_FALSE);
-}
-
-bool
-pl_is_window_maximized(plWindow* ptWindow)
-{
-    GLFWwindow* ptGlfwWindow = (GLFWwindow*)ptWindow->_pBackendData2;
-    if (glfwGetWindowAttrib(ptGlfwWindow, GLFW_MAXIMIZED))
-    {
         return true;
     }
     return false;
 }
 
 bool
-pl_is_window_minimized(plWindow* ptWindow)
+pl_set_fullscreen(plWindow* ptWindow, const plFullScreenDesc* tDesc)
 {
     GLFWwindow* ptGlfwWindow = (GLFWwindow*)ptWindow->_pBackendData2;
-    if (glfwGetWindowAttrib(ptGlfwWindow, GLFW_ICONIFIED))
+    switch (tDesc->tMode)
     {
-        return true;
+        case PL_FULLSCREEN_MODE_EXCLUSIVE:
+            ptWindow->_tInternalFlags |= PL_WINDOW_INTERNAL_FLAG_FULL_SCREEN_REQUESTED;
+            ptWindow->_iRequestedMonitor = tDesc->iMonitor;
+            return true;
+
+        case PL_FULLSCREEN_MODE_BORDERLESS:
+            return false;
+
+        case PL_FULLSCREEN_MODE_NONE:
+            ptWindow->_tInternalFlags |= PL_WINDOW_INTERNAL_FLAG_RESIZE_REQUESTED;
+            ptWindow->_uRequestedWidth = 500;
+            ptWindow->_uRequestedHeight = 500;
+            return true;
+        
+        default:
+            return true;
     }
-    return false;
 }
 
-bool
-pl_is_window_focused(plWindow* ptWindow)
+const plWindowCapabilities*
+pl_get_window_capabilities(void)
 {
-    GLFWwindow* ptGlfwWindow = (GLFWwindow*)ptWindow->_pBackendData2;
-    if (glfwGetWindowAttrib(ptGlfwWindow, GLFW_FOCUSED))
-    {
-        return true;
-    }
-    return false;
-}
+    static plWindowCapabilities tCapabilities = {};
 
-bool
-pl_is_window_hovered(plWindow* ptWindow)
-{
-    GLFWwindow* ptGlfwWindow = (GLFWwindow*)ptWindow->_pBackendData2;
-    if (glfwGetWindowAttrib(ptGlfwWindow, GLFW_HOVERED))
-    {
-        return true;
-    }
-    return false;
-}
+    tCapabilities.uCursorModeCount = (uint32_t)PL_CURSOR_MODE_COUNT;
+    tCapabilities.uAttributeCount = (uint32_t)PL_WINDOW_ATTRIBUTE_COUNT;
+    tCapabilities.uFullScreenModeCount = 2;
 
-bool
-pl_is_window_resizable(plWindow* ptWindow)
-{
-    GLFWwindow* ptGlfwWindow = (GLFWwindow*)ptWindow->_pBackendData2;
-    if (glfwGetWindowAttrib(ptGlfwWindow, GLFW_RESIZABLE))
-    {
-        return true;
-    }
-    return false;
-}
+    static const plWindowAttribute atSupportedAttributes[] = {
+        PL_WINDOW_ATTRIBUTE_SIZE,
+        PL_WINDOW_ATTRIBUTE_POSITION,
+        PL_WINDOW_ATTRIBUTE_RESIZABLE,
+        PL_WINDOW_ATTRIBUTE_DECORATED,
+        PL_WINDOW_ATTRIBUTE_TOP_MOST,
+        PL_WINDOW_ATTRIBUTE_MINIMIZED,
+        PL_WINDOW_ATTRIBUTE_MAXIMIZED,
+        PL_WINDOW_ATTRIBUTE_VISIBLE,
+        PL_WINDOW_ATTRIBUTE_FOCUSED,
+        PL_WINDOW_ATTRIBUTE_HOVERED
+    };
 
-bool
-pl_is_window_decorated(plWindow* ptWindow)
-{
-    GLFWwindow* ptGlfwWindow = (GLFWwindow*)ptWindow->_pBackendData2;
-    if (glfwGetWindowAttrib(ptGlfwWindow, GLFW_DECORATED))
-    {
-        return true;
-    }
-    return false;
-}
+    static const plCursorMode atSupportedCursorModes[] = {
+        PL_CURSOR_MODE_NORMAL,
+        PL_CURSOR_MODE_HIDDEN,
+        PL_CURSOR_MODE_CAPTURED,
+        PL_CURSOR_MODE_DISABLED
+    };
 
-bool
-pl_is_window_top_most(plWindow* ptWindow)
-{
-    GLFWwindow* ptGlfwWindow = (GLFWwindow*)ptWindow->_pBackendData2;
-    if (glfwGetWindowAttrib(ptGlfwWindow, GLFW_FLOATING))
-    {
-        return true;
-    }
-    return false;
+    static const plFullScreenMode atSupportedScreenModes[] = {
+        PL_FULLSCREEN_MODE_NONE,
+        PL_FULLSCREEN_MODE_EXCLUSIVE
+    };
+
+    tCapabilities.atCursorModes = atSupportedCursorModes;
+    tCapabilities.atFullScreenModes = atSupportedScreenModes;
+    tCapabilities.atWindowAttributes = atSupportedAttributes;
+    tCapabilities.tFlags = PL_WINDOW_CAPABILITY_FLAGS_RAW_MOUSE_INPUT;
+
+    return &tCapabilities;
 }
 
 plWindowResult
@@ -327,19 +459,13 @@ pl_create_window(plWindowDesc tDesc, plWindow** pptWindowOut)
     plWindow* ptWindow = (plWindow*)malloc(sizeof(plWindow));
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 
-    glfwWindowHint(GLFW_RESIZABLE, (tDesc.tFlags & PL_WINDOW_FLAG_NOT_RESIZABLE) ? GLFW_FALSE : GLFW_TRUE);
-    glfwWindowHint(GLFW_DECORATED, (tDesc.tFlags & PL_WINDOW_FLAG_UNDECORATED) ? GLFW_FALSE : GLFW_TRUE);
-    glfwWindowHint(GLFW_FLOATING,  (tDesc.tFlags & PL_WINDOW_FLAG_TOP_MOST) ? GLFW_TRUE : GLFW_FALSE);
+    glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
+    glfwWindowHint(GLFW_DECORATED, GLFW_TRUE);
+    glfwWindowHint(GLFW_FLOATING,  GLFW_FALSE);
     glfwWindowHint(GLFW_POSITION_X,  tDesc.iXPos);
-    glfwWindowHint(GLFW_POSITION_Y,  tDesc.iXPos);
+    glfwWindowHint(GLFW_POSITION_Y,  tDesc.iYPos);
 
     gptGlfwWindow = glfwCreateWindow((int)tDesc.uWidth, (int)tDesc.uHeight, tDesc.pcTitle, NULL, NULL);
-
-    int iMinWidth = tDesc.uMinWidth > 0 ? (int)tDesc.uMinWidth : GLFW_DONT_CARE;
-    int iMaxWidth = tDesc.uMaxWidth > 0 ? (int)tDesc.uMaxWidth : GLFW_DONT_CARE;
-    int iMinHeight = tDesc.uMinHeight > 0 ? (int)tDesc.uMinHeight : GLFW_DONT_CARE;
-    int iMaxHeight = tDesc.uMaxHeight > 0 ? (int)tDesc.uMaxHeight : GLFW_DONT_CARE;
-    glfwSetWindowSizeLimits(gptGlfwWindow, iMinWidth, iMinHeight, iMaxWidth, iMaxHeight);
 
     ptWindow->_pBackendData2 = gptGlfwWindow;
 
