@@ -21,10 +21,13 @@ Index of this file:
 #define PL_EXPERIMENTAL
 #ifdef _WIN32
     const char* gpcLibraryExtension = "dll";
+    const char* gpcLibraryPrefix    = "";
 #elif defined(__APPLE__)
     const char* gpcLibraryExtension = "dylib";
+    const char* gpcLibraryPrefix    = "lib";
 #else // linux
     const char* gpcLibraryExtension = "so";
+    const char* gpcLibraryPrefix    = "lib";
 #endif
 
 // platform specifics
