@@ -1,19 +1,11 @@
 import os
 
-# core package
+# core
 import pilotlight.pilotlight as pl
-
-# core APIs
-from pilotlight.pl_core import plWindowI
-from pilotlight.pl_core import *
-
-# stable extension APIs
-from pilotlight.pl_starter_ext import *
-from pilotlight.pl_draw_ext import *
-from pilotlight.pl_vfs_ext import *
-from pilotlight.pl_shader_ext import *
-from pilotlight.pl_graphics_ext import *
-
+from pilotlight.pilotlight import *
+from pilotlight.imgui import *
+from pilotlight.enums import *
+from pilotlight.types import *
 
 class App:
     """
@@ -41,30 +33,30 @@ class App:
         # Mount directories used by the shader system.
         # /shaders points at the Python package shader folder.
         # /shader-temp is where compiled/intermediate shader output can go.
-        plVfsI.mount_directory("/cache", "cache")
-        plVfsI.mount_directory(
+        pl_vfs_mount_directory("/cache", "cache")
+        pl_vfs_mount_directory(
             "/shaders",
             os.path.dirname(os.path.abspath(pl.__file__)) + "/shaders"
         )
-        plVfsI.mount_directory("/shader-temp", "shader-temp")
+        pl_vfs_mount_directory("/shader-temp", "shader-temp")
 
         # Create and show the OS window.
-        self.ptWindow = plWindowI.create(
+        self.ptWindow = pl_window_create(
             "Pilot Light Python - Drawing API Example",
             100, 100,   # x, y
             1280, 720,  # width, height
             0
         )
-        plWindowI.show(self.ptWindow)
+        pl_window_show(self.ptWindow)
 
         # Initialize the starter extension.
         # We explicitly disable the shader ext from the starter flags because
         # we are going to initialize the shader system ourselves below.
-        starter_flags = PL_STARTER_FLAGS_ALL_EXTENSIONS
-        starter_flags &= ~PL_STARTER_FLAGS_SHADER_EXT
-        starter_flags |= PL_STARTER_FLAGS_MSAA
+        starter_flags = plStarterFlag.PL_STARTER_FLAGS_ALL_EXTENSIONS
+        starter_flags &= ~plStarterFlag.PL_STARTER_FLAGS_SHADER_EXT
+        starter_flags |= plStarterFlag.PL_STARTER_FLAGS_MSAA
 
-        plStarterI.initialize(self.ptWindow, starter_flags)
+        pl_starter_initialize(self.ptWindow, starter_flags)
 
         # Initialize shader system.
         # This is required even for simple drawing examples because the
@@ -74,15 +66,15 @@ class App:
         shader_options.apcDirectories = ["/shaders/"]
         shader_options.apcIncludeDirectories = ["/shaders/"]
         shader_options.tFlags = (
-            PL_SHADER_FLAGS_AUTO_OUTPUT
-            | PL_SHADER_FLAGS_INCLUDE_DEBUG
-            | PL_SHADER_FLAGS_ALWAYS_COMPILE
+            plShaderFlags.PL_SHADER_FLAGS_AUTO_OUTPUT
+            | plShaderFlags.PL_SHADER_FLAGS_INCLUDE_DEBUG
+            | plShaderFlags.PL_SHADER_FLAGS_ALWAYS_COMPILE
         )
 
-        plShaderI.initialize(shader_options)
+        pl_shader_initialize(shader_options)
 
         # Complete starter initialization after custom systems are ready.
-        plStarterI.finalize()
+        pl_starter_finalize()
 
     def pl_app_shutdown(self):
         """
@@ -90,16 +82,16 @@ class App:
         Flush GPU work, clean up engine systems, then destroy the window.
         """
 
-        plGraphicsI.flush_device(plStarterI.get_device())
-        plStarterI.cleanup()
-        plWindowI.destroy(self.ptWindow)
+        pl_graphics_flush_device(pl_starter_get_device())
+        pl_starter_cleanup()
+        pl_window_destroy(self.ptWindow)
 
     def pl_app_resize(self):
         """
         Called when the window changes size.
         Let the starter extension rebuild any size-dependent resources.
         """
-        plStarterI.resize()
+        pl_starter_resize()
 
     # -------------------------------------------------------------------------
     # Per-frame update
@@ -112,15 +104,15 @@ class App:
         """
 
         # Begin the frame. If it returns False, skip rendering this frame.
-        if not plStarterI.begin_frame():
+        if not pl_starter_begin_frame():
             return
 
         # Foreground fgLayer is a convenient draw list for 2D overlay-style
         # rendering.
-        fgLayer = plStarterI.get_foreground_layer()
+        fgLayer = pl_starter_get_foreground_layer()
 
         # Outer frame
-        plDrawI.add_rect(
+        pl_draw_add_rect(
             fgLayer,
             [40.0, 40.0],
             [1240.0, 680.0],
@@ -129,7 +121,7 @@ class App:
         )
 
         # Diagonal guide line
-        plDrawI.add_line(
+        pl_draw_add_line(
             fgLayer,
             [40.0, 40.0],
             [1240.0, 680.0],
@@ -138,19 +130,19 @@ class App:
         )
 
         # Rounded panel region
-        plDrawI.add_rect_rounded(
+        pl_draw_add_rect_rounded(
             fgLayer,
             [70.0, 70.0],
             [500.0, 300.0],
             16.0,                   # rounding radius
             0,                      # segment count (0 = automatic/default)
-            PL_DRAW_RECT_FLAG_NONE,
+            plDrawRectFlag.PL_DRAW_RECT_FLAG_NONE,
             color=PL_COLOR_32_CYAN,
             thickness=2.0
         )
 
         # Triangle outline
-        plDrawI.add_triangle(
+        pl_draw_add_triangle(
             fgLayer,
             [120.0, 240.0],
             [240.0, 120.0],
@@ -159,7 +151,7 @@ class App:
         )
 
         # Arbitrary quad outline
-        plDrawI.add_quad(
+        pl_draw_add_quad(
             fgLayer,
             [580.0, 100.0],
             [760.0, 120.0],
@@ -169,7 +161,7 @@ class App:
         )
 
         # Circle outline
-        plDrawI.add_circle(
+        pl_draw_add_circle(
             fgLayer,
             [930.0, 180.0],
             70.0,
@@ -178,7 +170,7 @@ class App:
         )
 
         # Polygon outline
-        plDrawI.add_polygon(
+        pl_draw_add_polygon(
             fgLayer,
             [
                 [1040.0, 110.0],
@@ -191,7 +183,7 @@ class App:
             color=PL_COLOR_32_RED
         )
 
-        plDrawI.add_bezier_quad(
+        pl_draw_add_bezier_quad(
             fgLayer,
             [120.0, 420.0],   # start
             [260.0, 320.0],   # control
@@ -201,7 +193,7 @@ class App:
         )
 
         # Cubic bezier with thicker line
-        plDrawI.add_bezier_cubic(
+        pl_draw_add_bezier_cubic(
             fgLayer,
             [120.0, 560.0],   # start
             [220.0, 460.0],   # control 1
@@ -213,7 +205,7 @@ class App:
         )
 
         # Filled triangle
-        plDrawI.add_triangle_filled(
+        pl_draw_add_triangle_filled(
             fgLayer,
             [640.0, 420.0],
             [820.0, 360.0],
@@ -221,7 +213,7 @@ class App:
         )
 
         # Filled-looking composition using multiple primitives
-        plDrawI.add_line(
+        pl_draw_add_line(
             fgLayer,
             [900.0, 360.0],
             [1180.0, 360.0],
@@ -229,7 +221,7 @@ class App:
             thickness=4.0
         )
 
-        plDrawI.add_rect(
+        pl_draw_add_rect(
             fgLayer,
             [920.0, 390.0],
             [1160.0, 560.0],
@@ -237,7 +229,7 @@ class App:
             thickness=3.0
         )
 
-        plDrawI.add_circle(
+        pl_draw_add_circle(
             fgLayer,
             [1040.0, 475.0],
             50.0,
@@ -246,8 +238,8 @@ class App:
         )
 
         # Submit/present the frame.
-        plStarterI.end_frame()
+        pl_starter_end_frame()
 
 
 # Run the application.
-pl.run(App())
+pl_run(App())

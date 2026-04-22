@@ -19,7 +19,7 @@ Index of this file:
 //-----------------------------------------------------------------------------
 
 PyObject*
-plShaderI_initialize(PyObject* self, PyObject* args)
+shader_initialize(PyObject* self, PyObject* args)
 {
     PyObject* ptFlags = PyObject_GetAttrString(args, "tFlags");
     PyObject* ptOptimizationLevel = PyObject_GetAttrString(args, "tOptimizationLevel");
@@ -60,14 +60,14 @@ plShaderI_initialize(PyObject* self, PyObject* args)
 }
 
 PyObject*
-plShaderI_cleanup(PyObject* self)
+shader_cleanup(PyObject* self)
 {
     gptShader->cleanup();
     Py_RETURN_NONE;
 }
 
 PyObject*
-plShaderI_load_glsl(PyObject* self, PyObject* args, PyObject* kwargs)
+shader_load_glsl(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {
         "shader",
@@ -127,7 +127,7 @@ plShaderI_load_glsl(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-plShaderI_compile_glsl(PyObject* self, PyObject* args, PyObject* kwargs)
+shader_compile_glsl(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {
         "shader",
@@ -185,7 +185,7 @@ plShaderI_compile_glsl(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-plShaderI_write_to_disk(PyObject* self, PyObject* args)
+shader_write_to_disk(PyObject* self, PyObject* args)
 {
     static const char* apcKeywords[] = {
         "shader",

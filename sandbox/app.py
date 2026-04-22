@@ -2,61 +2,10 @@ import os
 
 # core
 import pilotlight.pilotlight as pl
-
-# core apis
-from pilotlight.pl_core import plCoreI
-from pilotlight.pl_core import plIOI
-from pilotlight.pl_core import plWindowI
-from pilotlight.pl_core import * # constants
-
-# stable extension apis
-from pilotlight.pl_starter_ext import *
-from pilotlight.pl_draw_ext import *
-from pilotlight.pl_ui_ext import *
-from pilotlight.pl_vfs_ext import *
-from pilotlight.pl_shader_ext import *
-from pilotlight.pl_pak_ext import *
-from pilotlight.pl_stats_ext import *
-from pilotlight.pl_screen_log_ext import *
-from pilotlight.pl_ecs_ext import *
-from pilotlight.pl_graphics_ext import *
-from pilotlight.pl_compress_ext import *
-from pilotlight.pl_config_ext import *
-from pilotlight.pl_console_ext import *
-from pilotlight.pl_dds_ext import *
-from pilotlight.pl_dxt_ext import *
-from pilotlight.pl_datetime_ext import *
-from pilotlight.pl_gpu_allocators_ext import *
-from pilotlight.pl_image_ext import *
-from pilotlight.pl_job_ext import *
-from pilotlight.pl_log_ext import *
-from pilotlight.pl_platform_ext import *
-from pilotlight.pl_profile_ext import *
-from pilotlight.pl_rect_pack_ext import *
-from pilotlight.pl_resource_ext import *
-from pilotlight.pl_string_intern_ext import *
-from pilotlight.pl_tools_ext import *
-
-# unstable extension apis
-from pilotlight.pl_dearimgui_ext import *
-from pilotlight.pl_animation_ext import *
-from pilotlight.pl_bvh_ext import *
-from pilotlight.pl_camera_ext import *
-from pilotlight.pl_collision_ext import *
-from pilotlight.pl_ecs_tools_ext import *
-from pilotlight.pl_freelist_ext import *
-from pilotlight.pl_gizmo_ext import *
-from pilotlight.pl_image_ops_ext import *
-from pilotlight.pl_material_ext import *
-from pilotlight.pl_mesh_ext import *
-from pilotlight.pl_model_loader_ext import *
-from pilotlight.pl_physics_ext import *
-from pilotlight.pl_renderer_ext import *
-from pilotlight.pl_script_ext import *
-from pilotlight.pl_shader_variant_ext import *
-from pilotlight.pl_terrain_ext import *
-from pilotlight.pl_terrain_processor_ext import *
-
+from pilotlight.pilotlight import *
+from pilotlight.imgui import *
+from pilotlight.enums import *
+from pilotlight.types import *
 
 class App:
 
@@ -72,57 +21,58 @@ class App:
 
     def pl_app_load(self):
 
-        self.show_imgui_demo = plCoreI.create_bool_pointer()
-        self.show_implot_demo = plCoreI.create_bool_pointer()
+        self.show_imgui_demo = pl_create_bool_pointer()
+        self.show_implot_demo = pl_create_bool_pointer()
 
-        plVfsI.mount_directory("/cache", "cache")
-        plVfsI.mount_directory("/shaders", os.path.dirname(os.path.abspath(pl.__file__)) + "/shaders")
-        plVfsI.mount_directory("/shader-temp", "shader-temp")
+        pl_vfs_mount_directory("/cache", "cache")
+        pl_vfs_mount_directory("/shaders", os.path.dirname(os.path.abspath(pl.__file__)) + "/shaders")
+        pl_vfs_mount_directory("/shader-temp", "shader-temp")
 
-        self.ptWindow = plWindowI.create("Python Example", 200, 200, 500, 500, 0)
-        plWindowI.show(self.ptWindow)
+        self.ptWindow = pl_window_create("Python Example", 200, 200, 500, 500, 0)
+        pl_window_show(self.ptWindow)
 
-        starter_flags = PL_STARTER_FLAGS_ALL_EXTENSIONS
-        starter_flags |= PL_STARTER_FLAGS_MSAA
-        starter_flags &= ~PL_STARTER_FLAGS_SHADER_EXT
-        plStarterI.initialize(self.ptWindow, starter_flags)
+        starter_flags = plStarterFlag.PL_STARTER_FLAGS_ALL_EXTENSIONS
+        starter_flags |= plStarterFlag.PL_STARTER_FLAGS_MSAA
+        starter_flags &= ~plStarterFlag.PL_STARTER_FLAGS_SHADER_EXT
+        pl_starter_initialize(self.ptWindow, starter_flags)
 
         shader_options = plShaderOptions()
         shader_options.pcCacheOutputDirectory = "/shader-temp/"
         shader_options.apcDirectories = ["/shaders/"]
         shader_options.apcIncludeDirectories = ["/shaders/"]
-        shader_options.tFlags = PL_SHADER_FLAGS_AUTO_OUTPUT | PL_SHADER_FLAGS_INCLUDE_DEBUG | PL_SHADER_FLAGS_ALWAYS_COMPILE
-        plShaderI.initialize(shader_options)
+        shader_options.tFlags = plShaderFlags.PL_SHADER_FLAGS_AUTO_OUTPUT | plShaderFlags.PL_SHADER_FLAGS_INCLUDE_DEBUG | plShaderFlags.PL_SHADER_FLAGS_ALWAYS_COMPILE
+        pl_shader_initialize(shader_options)
 
-        plStarterI.finalize()
+        pl_starter_finalize()
 
-        plDearImGuiI.initialize(plStarterI.get_device(), plStarterI.get_swapchain(), plStarterI.get_render_pass())
+        pl_dear_imgui_initialize(pl_starter_get_device(), pl_starter_get_swapchain(), pl_starter_get_render_pass())
 
-        self.counter = plStatsI.get_counter("python counter")
+        self.counter = pl_stats_get_counter("python counter")
 
-        # mod = plShaderI.load_glsl("draw_3d.frag", "main")
-        # plShaderI.write_to_disk("C:/dev/pilotlight-python/sandbox/blah.spv", mod)
+        # mod = pl_shader_load_glsl("draw_3d.frag", "main")
+        # pl_shader_write_to_disk("C:/dev/pilotlight-python/sandbox/blah.spv", mod)
 
-        # (result, pakFile) = plPakI.begin_packing("C:/dev/pilotlight-python/sandbox/shaders.pak", 2)
-        # result = plPakI.add_from_disk(pakFile, "shaders.pak", "C:/dev/pilotlight-python/sandbox/blah.spv", False)
-        # plPakI.end_packing(pakFile)
+        # (result, pakFile) = pl_pak_begin_packing("C:/dev/pilotlight-python/sandbox/shaders.pak", 2)
+        # result = pl_pak_add_from_disk(pakFile, "shaders.pak", "C:/dev/pilotlight-python/sandbox/blah.spv", False)
+        # pl_pak_end_packing(pakFile)
 
-        plShaderVariantI.initialize(plStarterI.get_device())
+        pl_shader_variant_initialize(pl_starter_get_device())
 
-        plRendererI.initialize(plStarterI.get_device(), plStarterI.get_swapchain())
+        pl_renderer_initialize(pl_starter_get_device(), pl_starter_get_swapchain())
+        
 
-        plEcsI.initialize()
-        plRendererI.register_ecs_system()
-        plScriptI.register_ecs_system()
-        plCameraI.register_ecs_system()
-        plAnimationI.register_ecs_system()
-        plMeshI.register_ecs_system()
-        plPhysicsI.register_ecs_system()
-        plMaterialI.register_ecs_system()
-        plEcsI.finalize()
-        self.ptComponentLibrary = plEcsI.get_default_library()
+        pl_ecs_initialize()
+        pl_renderer_register_ecs_system()
+        pl_script_register_ecs_system()
+        pl_camera_register_ecs_system()
+        pl_animation_register_ecs_system()
+        pl_mesh_register_ecs_system()
+        pl_physics_register_ecs_system()
+        pl_material_register_ecs_system()
+        pl_ecs_finalize()
+        self.ptComponentLibrary = pl_ecs_get_default_library()
 
-        self.tMainCamera = plCameraI.create_perspective(
+        self.tMainCamera = pl_camera_create_perspective(
             self.ptComponentLibrary,
             "main camera",
             [-4.012, 2.984, -1.109],
@@ -133,100 +83,101 @@ class App:
             True
             )
         
-        camera = plEcsI.get_component(self.ptComponentLibrary, plCameraI.get_ecs_type_key(), self.tMainCamera)
-        plCameraI.set_fov(camera, 1.04719755)
-        plCameraI.update(camera)
+        camera = pl_ecs_get_component(self.ptComponentLibrary, pl_camera_get_ecs_type_key(), self.tMainCamera)
+        pl_camera_set_fov(camera, 1.04719755)
+        pl_camera_update(camera)
 
-        plRendererI.create_directional_light(self.ptComponentLibrary, "direction light")
+        pl_renderer_create_directional_light(self.ptComponentLibrary, "direction light")
 
-        ImGui.StyleColorsDark()
+        ImGui_StyleColorsDark()
 
 
     def pl_app_shutdown(self):
-        plGraphicsI.flush_device(plStarterI.get_device())
-        plEcsI.cleanup()
-        plRendererI.cleanup()
-        plDearImGuiI.cleanup()
-        plStarterI.cleanup()
-        plWindowI.destroy(self.ptWindow)
+        pl_graphics_flush_device(pl_starter_get_device())
+        pl_ecs_cleanup()
+        pl_renderer_cleanup()
+        pl_dear_imgui_cleanup()
+        pl_starter_cleanup()
+        pl_window_destroy(self.ptWindow)
 
     def pl_app_resize(self):
 
         print("resizing")
-        plStarterI.resize()
+        pl_starter_resize()
 
     def pl_app_update(self):
 
-        if not plStarterI.begin_frame():
+        
+        if not pl_starter_begin_frame():
             return
         
-        plDearImGuiI.new_frame(plStarterI.get_device(), plStarterI.get_render_pass())
+        pl_dear_imgui_new_frame(pl_starter_get_device(), pl_starter_get_render_pass())
 
-        if plCoreI.get_pointer_value(self.show_imgui_demo):
-            ImGui.ShowDemoWindow(self.show_imgui_demo)
+        if pl_get_pointer_value(self.show_imgui_demo):
+            ImGui_ShowDemoWindow(self.show_imgui_demo)
         
-        if plCoreI.get_pointer_value(self.show_implot_demo):
-            ImPlot.ShowDemoWindow(self.show_implot_demo)
-        
+        if pl_get_pointer_value(self.show_implot_demo):
+            ImPlot_ShowDemoWindow(self.show_implot_demo)
+     
         # drawing API
-        fgLayer = plStarterI.get_foreground_layer()
-        plDrawI.add_triangle_filled(fgLayer, [50.0, 100.0], [200.0, 0.0], [100.0, 200.0])
-        plDrawI.add_triangle(fgLayer, [50.0, 300.0], [200.0, 200.0], [100.0, 400.0], color = PL_COLOR_32_WHITE)
+        fgLayer = pl_starter_get_foreground_layer()
+        pl_draw_add_triangle_filled(fgLayer, [50.0, 100.0], [200.0, 0.0], [100.0, 200.0])
+        pl_draw_add_triangle(fgLayer, [50.0, 300.0], [200.0, 200.0], [100.0, 400.0], color = PL_COLOR_32_WHITE)
 
         # io API
-        if plIOI.is_key_pressed(PL_KEY_P):
+        if pl_io_is_key_pressed(plKey.PL_KEY_P):
             print("P key pressed!")
 
         # ui API
-        if plUiI.begin_window("Debug Window"):
+        if pl_ui_begin_window("Debug Window"):
 
-            if plUiI.input_text("Input", self.some_string_array):
+            if pl_ui_input_text("Input", self.some_string_array):
                 print("String changed")
-            if plUiI.button("Press me"):
+            if pl_ui_button("Press me"):
                 print("Button Pressed")
-                current_value = plCoreI.get_pointer_value(self.counter)
+                current_value = pl_get_pointer_value(self.counter)
                 current_value += 1
-                plCoreI.set_pointer_value(self.counter, current_value)
+                pl_set_pointer_value(self.counter, current_value)
 
-            if plUiI.button("Add Message"):
-                plScreenLogI.add_message(1.0, "Logging from python!")
+            if pl_ui_button("Add Message"):
+                pl_screen_log_add_message(1.0, "Logging from python!")
 
-            plUiI.checkbox("Show ImGui Demo", pointer=self.show_imgui_demo)
+            pl_ui_checkbox("Show ImGui Demo", pointer=self.show_imgui_demo)
 
-            bCurrentValue = plCoreI.get_pointer_value(self.show_implot_demo)
-            bChanged, bCurrentValue = plUiI.checkbox("Show ImPlot Demo", bCurrentValue)
+            bCurrentValue = pl_get_pointer_value(self.show_implot_demo)
+            bChanged, bCurrentValue = pl_ui_checkbox("Show ImPlot Demo", bCurrentValue)
             if bChanged:
-                plCoreI.set_pointer_value(self.show_implot_demo, bCurrentValue)
+                pl_set_pointer_value(self.show_implot_demo, bCurrentValue)
 
-            plUiI.end_window()
+            pl_ui_end_window()
 
         # dear imgui API
-        if ImGui.BeginMainMenuBar():
-            if ImGui.BeginMenu("File"):
-                ImGui.EndMenu()
-            if ImGui.BeginMenu("Edit", False):
-                ImGui.EndMenu()
-            if ImGui.BeginMenu("Tools"):
-                ImGui.MenuItem("Show ImGui Demo", selected_pointer=self.show_imgui_demo)
-                ImGui.MenuItem("Show ImPlot Demo", selected_pointer=self.show_implot_demo)
-                ImGui.EndMenu()
-            if ImGui.BeginMenu("Help"):
-                ImGui.MenuItem("Check For Update")
-                ImGui.MenuItem("About", "-a")
-                ImGui.EndMenu()
-            ImGui.EndMainMenuBar()
-        if ImGui.Begin("ImGui Window"):
-            if ImGui.Button("Press Me"):
+        if ImGui_BeginMainMenuBar():
+            if ImGui_BeginMenu("File"):
+                ImGui_EndMenu()
+            if ImGui_BeginMenu("Edit", False):
+                ImGui_EndMenu()
+            if ImGui_BeginMenu("Tools"):
+                ImGui_MenuItem("Show ImGui Demo", selected_pointer=self.show_imgui_demo)
+                ImGui_MenuItem("Show ImPlot Demo", selected_pointer=self.show_implot_demo)
+                ImGui_EndMenu()
+            if ImGui_BeginMenu("Help"):
+                ImGui_MenuItem("Check For Update")
+                ImGui_MenuItem("About", "-a")
+                ImGui_EndMenu()
+            ImGui_EndMainMenuBar()
+        if ImGui_Begin("ImGui Window"):
+            if ImGui_Button("Press Me"):
                 print("Pressed Imgui Button")
-        ImGui.End()
+        ImGui_End()
 
-        render_encoder = plStarterI.begin_main_pass()
+        render_encoder = pl_starter_begin_main_pass()
 
-        plDearImGuiI.render(render_encoder)
+        pl_dear_imgui_render(render_encoder)
 
-        plStarterI.end_main_pass()
+        pl_starter_end_main_pass()
 
-        plStarterI.end_frame()
+        pl_starter_end_frame()
 
 # run app
-pl.run(App())
+pl_run(App())

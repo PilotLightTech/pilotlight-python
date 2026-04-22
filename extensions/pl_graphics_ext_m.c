@@ -20,7 +20,7 @@ Index of this file:
 //-----------------------------------------------------------------------------
 
 PyObject*
-plGraphicsI_flush_device(PyObject* self, PyObject* args, PyObject* kwargs)
+graphics_flush_device(PyObject* self, PyObject* args, PyObject* kwargs)
 {
  
     PyObject* ptPythonDevice = NULL;

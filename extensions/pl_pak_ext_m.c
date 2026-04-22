@@ -19,7 +19,7 @@ Index of this file:
 //-----------------------------------------------------------------------------
 
 PyObject*
-plPakI_begin_packing(PyObject* self, PyObject* args)
+pak_begin_packing(PyObject* self, PyObject* args)
 {
     static const char* apcKeywords[] = {
         "pcFile",
@@ -43,7 +43,7 @@ plPakI_begin_packing(PyObject* self, PyObject* args)
 }
 
 PyObject*
-plPakI_add_from_disk(PyObject* self, PyObject* args)
+pak_add_from_disk(PyObject* self, PyObject* args)
 {
     static const char* apcKeywords[] = {
         "ptPakFile",
@@ -68,7 +68,7 @@ plPakI_add_from_disk(PyObject* self, PyObject* args)
 }
 
 PyObject*
-plPakI_end_packing(PyObject* self, PyObject* arg)
+pak_end_packing(PyObject* self, PyObject* arg)
 {
     plPakFile* ptPakPtr = PyCapsule_GetPointer(arg, "plPakFile");
 

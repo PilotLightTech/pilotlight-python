@@ -20,14 +20,14 @@ Index of this file:
 //-----------------------------------------------------------------------------
 
 PyObject*
-plScreenLogI_clear(PyObject* self)
+screen_log_clear(PyObject* self)
 {
     gptScreenLog->clear();
     Py_RETURN_NONE;
 }
 
 PyObject*
-plScreenLogI_add_message(PyObject* self, PyObject* args)
+screen_log_add_message(PyObject* self, PyObject* args)
 {
     static const char* apcKeywords[] = {
         "time_to_display",

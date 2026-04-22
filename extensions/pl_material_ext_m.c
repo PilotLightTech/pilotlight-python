@@ -20,7 +20,7 @@ Index of this file:
 //-----------------------------------------------------------------------------
 
 PyObject*
-plMaterialI_register_ecs_system(PyObject* self)
+material_register_ecs_system(PyObject* self)
 {
  
     gptMaterial->register_ecs_system();

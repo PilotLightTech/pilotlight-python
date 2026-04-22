@@ -20,7 +20,7 @@ Index of this file:
 //-----------------------------------------------------------------------------
 
 PyObject*
-plPhysicsI_register_ecs_system(PyObject* self)
+physics_register_ecs_system(PyObject* self)
 {
  
     gptPhysics->register_ecs_system();

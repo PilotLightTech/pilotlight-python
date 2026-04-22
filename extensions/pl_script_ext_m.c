@@ -20,7 +20,7 @@ Index of this file:
 //-----------------------------------------------------------------------------
 
 PyObject*
-plScriptI_register_ecs_system(PyObject* self)
+script_register_ecs_system(PyObject* self)
 {
  
     gptScript->register_ecs_system();

@@ -20,14 +20,14 @@ Index of this file:
 //-----------------------------------------------------------------------------
 
 PyObject*
-plStatsI_new_frame(PyObject* self)
+stats_new_frame(PyObject* self)
 {
     gptStats->new_frame();
     Py_RETURN_NONE;
 }
 
 PyObject*
-plStatsI_get_counter(PyObject* self, PyObject* arg)
+stats_get_counter(PyObject* self, PyObject* arg)
 {
     const char* pcName = PyUnicode_AsUTF8(arg);
     double* pdCounter = gptStats->get_counter(pcName);

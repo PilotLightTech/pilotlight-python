@@ -20,7 +20,7 @@ Index of this file:
 //-----------------------------------------------------------------------------
 
 PyObject*
-plUiI_begin_window(PyObject* self, PyObject* args, PyObject* kwargs)
+ui_begin_window(PyObject* self, PyObject* args, PyObject* kwargs)
 {
  
     const char* pcText = NULL;
@@ -36,7 +36,7 @@ plUiI_begin_window(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-plUiI_end_window(PyObject* self, PyObject* args, PyObject* kwargs)
+ui_end_window(PyObject* self, PyObject* args, PyObject* kwargs)
 {
  
     gptUI->end_window();
@@ -44,7 +44,7 @@ plUiI_end_window(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-plUiI_button(PyObject* self, PyObject* args, PyObject* kwargs)
+ui_button(PyObject* self, PyObject* args, PyObject* kwargs)
 {
  
     const char* pcText = NULL;
@@ -62,7 +62,7 @@ plUiI_button(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-plUiI_checkbox(PyObject* self, PyObject* args, PyObject* kwargs)
+ui_checkbox(PyObject* self, PyObject* args, PyObject* kwargs)
 {
 
     static const char* apcKeywords[] = {
@@ -75,7 +75,7 @@ plUiI_checkbox(PyObject* self, PyObject* args, PyObject* kwargs)
     const char* pcName = NULL;
     int iValue = 0;
     PyObject* ptPointer = NULL;
-	if (!pl_parse("sp|$O", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+	if (!pl_parse("s|p$O", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
         &pcName, &iValue, &ptPointer))
 		return NULL;
 
@@ -92,7 +92,7 @@ plUiI_checkbox(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-plUiI_input_text(PyObject* self, PyObject* args, PyObject* kwargs)
+ui_input_text(PyObject* self, PyObject* args, PyObject* kwargs)
 {
 
     static const char* apcKeywords[] = {

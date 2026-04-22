@@ -20,7 +20,7 @@ Index of this file:
 //-----------------------------------------------------------------------------
 
 PyObject*
-plStarterI_initialize(PyObject* self, PyObject* args, PyObject* kwargs)
+starter_initialize(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     PyObject* ptWindow = NULL;
 
@@ -47,42 +47,42 @@ plStarterI_initialize(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-plStarterI_finalize(PyObject* self, PyObject* args, PyObject* kwargs)
+starter_finalize(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     gptStarter->finalize();
     Py_RETURN_NONE;
 }
 
 PyObject*
-plStarterI_cleanup(PyObject* self, PyObject* args, PyObject* kwargs)
+starter_cleanup(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     gptStarter->cleanup();
     Py_RETURN_NONE;
 }
 
 PyObject*
-plStarterI_resize(PyObject* self, PyObject* args, PyObject* kwargs)
+starter_resize(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     gptStarter->resize();
     Py_RETURN_NONE;
 }
 
 PyObject*
-plStarterI_begin_frame(PyObject* self, PyObject* args, PyObject* kwargs)
+starter_begin_frame(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     bool bResult = gptStarter->begin_frame(); // must be called once at the beginning of a frame
     return PyBool_FromLong(bResult);
 }
 
 PyObject*
-plStarterI_end_frame(PyObject* self, PyObject* args, PyObject* kwargs)
+starter_end_frame(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     gptStarter->end_frame();
     Py_RETURN_NONE;
 }
 
 PyObject*
-plStarterI_get_foreground_layer(PyObject* self, PyObject* args, PyObject* kwargs)
+starter_get_foreground_layer(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     plDrawLayer2D* ptFGLayer = gptStarter->get_foreground_layer();
 
@@ -90,7 +90,7 @@ plStarterI_get_foreground_layer(PyObject* self, PyObject* args, PyObject* kwargs
 }
 
 PyObject*
-plStarterI_get_background_layer(PyObject* self, PyObject* args, PyObject* kwargs)
+starter_get_background_layer(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     plDrawLayer2D* ptBGLayer = gptStarter->get_background_layer();
 
@@ -98,35 +98,35 @@ plStarterI_get_background_layer(PyObject* self, PyObject* args, PyObject* kwargs
 }
 
 PyObject*
-plStarterI_get_device(PyObject* self, PyObject* args, PyObject* kwargs)
+starter_get_device(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     plDevice* ptDevice = gptStarter->get_device();
     return PyCapsule_New(ptDevice, "plDevice", NULL);
 }
 
 PyObject*
-plStarterI_get_swapchain(PyObject* self, PyObject* args, PyObject* kwargs)
+starter_get_swapchain(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     plSwapchain* ptSwapchain = gptStarter->get_swapchain();
     return PyCapsule_New(ptSwapchain, "plSwapchain", NULL);
 }
 
 PyObject*
-plStarterI_get_render_pass(PyObject* self, PyObject* args, PyObject* kwargs)
+starter_get_render_pass(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     plRenderPassHandle tHandle = gptStarter->get_render_pass();
     return Py_BuildValue("K", tHandle.uData);
 }
 
 PyObject*
-plStarterI_begin_main_pass(PyObject* self, PyObject* args, PyObject* kwargs)
+starter_begin_main_pass(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     plRenderEncoder* ptEncoder = gptStarter->begin_main_pass();
     return PyCapsule_New(ptEncoder, "plRenderEncoder", NULL);
 }
 
 PyObject*
-plStarterI_end_main_pass(PyObject* self, PyObject* args, PyObject* kwargs)
+starter_end_main_pass(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     gptStarter->end_main_pass();
     Py_RETURN_NONE;

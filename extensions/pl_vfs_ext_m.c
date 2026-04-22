@@ -19,7 +19,7 @@ Index of this file:
 //-----------------------------------------------------------------------------
 
 PyObject*
-plVfsI_mount_directory(PyObject* self, PyObject* args, PyObject* kwargs)
+vfs_mount_directory(PyObject* self, PyObject* args, PyObject* kwargs)
 {
 
     static const char* apcKeywords[] = {

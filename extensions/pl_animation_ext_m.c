@@ -20,7 +20,7 @@ Index of this file:
 //-----------------------------------------------------------------------------
 
 PyObject*
-plAnimationI_register_ecs_system(PyObject* self)
+animation_register_ecs_system(PyObject* self)
 {
  
     gptAnimation->register_ecs_system();

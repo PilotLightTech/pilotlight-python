@@ -51,7 +51,7 @@ typedef struct _plPythonIntConstantPair
 //-----------------------------------------------------------------------------
 
 PyObject*
-plImgui_initialize(PyObject* self, PyObject* args, PyObject* kwargs)
+dear_imgui_initialize(PyObject* self, PyObject* args, PyObject* kwargs)
 {
 
     // const plApiRegistryI* ptApiRegistry = pl__python_setup();
@@ -86,7 +86,7 @@ plImgui_initialize(PyObject* self, PyObject* args, PyObject* kwargs)
     plRenderPassHandle tHandle = {};
     tHandle.uData = uRenderPassHandle;
 
-    pl_imgui_initialize(ptDevice, ptSwapchain, tHandle);
+    pl_dear_imgui_initialize(ptDevice, ptSwapchain, tHandle);
 
     // ImPlot::SetCurrentContext((ImPlotContext*)ptDataRegistry->get_data("implot"));
     ImGuiIO& tImGuiIO = ImGui::GetIO();
@@ -96,7 +96,7 @@ plImgui_initialize(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-plImgui_new_frame(PyObject* self, PyObject* args, PyObject* kwargs)
+dear_imgui_new_frame(PyObject* self, PyObject* args, PyObject* kwargs)
 {
 
     PyObject* ptPythonDevice = nullptr;
@@ -116,13 +116,13 @@ plImgui_new_frame(PyObject* self, PyObject* args, PyObject* kwargs)
     plRenderPassHandle tHandle = {};
     tHandle.uData = uRenderPassHandle;
 
-    pl_imgui_new_frame(ptDevice, tHandle);
+    pl_dear_imgui_new_frame(ptDevice, tHandle);
 
     Py_RETURN_NONE;
 }
 
 PyObject*
-plImgui_render(PyObject* self, PyObject* args, PyObject* kwargs)
+dear_imgui_render(PyObject* self, PyObject* args, PyObject* kwargs)
 {
 
     PyObject* ptPythonRenderEncoder = nullptr;
@@ -138,41 +138,41 @@ plImgui_render(PyObject* self, PyObject* args, PyObject* kwargs)
 
     plRenderEncoder* ptRenderEncoder = (plRenderEncoder*)PyCapsule_GetPointer(ptPythonRenderEncoder, "plRenderEncoder");
 
-    pl_imgui_render(ptRenderEncoder, gptGfx->get_encoder_command_buffer(ptRenderEncoder));
+    pl_dear_imgui_render(ptRenderEncoder, gptGfx->get_encoder_command_buffer(ptRenderEncoder));
 
     Py_RETURN_NONE;
 }
 
 PyObject*
-plImgui_StyleColorsDark(PyObject* self)
+ImGui_StyleColorsDark(PyObject* self)
 {
     ImGui::StyleColorsDark();
     Py_RETURN_NONE;
 }
 
 PyObject*
-plImgui_StyleColorsLight(PyObject* self)
+ImGui_StyleColorsLight(PyObject* self)
 {
     ImGui::StyleColorsLight();
     Py_RETURN_NONE;
 }
 
 PyObject*
-plImgui_StyleColorsClassic(PyObject* self)
+ImGui_StyleColorsClassic(PyObject* self)
 {
     ImGui::StyleColorsClassic();
     Py_RETURN_NONE;
 }
 
 PyObject*
-plImgui_cleanup(PyObject* self, PyObject* args, PyObject* kwargs)
+dear_imgui_cleanup(PyObject* self, PyObject* args, PyObject* kwargs)
 {
-    pl_imgui_cleanup();
+    pl_dear_imgui_cleanup();
     Py_RETURN_NONE;
 }
 
 PyObject*
-plImGui_ShowDemoWindow(PyObject* self, PyObject* arg)
+ImGui_ShowDemoWindow(PyObject* self, PyObject* arg)
 {
     bool* ptShow = NULL;
     if(!Py_IsNone(arg))
@@ -184,7 +184,7 @@ plImGui_ShowDemoWindow(PyObject* self, PyObject* arg)
 }
 
 PyObject*
-plImPlot_ShowDemoWindow(PyObject* self, PyObject* arg)
+ImPlot_ShowDemoWindow(PyObject* self, PyObject* arg)
 {
     bool* ptShow = NULL;
     if(!Py_IsNone(arg))
@@ -196,7 +196,7 @@ plImPlot_ShowDemoWindow(PyObject* self, PyObject* arg)
 }
 
 PyObject*
-plImgui_Begin(PyObject* self, PyObject* args, PyObject* kwargs)
+ImGui_Begin(PyObject* self, PyObject* args, PyObject* kwargs)
 {
 
     static const char* apcKeywords[] = {
@@ -206,7 +206,7 @@ plImgui_Begin(PyObject* self, PyObject* args, PyObject* kwargs)
         nullptr,
     };
     const char* pcText = nullptr;
-    PyObject* ptPointer = nullptr;
+    PyObject* ptPointer = Py_None;
     int iFlags = 0;
 	if (!pl_parse("s|Oi", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
         &pcText, &ptPointer, &iFlags))
@@ -220,14 +220,14 @@ plImgui_Begin(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-plImgui_End(PyObject* self)
+ImGui_End(PyObject* self)
 {
     ImGui::End();
     Py_RETURN_NONE;
 }
 
 PyObject*
-plImgui_Button(PyObject* self, PyObject* args, PyObject* kwargs)
+ImGui_Button(PyObject* self, PyObject* args, PyObject* kwargs)
 {
 
     static const char* apcKeywords[] = {
@@ -236,7 +236,7 @@ plImgui_Button(PyObject* self, PyObject* args, PyObject* kwargs)
         nullptr,
     };
     const char* pcLabel = nullptr;
-    PyObject* ptSize = nullptr;
+    PyObject* ptSize = Py_None;
 	if (!pl_parse("s|O", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
         &pcLabel, &ptSize))
 		return nullptr;
@@ -249,40 +249,40 @@ plImgui_Button(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-plImgui_BeginMenuBar(PyObject* self)
+ImGui_BeginMenuBar(PyObject* self)
 {
     return PyBool_FromLong(ImGui::BeginMenuBar());
 }
 
 PyObject*
-plImgui_BeginMainMenuBar(PyObject* self)
+ImGui_BeginMainMenuBar(PyObject* self)
 {
     return PyBool_FromLong(ImGui::BeginMainMenuBar());
 }
 
 PyObject*
-plImgui_EndMenuBar(PyObject* self)
+ImGui_EndMenuBar(PyObject* self)
 {
     ImGui::EndMenuBar();
     Py_RETURN_NONE;
 }
 
 PyObject*
-plImgui_EndMainMenuBar(PyObject* self)
+ImGui_EndMainMenuBar(PyObject* self)
 {
     ImGui::EndMainMenuBar();
     Py_RETURN_NONE;
 }
 
 PyObject*
-plImgui_EndMenu(PyObject* self)
+ImGui_EndMenu(PyObject* self)
 {
     ImGui::EndMenu();
     Py_RETURN_NONE;
 }
 
 PyObject*
-plImgui_BeginMenu(PyObject* self, PyObject* args, PyObject* kwargs)
+ImGui_BeginMenu(PyObject* self, PyObject* args, PyObject* kwargs)
 {
 
     static const char* apcKeywords[] = {
@@ -300,7 +300,7 @@ plImgui_BeginMenu(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-plImgui_MenuItem(PyObject* self, PyObject* args, PyObject* kwargs)
+ImGui_MenuItem(PyObject* self, PyObject* args, PyObject* kwargs)
 {
 
     static const char* apcKeywords[] = {
@@ -315,7 +315,7 @@ plImgui_MenuItem(PyObject* self, PyObject* args, PyObject* kwargs)
     const char* pcShortcut = nullptr;
     int bEnabled = false;
     int bSelected = true;
-    PyObject* ptPointer = nullptr;
+    PyObject* ptPointer = Py_None;
 	if (!pl_parse("s|spp$O", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
         &pcLabel, &pcShortcut, &bSelected, &bEnabled, &ptPointer))
 		return nullptr;
@@ -330,7 +330,7 @@ plImgui_MenuItem(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-plImgui_Checkbox(PyObject* self, PyObject* args, PyObject* kwargs)
+ImGui_Checkbox(PyObject* self, PyObject* args, PyObject* kwargs)
 {
 
     static const char* apcKeywords[] = {
@@ -339,7 +339,7 @@ plImgui_Checkbox(PyObject* self, PyObject* args, PyObject* kwargs)
         nullptr,
     };
     const char* pcLabel = nullptr;
-    PyObject* ptPointer = nullptr;
+    PyObject* ptPointer = Py_None;
 	if (!pl_parse("sO", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
         &pcLabel, &ptPointer))
 		return nullptr;
@@ -349,39 +349,40 @@ plImgui_Checkbox(PyObject* self, PyObject* args, PyObject* kwargs)
     return PyBool_FromLong(ImGui::Checkbox(pcLabel, pbSelected));
 }
 
-
-#define PL_PYTHON_COMMAND(ARG, FLAGS, DOCS) {#ARG, (PyCFunction)ARG, FLAGS, DOCS}
 #define PL_ADD_INT_CONSTANT(X_ARG) {#X_ARG, X_ARG}
+#define PL_PYTHON_COMMAND_PL(ARG, FLAGS, DOCS) {"pl_" # ARG, (PyCFunction)ARG, FLAGS, DOCS}
+#define PL_PYTHON_COMMAND(ARG, FLAGS, DOCS) {#ARG, (PyCFunction)ARG, FLAGS, DOCS}
 
 static PyMethodDef gatCommands[] =
 {
     // imgui
-    PL_PYTHON_COMMAND(plImgui_initialize, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(plImgui_new_frame, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(plImgui_render, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(plImgui_cleanup, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(plImGui_ShowDemoWindow, METH_O, NULL),
-    PL_PYTHON_COMMAND(plImgui_Begin, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(plImgui_End, METH_NOARGS, NULL),
-    PL_PYTHON_COMMAND(plImgui_StyleColorsDark, METH_NOARGS, NULL),
-    PL_PYTHON_COMMAND(plImgui_StyleColorsLight, METH_NOARGS, NULL),
-    PL_PYTHON_COMMAND(plImgui_StyleColorsClassic, METH_NOARGS, NULL),
+    PL_PYTHON_COMMAND_PL(dear_imgui_initialize, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND_PL(dear_imgui_new_frame, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND_PL(dear_imgui_render, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND_PL(dear_imgui_cleanup, METH_VARARGS | METH_KEYWORDS, NULL),
+
+    PL_PYTHON_COMMAND(ImGui_ShowDemoWindow, METH_O, NULL),
+    PL_PYTHON_COMMAND(ImGui_Begin, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(ImGui_End, METH_NOARGS, NULL),
+    PL_PYTHON_COMMAND(ImGui_StyleColorsDark, METH_NOARGS, NULL),
+    PL_PYTHON_COMMAND(ImGui_StyleColorsLight, METH_NOARGS, NULL),
+    PL_PYTHON_COMMAND(ImGui_StyleColorsClassic, METH_NOARGS, NULL),
 
     // imgui widgets
-    PL_PYTHON_COMMAND(plImgui_Button, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(ImGui_Button, METH_VARARGS | METH_KEYWORDS, NULL),
 
     // imgui menus
-    PL_PYTHON_COMMAND(plImgui_BeginMenuBar, METH_NOARGS, NULL),
-    PL_PYTHON_COMMAND(plImgui_BeginMainMenuBar, METH_NOARGS, NULL),
-    PL_PYTHON_COMMAND(plImgui_EndMenuBar, METH_NOARGS, NULL),
-    PL_PYTHON_COMMAND(plImgui_EndMainMenuBar, METH_NOARGS, NULL),
-    PL_PYTHON_COMMAND(plImgui_EndMenu, METH_NOARGS, NULL),
-    PL_PYTHON_COMMAND(plImgui_BeginMenu, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(plImgui_MenuItem, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(plImgui_Checkbox, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(ImGui_BeginMenuBar, METH_NOARGS, NULL),
+    PL_PYTHON_COMMAND(ImGui_BeginMainMenuBar, METH_NOARGS, NULL),
+    PL_PYTHON_COMMAND(ImGui_EndMenuBar, METH_NOARGS, NULL),
+    PL_PYTHON_COMMAND(ImGui_EndMainMenuBar, METH_NOARGS, NULL),
+    PL_PYTHON_COMMAND(ImGui_EndMenu, METH_NOARGS, NULL),
+    PL_PYTHON_COMMAND(ImGui_BeginMenu, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(ImGui_MenuItem, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(ImGui_Checkbox, METH_VARARGS | METH_KEYWORDS, NULL),
 
     // implot
-    PL_PYTHON_COMMAND(plImPlot_ShowDemoWindow, METH_O, NULL),
+    PL_PYTHON_COMMAND(ImPlot_ShowDemoWindow, METH_O, NULL),
 
     {NULL, NULL, 0, NULL}
 };

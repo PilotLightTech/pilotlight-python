@@ -133,7 +133,7 @@ get_pointer_value(PyObject* self, PyObject* ptPythonPointer)
 }
 
 PyObject*
-plIOI_is_key_pressed(PyObject* self, PyObject* args)
+io_is_key_pressed(PyObject* self, PyObject* args)
 {
     static const char* apcKeywords[] = {
         "key",
@@ -144,7 +144,7 @@ plIOI_is_key_pressed(PyObject* self, PyObject* args)
     int iKey = 0;
     int bRepeat = false;
 
-	if (!pl_parse("ip", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+	if (!pl_parse("i|p", (const char**)apcKeywords, args, NULL, __FUNCTION__,
         &iKey, &bRepeat))
 		return NULL;
 
@@ -153,7 +153,7 @@ plIOI_is_key_pressed(PyObject* self, PyObject* args)
 }
 
 PyObject*
-plIOI_is_key_released(PyObject* self, PyObject* args)
+io_is_key_released(PyObject* self, PyObject* args)
 {
     static const char* apcKeywords[] = {
         "key",
@@ -171,7 +171,7 @@ plIOI_is_key_released(PyObject* self, PyObject* args)
 }
 
 PyObject*
-plIOI_is_key_down(PyObject* self, PyObject* args)
+io_is_key_down(PyObject* self, PyObject* args)
 {
     static const char* apcKeywords[] = {
         "key",
@@ -189,7 +189,7 @@ plIOI_is_key_down(PyObject* self, PyObject* args)
 }
 
 PyObject*
-plIOI_get_key_pressed_amount(PyObject* self, PyObject* args)
+io_get_key_pressed_amount(PyObject* self, PyObject* args)
 {
     static const char* apcKeywords[] = {
         "key",
@@ -211,7 +211,7 @@ plIOI_get_key_pressed_amount(PyObject* self, PyObject* args)
 }
 
 PyObject*
-plIOI_is_mouse_down(PyObject* self, PyObject* args)
+io_is_mouse_down(PyObject* self, PyObject* args)
 {
     static const char* apcKeywords[] = {
         "button",
@@ -229,7 +229,7 @@ plIOI_is_mouse_down(PyObject* self, PyObject* args)
 }
 
 PyObject*
-plIOI_is_mouse_released(PyObject* self, PyObject* args)
+io_is_mouse_released(PyObject* self, PyObject* args)
 {
     static const char* apcKeywords[] = {
         "button",
@@ -247,7 +247,7 @@ plIOI_is_mouse_released(PyObject* self, PyObject* args)
 }
 
 PyObject*
-plIOI_is_mouse_double_clicked(PyObject* self, PyObject* args)
+io_is_mouse_double_clicked(PyObject* self, PyObject* args)
 {
     static const char* apcKeywords[] = {
         "button",
@@ -265,7 +265,7 @@ plIOI_is_mouse_double_clicked(PyObject* self, PyObject* args)
 }
 
 PyObject*
-plIOI_is_mouse_clicked(PyObject* self, PyObject* args)
+io_is_mouse_clicked(PyObject* self, PyObject* args)
 {
     static const char* apcKeywords[] = {
         "button",
@@ -285,7 +285,7 @@ plIOI_is_mouse_clicked(PyObject* self, PyObject* args)
 }
 
 PyObject*
-plIOI_is_mouse_dragging(PyObject* self, PyObject* args)
+io_is_mouse_dragging(PyObject* self, PyObject* args)
 {
     static const char* apcKeywords[] = {
         "button",
@@ -305,7 +305,7 @@ plIOI_is_mouse_dragging(PyObject* self, PyObject* args)
 }
 
 PyObject*
-plIOI_is_mouse_hovering_rect(PyObject* self, PyObject* args)
+io_is_mouse_hovering_rect(PyObject* self, PyObject* args)
 {
     static const char* apcKeywords[] = {
         "minvec",
@@ -325,7 +325,7 @@ plIOI_is_mouse_hovering_rect(PyObject* self, PyObject* args)
 }
 
 PyObject*
-plIOI_reset_mouse_drag_delta(PyObject* self, PyObject* args)
+io_reset_mouse_drag_delta(PyObject* self, PyObject* args)
 {
     static const char* apcKeywords[] = {
         "button",
@@ -343,7 +343,7 @@ plIOI_reset_mouse_drag_delta(PyObject* self, PyObject* args)
 }
 
 PyObject*
-plIOI_get_mouse_drag_delta(PyObject* self, PyObject* args)
+io_get_mouse_drag_delta(PyObject* self, PyObject* args)
 {
     static const char* apcKeywords[] = {
         "button",
@@ -363,20 +363,20 @@ plIOI_get_mouse_drag_delta(PyObject* self, PyObject* args)
 }
 
 PyObject*
-plIOI_get_mouse_pos(PyObject* self)
+io_get_mouse_pos(PyObject* self)
 {
     plVec2 tResult = gptIOI->get_mouse_pos();
     return Py_BuildValue("[ff]", tResult.x, tResult.y);
 }
 
 PyObject*
-plIOI_get_mouse_wheel(PyObject* self)
+io_get_mouse_wheel(PyObject* self)
 {
     return PyFloat_FromDouble((double)gptIOI->get_mouse_wheel());
 }
 
 PyObject*
-plIOI_is_mouse_pos_valid(PyObject* self, PyObject* args)
+io_is_mouse_pos_valid(PyObject* self, PyObject* args)
 {
     static const char* apcKeywords[] = {
         "pos",
@@ -394,7 +394,7 @@ plIOI_is_mouse_pos_valid(PyObject* self, PyObject* args)
 }
 
 PyObject*
-plIOI_set_mouse_cursor(PyObject* self, PyObject* args)
+io_set_mouse_cursor(PyObject* self, PyObject* args)
 {
     static const char* apcKeywords[] = {
         "cursor",
@@ -412,20 +412,20 @@ plIOI_set_mouse_cursor(PyObject* self, PyObject* args)
 }
 
 PyObject*
-plIOI_get_version_string(PyObject* self)
+io_get_version_string(PyObject* self)
 {
     return PyUnicode_FromString(gptIOI->get_version_string());
 }
 
 PyObject*
-plIOI_new_frame(PyObject* self)
+io_new_frame(PyObject* self)
 {
     gptIOI->new_frame(); // must be called once at the beginning of a frame
     Py_RETURN_NONE;
 }
 
 PyObject*
-plIOI_get_io(PyObject* self, PyObject* arg)
+io_get_io(PyObject* self, PyObject* arg)
 {
 
     if(ptpyIO == NULL)
@@ -457,7 +457,7 @@ plIOI_get_io(PyObject* self, PyObject* arg)
 }
 
 PyObject*
-plWindowI_create(PyObject* self, PyObject* args, PyObject* kwargs)
+window_create(PyObject* self, PyObject* args, PyObject* kwargs)
 {
 
     static const char* apcKeywords[] = {
@@ -484,7 +484,7 @@ plWindowI_create(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-plWindowI_show(PyObject* self, PyObject* args)
+window_show(PyObject* self, PyObject* args)
 {
     plWindow* ptWindowPtr = PyCapsule_GetPointer(args, "plWindow");
     ptWindows2->show(ptWindowPtr);
@@ -492,7 +492,7 @@ plWindowI_show(PyObject* self, PyObject* args)
 }
 
 PyObject*
-plWindowI_destroy(PyObject* self, PyObject* args)
+window_destroy(PyObject* self, PyObject* args)
 {
 
     plWindow* ptWindowPtr = PyCapsule_GetPointer(args, "plWindow");

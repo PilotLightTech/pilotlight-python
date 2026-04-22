@@ -20,7 +20,7 @@ Index of this file:
 //-----------------------------------------------------------------------------
 
 PyObject*
-plRendererI_initialize(PyObject* self, PyObject* args, PyObject* kwargs)
+renderer_initialize(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {
         "ptDevice",
@@ -47,7 +47,7 @@ plRendererI_initialize(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-plRendererI_cleanup(PyObject* self)
+renderer_cleanup(PyObject* self)
 {
  
     gptRenderer->cleanup();
@@ -55,7 +55,7 @@ plRendererI_cleanup(PyObject* self)
 }
 
 PyObject*
-plRendererI_register_ecs_system(PyObject* self)
+renderer_register_ecs_system(PyObject* self)
 {
  
     gptRenderer->register_ecs_system();
@@ -63,7 +63,7 @@ plRendererI_register_ecs_system(PyObject* self)
 }
 
 PyObject*
-plRendererI_create_directional_light(PyObject* self, PyObject* args, PyObject* kwargs)
+renderer_create_directional_light(PyObject* self, PyObject* args, PyObject* kwargs)
 {
 
     PyObject* ptPyLibrary = NULL;

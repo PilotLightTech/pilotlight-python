@@ -20,7 +20,7 @@ Index of this file:
 //-----------------------------------------------------------------------------
 
 PyObject*
-plShaderVariantI_initialize(PyObject* self, PyObject* args, PyObject* kwargs)
+shader_variant_initialize(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {
         "ptDevice",

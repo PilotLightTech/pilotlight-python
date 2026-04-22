@@ -20,7 +20,7 @@ Index of this file:
 //-----------------------------------------------------------------------------
 
 PyObject*
-plMeshI_register_ecs_system(PyObject* self)
+mesh_register_ecs_system(PyObject* self)
 {
  
     gptMesh->register_ecs_system();

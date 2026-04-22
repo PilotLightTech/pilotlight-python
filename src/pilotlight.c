@@ -274,12 +274,12 @@ pl_python_run(PyObject* self, PyObject* arg)
     Py_RETURN_NONE;
 }
 
-#define PL_PYTHON_COMMAND(ARG, FLAGS, DOCS) {#ARG, (PyCFunction)ARG, FLAGS, DOCS}
+#define PL_PYTHON_COMMAND(ARG, FLAGS, DOCS) {"pl_" # ARG, (PyCFunction)ARG, FLAGS, DOCS}
 
 static PyMethodDef gatCommands[] =
 {
 
-    {"run", (PyCFunction)pl_python_run, METH_O, NULL},
+    {"pl_run", (PyCFunction)pl_python_run, METH_O, NULL},
 
     // core API
     PL_PYTHON_COMMAND(set_pointer_value, METH_VARARGS, NULL),
@@ -292,127 +292,127 @@ static PyMethodDef gatCommands[] =
     PL_PYTHON_COMMAND(destroy_float_pointer, METH_O, NULL),
 
     // window API
-    PL_PYTHON_COMMAND(plWindowI_create, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(plWindowI_show, METH_O, NULL),
-    PL_PYTHON_COMMAND(plWindowI_destroy, METH_O, NULL),
+    PL_PYTHON_COMMAND(window_create, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(window_show, METH_O, NULL),
+    PL_PYTHON_COMMAND(window_destroy, METH_O, NULL),
 
     // vfs API
-    PL_PYTHON_COMMAND(plVfsI_mount_directory, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(vfs_mount_directory, METH_VARARGS | METH_KEYWORDS, NULL),
     
     // io API
-    PL_PYTHON_COMMAND(plIOI_get_version_string, METH_NOARGS, NULL),
-    PL_PYTHON_COMMAND(plIOI_get_io, METH_NOARGS, NULL),
-    PL_PYTHON_COMMAND(plIOI_new_frame, METH_NOARGS, NULL),
-    PL_PYTHON_COMMAND(plIOI_is_key_pressed, METH_VARARGS, NULL),
-    PL_PYTHON_COMMAND(plIOI_is_key_released, METH_VARARGS, NULL),
-    PL_PYTHON_COMMAND(plIOI_is_key_down, METH_VARARGS, NULL),
-    PL_PYTHON_COMMAND(plIOI_get_key_pressed_amount, METH_VARARGS, NULL),
-    PL_PYTHON_COMMAND(plIOI_is_mouse_down, METH_VARARGS, NULL),
-    PL_PYTHON_COMMAND(plIOI_is_mouse_released, METH_VARARGS, NULL),
-    PL_PYTHON_COMMAND(plIOI_is_mouse_double_clicked, METH_VARARGS, NULL),
-    PL_PYTHON_COMMAND(plIOI_is_mouse_clicked, METH_VARARGS, NULL),
-    PL_PYTHON_COMMAND(plIOI_is_mouse_dragging, METH_VARARGS, NULL),
-    PL_PYTHON_COMMAND(plIOI_reset_mouse_drag_delta, METH_VARARGS, NULL),
-    PL_PYTHON_COMMAND(plIOI_get_mouse_drag_delta, METH_VARARGS, NULL),
-    PL_PYTHON_COMMAND(plIOI_get_mouse_pos, METH_NOARGS, NULL),
-    PL_PYTHON_COMMAND(plIOI_get_mouse_wheel, METH_NOARGS, NULL),
-    PL_PYTHON_COMMAND(plIOI_is_mouse_pos_valid, METH_NOARGS, NULL),
-    PL_PYTHON_COMMAND(plIOI_set_mouse_cursor, METH_VARARGS, NULL),
+    PL_PYTHON_COMMAND(io_get_version_string, METH_NOARGS, NULL),
+    PL_PYTHON_COMMAND(io_get_io, METH_NOARGS, NULL),
+    PL_PYTHON_COMMAND(io_new_frame, METH_NOARGS, NULL),
+    PL_PYTHON_COMMAND(io_is_key_pressed, METH_VARARGS, NULL),
+    PL_PYTHON_COMMAND(io_is_key_released, METH_VARARGS, NULL),
+    PL_PYTHON_COMMAND(io_is_key_down, METH_VARARGS, NULL),
+    PL_PYTHON_COMMAND(io_get_key_pressed_amount, METH_VARARGS, NULL),
+    PL_PYTHON_COMMAND(io_is_mouse_down, METH_VARARGS, NULL),
+    PL_PYTHON_COMMAND(io_is_mouse_released, METH_VARARGS, NULL),
+    PL_PYTHON_COMMAND(io_is_mouse_double_clicked, METH_VARARGS, NULL),
+    PL_PYTHON_COMMAND(io_is_mouse_clicked, METH_VARARGS, NULL),
+    PL_PYTHON_COMMAND(io_is_mouse_dragging, METH_VARARGS, NULL),
+    PL_PYTHON_COMMAND(io_reset_mouse_drag_delta, METH_VARARGS, NULL),
+    PL_PYTHON_COMMAND(io_get_mouse_drag_delta, METH_VARARGS, NULL),
+    PL_PYTHON_COMMAND(io_get_mouse_pos, METH_NOARGS, NULL),
+    PL_PYTHON_COMMAND(io_get_mouse_wheel, METH_NOARGS, NULL),
+    PL_PYTHON_COMMAND(io_is_mouse_pos_valid, METH_NOARGS, NULL),
+    PL_PYTHON_COMMAND(io_set_mouse_cursor, METH_VARARGS, NULL),
 
     // draw API
-    PL_PYTHON_COMMAND(plDrawI_add_triangle_filled, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(plDrawI_add_triangle, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(plDrawI_add_line, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(plDrawI_add_rect, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(plDrawI_add_rect_rounded, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(plDrawI_add_quad, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(plDrawI_add_circle, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(plDrawI_add_polygon, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(plDrawI_add_bezier_quad, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(plDrawI_add_bezier_cubic, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(draw_add_triangle_filled, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(draw_add_triangle, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(draw_add_line, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(draw_add_rect, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(draw_add_rect_rounded, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(draw_add_quad, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(draw_add_circle, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(draw_add_polygon, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(draw_add_bezier_quad, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(draw_add_bezier_cubic, METH_VARARGS | METH_KEYWORDS, NULL),
 
     // ui API
-    PL_PYTHON_COMMAND(plUiI_begin_window, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(plUiI_end_window, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(plUiI_button, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(plUiI_checkbox, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(plUiI_input_text, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(ui_begin_window, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(ui_end_window, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(ui_button, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(ui_checkbox, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(ui_input_text, METH_VARARGS | METH_KEYWORDS, NULL),
 
     // graphics API
-    PL_PYTHON_COMMAND(plGraphicsI_flush_device, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(graphics_flush_device, METH_VARARGS | METH_KEYWORDS, NULL),
 
     // starter API
-    PL_PYTHON_COMMAND(plStarterI_begin_frame, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(plStarterI_initialize, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(plStarterI_finalize, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(plStarterI_cleanup, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(plStarterI_resize, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(plStarterI_end_frame, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(plStarterI_get_foreground_layer, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(plStarterI_get_background_layer, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(starter_begin_frame, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(starter_initialize, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(starter_finalize, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(starter_cleanup, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(starter_resize, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(starter_end_frame, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(starter_get_foreground_layer, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(starter_get_background_layer, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(starter_get_device, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(starter_get_swapchain, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(starter_get_render_pass, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(starter_begin_main_pass, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(starter_end_main_pass, METH_VARARGS | METH_KEYWORDS, NULL),
 
     // shader API
-    PL_PYTHON_COMMAND(plShaderI_initialize, METH_O, NULL),
-    PL_PYTHON_COMMAND(plShaderI_cleanup, METH_NOARGS, NULL),
-    PL_PYTHON_COMMAND(plShaderI_load_glsl, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(plShaderI_compile_glsl, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(plShaderI_write_to_disk, METH_VARARGS, NULL),
-    PL_PYTHON_COMMAND(plStarterI_get_device, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(plStarterI_get_swapchain, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(plStarterI_get_render_pass, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(plStarterI_begin_main_pass, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(plStarterI_end_main_pass, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(shader_initialize, METH_O, NULL),
+    PL_PYTHON_COMMAND(shader_cleanup, METH_NOARGS, NULL),
+    PL_PYTHON_COMMAND(shader_load_glsl, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(shader_compile_glsl, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(shader_write_to_disk, METH_VARARGS, NULL),
 
     // pak API
-    PL_PYTHON_COMMAND(plPakI_begin_packing, METH_VARARGS, NULL),
-    PL_PYTHON_COMMAND(plPakI_add_from_disk, METH_VARARGS, NULL),
-    PL_PYTHON_COMMAND(plPakI_end_packing, METH_O, NULL),
+    PL_PYTHON_COMMAND(pak_begin_packing, METH_VARARGS, NULL),
+    PL_PYTHON_COMMAND(pak_add_from_disk, METH_VARARGS, NULL),
+    PL_PYTHON_COMMAND(pak_end_packing, METH_O, NULL),
 
     // stats API
-    PL_PYTHON_COMMAND(plStatsI_new_frame, METH_NOARGS, NULL),
-    PL_PYTHON_COMMAND(plStatsI_get_counter, METH_O, NULL),
+    PL_PYTHON_COMMAND(stats_new_frame, METH_NOARGS, NULL),
+    PL_PYTHON_COMMAND(stats_get_counter, METH_O, NULL),
 
     // screen log API
-    PL_PYTHON_COMMAND(plScreenLogI_clear, METH_NOARGS, NULL),
-    PL_PYTHON_COMMAND(plScreenLogI_add_message, METH_VARARGS, NULL),
+    PL_PYTHON_COMMAND(screen_log_clear, METH_NOARGS, NULL),
+    PL_PYTHON_COMMAND(screen_log_add_message, METH_VARARGS, NULL),
 
     // ecs API
-    PL_PYTHON_COMMAND(plEcsI_initialize, METH_NOARGS, NULL),
-    PL_PYTHON_COMMAND(plEcsI_finalize, METH_NOARGS, NULL),
-    PL_PYTHON_COMMAND(plEcsI_cleanup, METH_NOARGS, NULL),
-    PL_PYTHON_COMMAND(plEcsI_get_default_library, METH_NOARGS, NULL),
-    PL_PYTHON_COMMAND(plEcsI_get_component, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(ecs_initialize, METH_NOARGS, NULL),
+    PL_PYTHON_COMMAND(ecs_finalize, METH_NOARGS, NULL),
+    PL_PYTHON_COMMAND(ecs_cleanup, METH_NOARGS, NULL),
+    PL_PYTHON_COMMAND(ecs_get_default_library, METH_NOARGS, NULL),
+    PL_PYTHON_COMMAND(ecs_get_component, METH_VARARGS | METH_KEYWORDS, NULL),
 
     // animation API
-    PL_PYTHON_COMMAND(plAnimationI_register_ecs_system, METH_NOARGS, NULL),
+    PL_PYTHON_COMMAND(animation_register_ecs_system, METH_NOARGS, NULL),
 
     // camera API
-    PL_PYTHON_COMMAND(plCameraI_register_ecs_system, METH_NOARGS, NULL),
-    PL_PYTHON_COMMAND(plCameraI_create_perspective, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(plCameraI_set_fov, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(plCameraI_update, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(plCameraI_get_ecs_type_key, METH_NOARGS, NULL),
+    PL_PYTHON_COMMAND(camera_register_ecs_system, METH_NOARGS, NULL),
+    PL_PYTHON_COMMAND(camera_create_perspective, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(camera_set_fov, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(camera_update, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(camera_get_ecs_type_key, METH_NOARGS, NULL),
 
     // material API
-    PL_PYTHON_COMMAND(plMaterialI_register_ecs_system, METH_NOARGS, NULL),
+    PL_PYTHON_COMMAND(material_register_ecs_system, METH_NOARGS, NULL),
 
     // mesh API
-    PL_PYTHON_COMMAND(plMeshI_register_ecs_system, METH_NOARGS, NULL),
+    PL_PYTHON_COMMAND(mesh_register_ecs_system, METH_NOARGS, NULL),
 
     // physics API
-    PL_PYTHON_COMMAND(plPhysicsI_register_ecs_system, METH_NOARGS, NULL),
+    PL_PYTHON_COMMAND(physics_register_ecs_system, METH_NOARGS, NULL),
 
     // shader variant API
-    PL_PYTHON_COMMAND(plShaderVariantI_initialize, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(shader_variant_initialize, METH_VARARGS | METH_KEYWORDS, NULL),
 
     // renderer API
-    PL_PYTHON_COMMAND(plRendererI_initialize, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(plRendererI_create_directional_light, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(plRendererI_cleanup, METH_NOARGS, NULL),
-    PL_PYTHON_COMMAND(plRendererI_register_ecs_system, METH_NOARGS, NULL),
+    PL_PYTHON_COMMAND(renderer_initialize, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(renderer_create_directional_light, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(renderer_cleanup, METH_NOARGS, NULL),
+    PL_PYTHON_COMMAND(renderer_register_ecs_system, METH_NOARGS, NULL),
 
     // script API
-    PL_PYTHON_COMMAND(plScriptI_register_ecs_system, METH_NOARGS, NULL),
+    PL_PYTHON_COMMAND(script_register_ecs_system, METH_NOARGS, NULL),
 
     {NULL, NULL, 0, NULL}
 };

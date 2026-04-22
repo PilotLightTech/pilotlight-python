@@ -20,7 +20,7 @@ Index of this file:
 //-----------------------------------------------------------------------------
 
 PyObject*
-plEcsI_initialize(PyObject* self)
+ecs_initialize(PyObject* self)
 {
  
     gptECS->initialize((plEcsInit){0});
@@ -28,7 +28,7 @@ plEcsI_initialize(PyObject* self)
 }
 
 PyObject*
-plEcsI_finalize(PyObject* self)
+ecs_finalize(PyObject* self)
 {
  
     gptECS->finalize();
@@ -36,7 +36,7 @@ plEcsI_finalize(PyObject* self)
 }
 
 PyObject*
-plEcsI_cleanup(PyObject* self)
+ecs_cleanup(PyObject* self)
 {
  
     gptECS->cleanup();
@@ -44,14 +44,14 @@ plEcsI_cleanup(PyObject* self)
 }
 
 PyObject*
-plEcsI_get_default_library(PyObject* self, PyObject* args, PyObject* kwargs)
+ecs_get_default_library(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     plComponentLibrary* ptCompLibrary = gptECS->get_default_library();
     return PyCapsule_New(ptCompLibrary, "plComponentLibrary", NULL);
 }
 
 PyObject*
-plEcsI_get_component(PyObject* self, PyObject* args, PyObject* kwargs)
+ecs_get_component(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {
         "library",

@@ -20,7 +20,7 @@ Index of this file:
 //-----------------------------------------------------------------------------
 
 PyObject*
-plCameraI_register_ecs_system(PyObject* self)
+camera_register_ecs_system(PyObject* self)
 {
  
     gptCamera->register_ecs_system();
@@ -28,7 +28,7 @@ plCameraI_register_ecs_system(PyObject* self)
 }
 
 PyObject*
-plCameraI_get_ecs_type_key(PyObject* self)
+camera_get_ecs_type_key(PyObject* self)
 {
  
     plEcsTypeKey tKey = gptCamera->get_ecs_type_key();
@@ -36,7 +36,7 @@ plCameraI_get_ecs_type_key(PyObject* self)
 }
 
 PyObject*
-plCameraI_create_perspective(PyObject* self, PyObject* args, PyObject* kwargs)
+camera_create_perspective(PyObject* self, PyObject* args, PyObject* kwargs)
 {
  
     PyObject* ptPyLibrary = NULL;
@@ -81,7 +81,7 @@ plCameraI_create_perspective(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-plCameraI_set_fov(PyObject* self, PyObject* args, PyObject* kwargs)
+camera_set_fov(PyObject* self, PyObject* args, PyObject* kwargs)
 {
  
     PyObject* ptPyCamera = NULL;
@@ -103,7 +103,7 @@ plCameraI_set_fov(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-plCameraI_update(PyObject* self, PyObject* args, PyObject* kwargs)
+camera_update(PyObject* self, PyObject* args, PyObject* kwargs)
 {
  
     PyObject* ptPyCamera = NULL;

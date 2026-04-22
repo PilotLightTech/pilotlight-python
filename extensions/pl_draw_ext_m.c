@@ -51,7 +51,7 @@ static plVec2* gsbtTempVec2Vec = NULL;
 //-----------------------------------------------------------------------------
 
 PyObject*
-plDrawI_add_triangle_filled(PyObject* self, PyObject* args, PyObject* kwargs)
+draw_add_triangle_filled(PyObject* self, PyObject* args, PyObject* kwargs)
 {
  
     PyObject* ptPythonLayer = NULL;
@@ -87,7 +87,7 @@ plDrawI_add_triangle_filled(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-plDrawI_add_line(PyObject* self, PyObject* args, PyObject* kwargs)
+draw_add_line(PyObject* self, PyObject* args, PyObject* kwargs)
 {
  
     PyObject* ptPythonLayer = NULL;
@@ -123,7 +123,7 @@ plDrawI_add_line(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-plDrawI_add_triangle(PyObject* self, PyObject* args, PyObject* kwargs)
+draw_add_triangle(PyObject* self, PyObject* args, PyObject* kwargs)
 {
  
     PyObject* ptPythonLayer = NULL;
@@ -162,7 +162,7 @@ plDrawI_add_triangle(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-plDrawI_add_rect(PyObject* self, PyObject* args, PyObject* kwargs)
+draw_add_rect(PyObject* self, PyObject* args, PyObject* kwargs)
 {
  
     PyObject* ptPythonLayer = NULL;
@@ -198,7 +198,7 @@ plDrawI_add_rect(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-plDrawI_add_rect_rounded(PyObject* self, PyObject* args, PyObject* kwargs)
+draw_add_rect_rounded(PyObject* self, PyObject* args, PyObject* kwargs)
 {
  
     PyObject* ptPythonLayer = NULL;
@@ -242,7 +242,7 @@ plDrawI_add_rect_rounded(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-plDrawI_add_quad(PyObject* self, PyObject* args, PyObject* kwargs)
+draw_add_quad(PyObject* self, PyObject* args, PyObject* kwargs)
 {
  
     PyObject* ptPythonLayer = NULL;
@@ -285,7 +285,7 @@ plDrawI_add_quad(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-plDrawI_add_circle(PyObject* self, PyObject* args, PyObject* kwargs)
+draw_add_circle(PyObject* self, PyObject* args, PyObject* kwargs)
 {
  
     PyObject* ptPythonLayer = NULL;
@@ -324,7 +324,7 @@ plDrawI_add_circle(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-plDrawI_add_bezier_quad(PyObject* self, PyObject* args, PyObject* kwargs)
+draw_add_bezier_quad(PyObject* self, PyObject* args, PyObject* kwargs)
 {
  
     PyObject* ptPythonLayer = NULL;
@@ -367,7 +367,7 @@ plDrawI_add_bezier_quad(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-plDrawI_add_bezier_cubic(PyObject* self, PyObject* args, PyObject* kwargs)
+draw_add_bezier_cubic(PyObject* self, PyObject* args, PyObject* kwargs)
 {
  
     PyObject* ptPythonLayer = NULL;
@@ -413,7 +413,7 @@ plDrawI_add_bezier_cubic(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-plDrawI_add_polygon(PyObject* self, PyObject* args, PyObject* kwargs)
+draw_add_polygon(PyObject* self, PyObject* args, PyObject* kwargs)
 {
  
     PyObject* ptPythonLayer = NULL;
