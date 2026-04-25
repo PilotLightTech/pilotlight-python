@@ -46,7 +46,7 @@ typedef struct _plPythonEntity
 } plPythonEntity;
 
 #define PL_ADD_INT_CONSTANT(X_ARG) {#X_ARG, X_ARG}
-
+#define PL_ADD_UINT_CONSTANT(MODULE, X_ARG) pl_add_u32_constant(MODULE, #X_ARG, X_ARG)
 
 //-----------------------------------------------------------------------------
 // [SECTION] public api

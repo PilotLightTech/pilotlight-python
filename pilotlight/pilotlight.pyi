@@ -1,6 +1,51 @@
-from typing import List, dict
+from typing import List, dict, overload, NewType
 from enum import IntEnum, IntFlag
 import pilotlight.pilotlight as pl
+from pilotlight.types import *
+from pilotlight.enums import *
+
+########################################################################################################################
+# [SECTION] custom types
+########################################################################################################################
+
+class plVec2:
+    x: float
+    y: float
+
+    @overload
+    def __init__(self) -> None: ...
+    @overload
+    def __init__(self, x: float, y: float) -> None: ...
+
+    def __repr__(self) -> str: ...
+
+    def __add__(self, other: plVec2) -> plVec2: ...
+    def __sub__(self, other: plVec2) -> plVec2: ...
+
+    def __mul__(self, scalar: float) -> plVec2: ...
+    def __rmul__(self, scalar: float) -> plVec2: ...
+
+    def __neg__(self) -> plVec2: ...
+
+type plVec2Like = plVec2 | tuple[float, float] | List[float, float]
+
+########################################################################################################################
+# [SECTION] opaque types
+########################################################################################################################
+
+plDrawLayer2D = NewType("plDrawLayer2D", object)
+plWindow = NewType("plWindow", object)
+plDevice = NewType("plDevice", object)
+plSwapchain = NewType("plSwapchain", object)
+plComponentLibrary = NewType("plComponentLibrary", object)
+plRenderEncoder = NewType("plRenderEncoder", object)
+plPakFile = NewType("plPakFile", object)
+plBoolPointer = NewType("plBoolPointer", object)
+plIntPointer = NewType("plIntPointer", object)
+plFloatPointer = NewType("plFloatPointer", object)
+plDoublePointer = NewType("plDoublePointer", object)
+
+type plPointer = plBoolPointer | plIntPointer | plFloatPointer | plDoublePointer
 
 ########################################################################################################################
 # [SECTION] core api
@@ -9,42 +54,27 @@ import pilotlight.pilotlight as pl
 def pl_run(app):
     ...
 
-def pl_get_pointer_value(pointer):
+def pl_get_pointer_value(pointer: plPointer, index: int = 0):
     ...
 
-def pl_set_pointer_value(pointer, value):
+def pl_set_pointer_value(pointer: plPointer, value, index: int = 0):
     ...
 
-def pl_create_bool_pointer():
+def pl_destroy_pointer(pointer: plPointer):
     ...
 
-def pl_destroy_bool_pointer(pointer):
+def pl_create_bool_pointer() -> plBoolPointer:
     ...
 
-def pl_create_int_pointer():
+def pl_create_int_pointer(count: int = 1) -> plIntPointer:
     ...
 
-def pl_destroy_int_pointer(pointer):
-    ...
-
-def pl_create_float_pointer():
-    ...
-
-def pl_destroy_float_pointer(pointer):
+def pl_create_float_pointer(count: int = 1) -> plFloatPointer:
     ...
 
 ########################################################################################################################
 # [SECTION] io api
 ########################################################################################################################
-
-class plKey(IntEnum):
-    ...
-
-class plMouseCursor(IntEnum):
-    ...
-
-class plMouseButton(IntEnum):
-    ...
 
 def pl_io_get_io() -> dict:
     ...
@@ -107,13 +137,13 @@ def pl_io_set_mouse_cursor(vec: int) -> None:
 # [SECTION] window api
 ########################################################################################################################
 
-def pl_window_create(pcTitle, iXPos, iYPos, uWidth, uHeight, tFlags):
+def pl_window_create(pcTitle: str, iXPos, iYPos, uWidth, uHeight, tFlags) -> plWindow:
     ...
 
-def pl_window_show(window):
+def pl_window_show(window: plWindow):
     ...
 
-def pl_window_destroy(window):
+def pl_window_destroy(window: plWindow):
     ...
 
 ########################################################################################################################
@@ -137,20 +167,20 @@ def pl_vfs_mount_directory(directory, physical_directory, **kwargs) -> None:
 # [SECTION] pack api
 ########################################################################################################################
 
-def pl_pack_begin_packing(file, content_version):
+def pl_pack_begin_packing(file, content_version) -> tuple[bool, plPakFile]:
     ...
 
-def pl_pack_add_from_disk(pak, pcPakPath, pcFilePath, bCompress):
+def pl_pack_add_from_disk(pak: plPakFile, pcPakPath, pcFilePath, bCompress) -> bool:
     ...
 
-def pl_pack_end_packing(pak):
+def pl_pack_end_packing(pak: plPakFile):
     ...
 
 ########################################################################################################################
 # [SECTION] graphics api
 ########################################################################################################################
 
-def pl_graphics_flush_device(device, **kwargs) -> None:
+def pl_graphics_flush_device(device: plDevice, **kwargs) -> None:
     ...
 
 ########################################################################################################################
@@ -176,34 +206,34 @@ def pl_shader_write_to_disk(shader, module):
 # [SECTION] draw api
 ########################################################################################################################
 
-def pl_draw_add_triangle_filled(layer, p0, p1, p2, *, color=PL_COLOR_32_WHITE, **kwargs):
+def pl_draw_add_triangle_filled(layer: plDrawLayer2D, p0: plVec2Like, p1: plVec2Like, p2: plVec2Like, options: plDrawSolidOptions):
     ...
 
-def pl_draw_add_triangle(layer, p0, p1, p2, *, color=PL_COLOR_32_WHITE, thickness=1.0, **kwargs):
+def pl_draw_add_triangle(layer: plDrawLayer2D, p0: plVec2Like, p1: plVec2Like, p2: plVec2Like, options: plDrawLineOptions):
     ...
 
-def pl_draw_add_line(layer, p0, p1, *, color=PL_COLOR_32_WHITE, thickness=1.0, **kwargs):
+def pl_draw_add_line(layer: plDrawLayer2D, p0: plVec2Like, p1: plVec2Like, options: plDrawLineOptions):
     ...
 
-def pl_draw_add_rect(layer, pMin, pMax, *, color=PL_COLOR_32_WHITE, thickness=1.0, **kwargs):
+def pl_draw_add_rect(layer: plDrawLayer2D, pMin: plVec2Like, pMax: plVec2Like, options: plDrawLineOptions):
     ...
 
-def pl_draw_add_rect_rounded(layer, pMin, pMax, radius, segments, flags, *, color=PL_COLOR_32_WHITE, thickness=1.0, **kwargs):
+def pl_draw_add_rect_rounded(layer: plDrawLayer2D, pMin: plVec2Like, pMax: plVec2Like, radius: float, segments: int, flags: plDrawRectFlag, options: plDrawLineOptions):
     ...
 
-def pl_draw_add_quad(layer, p0, p1, p2, p3, *, color=PL_COLOR_32_WHITE, thickness=1.0, **kwargs):
+def pl_draw_add_quad(layer: plDrawLayer2D, p0: plVec2Like, p1: plVec2Like, p2: plVec2Like, p3: plVec2Like, options: plDrawLineOptions):
     ...
 
-def pl_draw_add_circle(layer, p, radius, segments, *, color=PL_COLOR_32_WHITE, thickness=1.0, **kwargs):
+def pl_draw_add_circle(layer: plDrawLayer2D, p: plVec2Like, radius: float, segments: int, options: plDrawLineOptions):
     ...
 
-def pl_draw_add_polygon(layer, points, *, color=PL_COLOR_32_WHITE, thickness=1.0, **kwargs):
+def pl_draw_add_polygon(layer: plDrawLayer2D, points, options: plDrawLineOptions):
     ...
 
-def pl_draw_add_bezier_quad(layer, p0, p1, p2, segments, *, color=PL_COLOR_32_WHITE, thickness=1.0, **kwargs):
+def pl_draw_add_bezier_quad(layer: plDrawLayer2D, p0: plVec2Like, p1: plVec2Like, p2: plVec2Like, segments: int, options: plDrawLineOptions):
     ...
 
-def pl_draw_add_bezier_cubic(layer, p0, p1, p2, p3, segments, *, color=PL_COLOR_32_WHITE, thickness=1.0, **kwargs):
+def pl_draw_add_bezier_cubic(layer: plDrawLayer2D, p0: plVec2Like, p1: plVec2Like, p2: plVec2Like, p3: plVec2Like, segments: int, options: plDrawLineOptions):
     ...
 
 ########################################################################################################################
@@ -251,7 +281,7 @@ def pl_ecs_cleanup():
 def pl_ecs_get_default_library():
     ...
 
-def pl_ecs_get_component(library, key, entity):
+def pl_ecs_get_component(library: plComponentLibrary, key, entity):
     ...
 
 ########################################################################################################################
@@ -271,7 +301,7 @@ def pl_camera_register_ecs_system():
 def pl_camera_get_ecs_type_key():
     ...
 
-def pl_camera_create_perspective(library, name, pos, yFov, aspect, nearZ, farZ, reverseZ):
+def pl_camera_create_perspective(library: plComponentLibrary, name, pos, yFov, aspect, nearZ, farZ, reverseZ):
     ...
 
 def pl_camera_set_fov(camera, yFov):
@@ -319,10 +349,7 @@ def pl_shader_variant_initialize(device):
 # [SECTION] starter api
 ########################################################################################################################
 
-class plStarterFlag(IntFlag):
-    ...
-
-def pl_starter_initialize(window, flags: plStarterFlag):
+def pl_starter_initialize(window: plWindow, flags: plStarterFlag):
     ...
 
 def pl_starter_cleanup(**kwargs):
@@ -340,16 +367,16 @@ def pl_starter_resize(**kwargs) -> None:
 def pl_starter_end_frame(**kwargs) -> None:
     ...
 
-def pl_starter_get_foreground_layer(**kwargs) -> None:
+def pl_starter_get_foreground_layer(**kwargs) -> plDrawLayer2D:
     ...
 
-def pl_starter_get_background_layer(**kwargs) -> None:
+def pl_starter_get_background_layer(**kwargs) -> plDrawLayer2D:
     ...
 
-def pl_starter_get_device(**kwargs) -> None:
+def pl_starter_get_device(**kwargs) -> plDevice:
     ...
 
-def pl_starter_get_swapchain(**kwargs) -> None:
+def pl_starter_get_swapchain(**kwargs) -> plSwapchain:
     ...
 
 def pl_starter_get_render_pass(**kwargs) -> None:
@@ -365,7 +392,7 @@ def pl_starter_end_main_pass(**kwargs) -> None:
 # [SECTION] renderer api
 ########################################################################################################################
 
-def pl_renderer_initialize(device, swapchain, **kwargs):
+def pl_renderer_initialize(device: plDevice, swapchain: plSwapchain, **kwargs):
     ...
 
 def pl_renderer_cleanup():
@@ -374,7 +401,7 @@ def pl_renderer_cleanup():
 def pl_renderer_register_ecs_system():
     ...
 
-def pl_renderer_create_directional_light(library, name):
+def pl_renderer_create_directional_light(library: plComponentLibrary, name):
     ...
 
 ########################################################################################################################

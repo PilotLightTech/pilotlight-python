@@ -31,5 +31,5 @@ stats_get_counter(PyObject* self, PyObject* arg)
 {
     const char* pcName = PyUnicode_AsUTF8(arg);
     double* pdCounter = gptStats->get_counter(pcName);
-    return PyCapsule_New(pdCounter, "pd", NULL);
+    return PyCapsule_New(pdCounter, "plFloatPointer", NULL);
 }

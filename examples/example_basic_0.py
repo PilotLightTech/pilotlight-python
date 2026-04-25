@@ -116,8 +116,7 @@ class App:
             fgLayer,
             [40.0, 40.0],
             [1240.0, 680.0],
-            color=PL_COLOR_32_YELLOW,
-            thickness=2.0
+            plDrawLineOptions(PL_COLOR_32_YELLOW, 2.0)
         )
 
         # Diagonal guide line
@@ -125,8 +124,7 @@ class App:
             fgLayer,
             [40.0, 40.0],
             [1240.0, 680.0],
-            color=PL_COLOR_32_GREEN,
-            thickness=2.0
+            plDrawLineOptions(PL_COLOR_32_GREEN, 2.0)
         )
 
         # Rounded panel region
@@ -137,8 +135,7 @@ class App:
             16.0,                   # rounding radius
             0,                      # segment count (0 = automatic/default)
             plDrawRectFlag.PL_DRAW_RECT_FLAG_NONE,
-            color=PL_COLOR_32_CYAN,
-            thickness=2.0
+            plDrawLineOptions(PL_COLOR_32_CYAN, 2.0)
         )
 
         # Triangle outline
@@ -147,7 +144,7 @@ class App:
             [120.0, 240.0],
             [240.0, 120.0],
             [320.0, 260.0],
-            color=PL_COLOR_32_WHITE
+            plDrawLineOptions(PL_COLOR_32_WHITE)
         )
 
         # Arbitrary quad outline
@@ -157,7 +154,7 @@ class App:
             [760.0, 120.0],
             [720.0, 260.0],
             [540.0, 220.0],
-            color=PL_COLOR_32_ORANGE
+            plDrawLineOptions(PL_COLOR_32_ORANGE)
         )
 
         # Circle outline
@@ -166,7 +163,7 @@ class App:
             [930.0, 180.0],
             70.0,
             0,  # segment count (0 = automatic/default)
-            color=PL_COLOR_32_BLUE
+            plDrawLineOptions(PL_COLOR_32_BLUE)
         )
 
         # Polygon outline
@@ -180,7 +177,7 @@ class App:
                 [1070.0, 260.0],
                 [1010.0, 180.0],
             ],
-            color=PL_COLOR_32_RED
+            plDrawLineOptions(PL_COLOR_32_RED)
         )
 
         pl_draw_add_bezier_quad(
@@ -189,7 +186,7 @@ class App:
             [260.0, 320.0],   # control
             [420.0, 450.0],   # end
             0,                # segment count (0 = automatic/default)
-            color=PL_COLOR_32_BLUE
+            plDrawLineOptions(PL_COLOR_32_BLUE)
         )
 
         # Cubic bezier with thicker line
@@ -200,8 +197,7 @@ class App:
             [360.0, 660.0],   # control 2
             [460.0, 540.0],   # end
             0,                # segment count
-            color=PL_COLOR_32_RED,
-            thickness=3.0
+            plDrawLineOptions(PL_COLOR_32_RED, 3.0)
         )
 
         # Filled triangle
@@ -209,7 +205,8 @@ class App:
             fgLayer,
             [640.0, 420.0],
             [820.0, 360.0],
-            [760.0, 560.0]
+            [760.0, 560.0],
+            plDrawSolidOptions(PL_COLOR_32_WHITE)
         )
 
         # Filled-looking composition using multiple primitives
@@ -217,16 +214,14 @@ class App:
             fgLayer,
             [900.0, 360.0],
             [1180.0, 360.0],
-            color=PL_COLOR_32_WHITE,
-            thickness=4.0
+            plDrawLineOptions(PL_COLOR_32_WHITE, 4.0)
         )
 
         pl_draw_add_rect(
             fgLayer,
             [920.0, 390.0],
             [1160.0, 560.0],
-            color=PL_COLOR_32_WHITE,
-            thickness=3.0
+            plDrawLineOptions(PL_COLOR_32_WHITE, 3.0)
         )
 
         pl_draw_add_circle(
@@ -234,7 +229,7 @@ class App:
             [1040.0, 475.0],
             50.0,
             0,
-            color=PL_COLOR_32_GREEN
+            plDrawLineOptions(PL_COLOR_32_GREEN)
         )
 
         # Submit/present the frame.

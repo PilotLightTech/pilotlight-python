@@ -121,8 +121,8 @@ class App:
      
         # drawing API
         fgLayer = pl_starter_get_foreground_layer()
-        pl_draw_add_triangle_filled(fgLayer, [50.0, 100.0], [200.0, 0.0], [100.0, 200.0])
-        pl_draw_add_triangle(fgLayer, [50.0, 300.0], [200.0, 200.0], [100.0, 400.0], color = PL_COLOR_32_WHITE)
+        pl_draw_add_triangle_filled(fgLayer, [50.0, 100.0], [200.0, 0.0], [100.0, 200.0], plDrawSolidOptions(PL_COLOR_32_GREEN))
+        pl_draw_add_triangle(fgLayer, plVec2(50.0, 300.0), plVec2(200.0, 200.0), plVec2(100.0, 400.0), plDrawLineOptions(PL_COLOR_32_WHITE))
 
         # io API
         if pl_io_is_key_pressed(plKey.PL_KEY_P):

@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 
 class plShaderMacroDefinition:
     def __init__(self):
@@ -12,3 +13,12 @@ class plShaderOptions:
         self.apcIncludeDirectories = []
         self.apcDirectories = []
         self.pcCacheOutputDirectory = None
+
+@dataclass(slots=True)
+class plDrawSolidOptions:
+    uColor: int = 0xFFFFFFFF  # default white
+
+@dataclass(slots=True)
+class plDrawLineOptions:
+    uColor: int = 0xFFFFFFFF  # default white
+    fThickness: float = 1.0

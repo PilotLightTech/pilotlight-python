@@ -14,6 +14,7 @@ Index of this file:
 //-----------------------------------------------------------------------------
 
 #include "pilotlight.h"
+#include "pl_py_math.h"
 
 //-----------------------------------------------------------------------------
 // [SECTION] enums
@@ -46,169 +47,207 @@ plPythonIntConstantPair gatDrawIntPairs[] = {
 
 static plVec2* gsbtTempVec2Vec = NULL;
 
+static inline void
+pl__get_draw_solid_options(PyObject* ptPythonOptions, plDrawSolidOptions* ptOptionsOut)
+{
+    PyObject* ptPythonOptionColor = PyObject_GetAttrString(ptPythonOptions, "uColor");
+    PyLong_AsUInt32(ptPythonOptionColor, &ptOptionsOut->uColor);
+    Py_DECREF(ptPythonOptionColor);
+}
+
+static inline void
+pl__get_draw_line_options(PyObject* ptPythonOptions, plDrawLineOptions* ptOptionsOut)
+{
+    PyObject* ptPythonOptionColor = PyObject_GetAttrString(ptPythonOptions, "uColor");
+    PyLong_AsUInt32(ptPythonOptionColor, &ptOptionsOut->uColor);
+    Py_DECREF(ptPythonOptionColor);
+
+    PyObject* ptPythonOptionThickness = PyObject_GetAttrString(ptPythonOptions, "fThickness");
+    ptOptionsOut->fThickness = (float)PyFloat_AsDouble(ptPythonOptionThickness);
+    Py_DECREF(ptPythonOptionThickness);
+}
+
 //-----------------------------------------------------------------------------
 // [SECTION] implementations
 //-----------------------------------------------------------------------------
 
 PyObject*
-draw_add_triangle_filled(PyObject* self, PyObject* args, PyObject* kwargs)
+draw_add_triangle_filled(PyObject* self, PyObject* args)
 {
  
     PyObject* ptPythonLayer = NULL;
     PyObject* ptPythonP0 = NULL;
     PyObject* ptPythonP1 = NULL;
     PyObject* ptPythonP2 = NULL;
-    plDrawSolidOptions tOptions = {
-        .uColor = PL_COLOR_32_WHITE
-    };
+    PyObject* ptPythonOptions = NULL;
 
     static const char* apcKeywords[] = {
         "layer",
         "p0",
         "p1",
         "p2",
-        "color",
+        "options",
         NULL,
     };
 
-	if (!pl_parse("OOOO|$I", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
-        &ptPythonLayer, &ptPythonP0, &ptPythonP1, &ptPythonP2, &tOptions.uColor))
+	if (!pl_parse("OOOOO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+        &ptPythonLayer, &ptPythonP0, &ptPythonP1, &ptPythonP2, &ptPythonOptions))
 		return NULL;
 
     plDrawLayer2D* ptLayer = PyCapsule_GetPointer(ptPythonLayer, "plDrawLayer2D");
+    plDrawSolidOptions tOptions = {0};
+    pl__get_draw_solid_options(ptPythonOptions, &tOptions);
+
+    plVec2 tP0 = {0};
+    plVec2 tP1 = {0};
+    plVec2 tP2 = {0};
+
+    pl_vec2_from_py(ptPythonP0, &tP0);
+    pl_vec2_from_py(ptPythonP1, &tP1);
+    pl_vec2_from_py(ptPythonP2, &tP2);
 
     gptDraw->add_triangle_filled(ptLayer,
-        pl_get_vec2_from_python(ptPythonP0),
-        pl_get_vec2_from_python(ptPythonP1),
-        pl_get_vec2_from_python(ptPythonP2),
+        tP0,
+        tP1,
+        tP2,
         tOptions);
 
     Py_RETURN_NONE;
 }
 
 PyObject*
-draw_add_line(PyObject* self, PyObject* args, PyObject* kwargs)
+draw_add_line(PyObject* self, PyObject* args)
 {
  
     PyObject* ptPythonLayer = NULL;
     PyObject* ptPythonP0 = NULL;
     PyObject* ptPythonP1 = NULL;
-
-    plDrawLineOptions tOptions = {
-        .uColor = PL_COLOR_32_WHITE,
-        .fThickness = 1.0f
-    };
+    PyObject* ptPythonOptions = NULL;
 
     static const char* apcKeywords[] = {
         "layer",
         "p0",
         "p1",
-        "color",
-        "thickness",
+        "options",
         NULL,
     };
 
-	if (!pl_parse("OOO|$If", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
-        &ptPythonLayer, &ptPythonP0, &ptPythonP1, &tOptions.uColor, &tOptions.fThickness))
+	if (!pl_parse("OOOO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+        &ptPythonLayer, &ptPythonP0, &ptPythonP1, &ptPythonOptions))
 		return NULL;
 
     plDrawLayer2D* ptLayer = PyCapsule_GetPointer(ptPythonLayer, "plDrawLayer2D");
 
+    plDrawLineOptions tOptions = {0};
+    pl__get_draw_line_options(ptPythonOptions, &tOptions);
+
+    plVec2 tP0 = {0};
+    plVec2 tP1 = {0};
+
+    pl_vec2_from_py(ptPythonP0, &tP0);
+    pl_vec2_from_py(ptPythonP1, &tP1);
+
     gptDraw->add_line(ptLayer,
-        pl_get_vec2_from_python(ptPythonP0),
-        pl_get_vec2_from_python(ptPythonP1),
+        tP0,
+        tP1,
         tOptions);
 
     Py_RETURN_NONE;
 }
 
 PyObject*
-draw_add_triangle(PyObject* self, PyObject* args, PyObject* kwargs)
+draw_add_triangle(PyObject* self, PyObject* args)
 {
  
     PyObject* ptPythonLayer = NULL;
     PyObject* ptPythonP0 = NULL;
     PyObject* ptPythonP1 = NULL;
     PyObject* ptPythonP2 = NULL;
-
-    plDrawLineOptions tOptions = {
-        .uColor = PL_COLOR_32_WHITE,
-        .fThickness = 1.0f
-    };
+    PyObject* ptPythonOptions = NULL;
 
     static const char* apcKeywords[] = {
         "layer",
         "p0",
         "p1",
         "p2",
-        "color",
-        "thickness",
+        "options",
         NULL,
     };
 
-	if (!pl_parse("OOOO|$If", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
-        &ptPythonLayer, &ptPythonP0, &ptPythonP1, &ptPythonP2, &tOptions.uColor, &tOptions.fThickness))
+	if (!pl_parse("OOOOO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+        &ptPythonLayer, &ptPythonP0, &ptPythonP1, &ptPythonP2, &ptPythonOptions))
 		return NULL;
 
     plDrawLayer2D* ptLayer = PyCapsule_GetPointer(ptPythonLayer, "plDrawLayer2D");
 
+    plDrawLineOptions tOptions = {0};
+    pl__get_draw_line_options(ptPythonOptions, &tOptions);
+
+    plVec2 tP0 = {0};
+    plVec2 tP1 = {0};
+    plVec2 tP2 = {0};
+
+    pl_vec2_from_py(ptPythonP0, &tP0);
+    pl_vec2_from_py(ptPythonP1, &tP1);
+    pl_vec2_from_py(ptPythonP2, &tP2);
+
     gptDraw->add_triangle(ptLayer,
-        pl_get_vec2_from_python(ptPythonP0),
-        pl_get_vec2_from_python(ptPythonP1),
-        pl_get_vec2_from_python(ptPythonP2),
+        tP0,
+        tP1,
+        tP2,
         tOptions);
 
     Py_RETURN_NONE;
 }
 
 PyObject*
-draw_add_rect(PyObject* self, PyObject* args, PyObject* kwargs)
+draw_add_rect(PyObject* self, PyObject* args)
 {
  
     PyObject* ptPythonLayer = NULL;
     PyObject* ptPythonP0 = NULL;
     PyObject* ptPythonP1 = NULL;
-
-    plDrawLineOptions tOptions = {
-        .uColor = PL_COLOR_32_WHITE,
-        .fThickness = 1.0f
-    };
+    PyObject* ptPythonOptions = NULL;
 
     static const char* apcKeywords[] = {
         "layer",
         "pMin",
         "pMax",
-        "color",
-        "thickness",
+        "options",
         NULL,
     };
 
-	if (!pl_parse("OOO|$If", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
-        &ptPythonLayer, &ptPythonP0, &ptPythonP1, &tOptions.uColor, &tOptions.fThickness))
+	if (!pl_parse("OOOO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+        &ptPythonLayer, &ptPythonP0, &ptPythonP1, &ptPythonOptions))
 		return NULL;
 
     plDrawLayer2D* ptLayer = PyCapsule_GetPointer(ptPythonLayer, "plDrawLayer2D");
 
+    plDrawLineOptions tOptions = {0};
+    pl__get_draw_line_options(ptPythonOptions, &tOptions);
+
+    plVec2 tP0 = {0};
+    plVec2 tP1 = {0};
+
+    pl_vec2_from_py(ptPythonP0, &tP0);
+    pl_vec2_from_py(ptPythonP1, &tP1);
+
     gptDraw->add_rect(ptLayer,
-        pl_get_vec2_from_python(ptPythonP0),
-        pl_get_vec2_from_python(ptPythonP1),
+        tP0,
+        tP1,
         tOptions);
 
     Py_RETURN_NONE;
 }
 
 PyObject*
-draw_add_rect_rounded(PyObject* self, PyObject* args, PyObject* kwargs)
+draw_add_rect_rounded(PyObject* self, PyObject* args)
 {
  
     PyObject* ptPythonLayer = NULL;
     PyObject* ptPythonP0 = NULL;
     PyObject* ptPythonP1 = NULL;
-
-    plDrawLineOptions tOptions = {
-        .uColor = PL_COLOR_32_WHITE,
-        .fThickness = 1.0f
-    };
+    PyObject* ptPythonOptions = NULL;
 
     float fRadius = 1.0f;
     uint32_t uSegments = 0;
@@ -221,28 +260,36 @@ draw_add_rect_rounded(PyObject* self, PyObject* args, PyObject* kwargs)
         "radius",
         "segments",
         "flags",
-        "color",
-        "thickness",
+        "options",
         NULL,
     };
 
-	if (!pl_parse("OOOfIi|$If", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+	if (!pl_parse("OOOfIiO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
         &ptPythonLayer, &ptPythonP0, &ptPythonP1, &fRadius, &uSegments, &iFlags, 
-        &tOptions.uColor, &tOptions.fThickness))
+        &ptPythonOptions))
 		return NULL;
 
     plDrawLayer2D* ptLayer = PyCapsule_GetPointer(ptPythonLayer, "plDrawLayer2D");
 
+    plDrawLineOptions tOptions = {0};
+    pl__get_draw_line_options(ptPythonOptions, &tOptions);
+
+    plVec2 tP0 = {0};
+    plVec2 tP1 = {0};
+
+    pl_vec2_from_py(ptPythonP0, &tP0);
+    pl_vec2_from_py(ptPythonP1, &tP1);
+
     gptDraw->add_rect_rounded(ptLayer,
-        pl_get_vec2_from_python(ptPythonP0),
-        pl_get_vec2_from_python(ptPythonP1),
+        tP0,
+        tP1,
         fRadius, uSegments, iFlags, tOptions);
 
     Py_RETURN_NONE;
 }
 
 PyObject*
-draw_add_quad(PyObject* self, PyObject* args, PyObject* kwargs)
+draw_add_quad(PyObject* self, PyObject* args)
 {
  
     PyObject* ptPythonLayer = NULL;
@@ -250,11 +297,7 @@ draw_add_quad(PyObject* self, PyObject* args, PyObject* kwargs)
     PyObject* ptPythonP1 = NULL;
     PyObject* ptPythonP2 = NULL;
     PyObject* ptPythonP3 = NULL;
-
-    plDrawLineOptions tOptions = {
-        .uColor = PL_COLOR_32_WHITE,
-        .fThickness = 1.0f
-    };
+    PyObject* ptPythonOptions = NULL;
 
     static const char* apcKeywords[] = {
         "layer",
@@ -262,39 +305,47 @@ draw_add_quad(PyObject* self, PyObject* args, PyObject* kwargs)
         "p1",
         "p2",
         "p3",
-        "color",
-        "thickness",
+        "options",
         NULL,
     };
 
-	if (!pl_parse("OOOOO|$If", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+	if (!pl_parse("OOOOOO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
         &ptPythonLayer, &ptPythonP0, &ptPythonP1, &ptPythonP2, &ptPythonP3,
-        &tOptions.uColor, &tOptions.fThickness))
+        &ptPythonOptions))
 		return NULL;
 
     plDrawLayer2D* ptLayer = PyCapsule_GetPointer(ptPythonLayer, "plDrawLayer2D");
 
+    plDrawLineOptions tOptions = {0};
+    pl__get_draw_line_options(ptPythonOptions, &tOptions);
+
+    plVec2 tP0 = {0};
+    plVec2 tP1 = {0};
+    plVec2 tP2 = {0};
+    plVec2 tP3 = {0};
+
+    pl_vec2_from_py(ptPythonP0, &tP0);
+    pl_vec2_from_py(ptPythonP1, &tP1);
+    pl_vec2_from_py(ptPythonP2, &tP2);
+    pl_vec2_from_py(ptPythonP3, &tP3);
+
     gptDraw->add_quad(ptLayer,
-        pl_get_vec2_from_python(ptPythonP0),
-        pl_get_vec2_from_python(ptPythonP1),
-        pl_get_vec2_from_python(ptPythonP2),
-        pl_get_vec2_from_python(ptPythonP3),
+        tP0,
+        tP1,
+        tP2,
+        tP3,
         tOptions);
 
     Py_RETURN_NONE;
 }
 
 PyObject*
-draw_add_circle(PyObject* self, PyObject* args, PyObject* kwargs)
+draw_add_circle(PyObject* self, PyObject* args)
 {
  
     PyObject* ptPythonLayer = NULL;
     PyObject* ptPythonP0 = NULL;
-
-    plDrawLineOptions tOptions = {
-        .uColor = PL_COLOR_32_WHITE,
-        .fThickness = 1.0f
-    };
+    PyObject* ptPythonOptions = NULL;
 
     float fRadius = 1.0f;
     uint32_t uSegments = 0;
@@ -304,38 +355,40 @@ draw_add_circle(PyObject* self, PyObject* args, PyObject* kwargs)
         "p",
         "radius",
         "segments",
-        "color",
-        "thickness",
+        "options",
         NULL,
     };
 
-	if (!pl_parse("OOfI|$If", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+	if (!pl_parse("OOfIO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
         &ptPythonLayer, &ptPythonP0, &fRadius, &uSegments, 
-        &tOptions.uColor, &tOptions.fThickness))
+        &ptPythonOptions))
 		return NULL;
 
     plDrawLayer2D* ptLayer = PyCapsule_GetPointer(ptPythonLayer, "plDrawLayer2D");
 
+    plDrawLineOptions tOptions = {0};
+    pl__get_draw_line_options(ptPythonOptions, &tOptions);
+
+    plVec2 tP0 = {0};
+
+    pl_vec2_from_py(ptPythonP0, &tP0);
+
     gptDraw->add_circle(ptLayer,
-        pl_get_vec2_from_python(ptPythonP0),
+        tP0,
         fRadius, uSegments, tOptions);
 
     Py_RETURN_NONE;
 }
 
 PyObject*
-draw_add_bezier_quad(PyObject* self, PyObject* args, PyObject* kwargs)
+draw_add_bezier_quad(PyObject* self, PyObject* args)
 {
  
     PyObject* ptPythonLayer = NULL;
     PyObject* ptPythonP0 = NULL;
     PyObject* ptPythonP1 = NULL;
     PyObject* ptPythonP2 = NULL;
-
-    plDrawLineOptions tOptions = {
-        .uColor = PL_COLOR_32_WHITE,
-        .fThickness = 1.0f
-    };
+    PyObject* ptPythonOptions = NULL;
 
     uint32_t uSegments = 0;
 
@@ -345,29 +398,39 @@ draw_add_bezier_quad(PyObject* self, PyObject* args, PyObject* kwargs)
         "p1",
         "p2",
         "segments",
-        "color",
-        "thickness",
+        "options",
         NULL,
     };
 
-	if (!pl_parse("OOOOI|$If", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+	if (!pl_parse("OOOOIO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
         &ptPythonLayer, &ptPythonP0, &ptPythonP1, &ptPythonP2, &uSegments, 
-        &tOptions.uColor, &tOptions.fThickness))
+        &ptPythonOptions))
 		return NULL;
 
     plDrawLayer2D* ptLayer = PyCapsule_GetPointer(ptPythonLayer, "plDrawLayer2D");
 
+    plDrawLineOptions tOptions = {0};
+    pl__get_draw_line_options(ptPythonOptions, &tOptions);
+
+    plVec2 tP0 = {0};
+    plVec2 tP1 = {0};
+    plVec2 tP2 = {0};
+
+    pl_vec2_from_py(ptPythonP0, &tP0);
+    pl_vec2_from_py(ptPythonP1, &tP1);
+    pl_vec2_from_py(ptPythonP2, &tP2);
+
     gptDraw->add_bezier_quad(ptLayer,
-        pl_get_vec2_from_python(ptPythonP0),
-        pl_get_vec2_from_python(ptPythonP1),
-        pl_get_vec2_from_python(ptPythonP2),
+        tP0,
+        tP1,
+        tP2,
         uSegments, tOptions);
 
     Py_RETURN_NONE;
 }
 
 PyObject*
-draw_add_bezier_cubic(PyObject* self, PyObject* args, PyObject* kwargs)
+draw_add_bezier_cubic(PyObject* self, PyObject* args)
 {
  
     PyObject* ptPythonLayer = NULL;
@@ -375,11 +438,7 @@ draw_add_bezier_cubic(PyObject* self, PyObject* args, PyObject* kwargs)
     PyObject* ptPythonP1 = NULL;
     PyObject* ptPythonP2 = NULL;
     PyObject* ptPythonP3 = NULL;
-
-    plDrawLineOptions tOptions = {
-        .uColor = PL_COLOR_32_WHITE,
-        .fThickness = 1.0f
-    };
+    PyObject* ptPythonOptions = NULL;
 
     uint32_t uSegments = 0;
 
@@ -390,53 +449,63 @@ draw_add_bezier_cubic(PyObject* self, PyObject* args, PyObject* kwargs)
         "p2",
         "p3",
         "segments",
-        "color",
-        "thickness",
+        "options",
         NULL,
     };
 
-	if (!pl_parse("OOOOOI|$If", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+	if (!pl_parse("OOOOOIO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
         &ptPythonLayer, &ptPythonP0, &ptPythonP1, &ptPythonP2, &ptPythonP3,
-        &uSegments, &tOptions.uColor, &tOptions.fThickness))
+        &uSegments, &ptPythonOptions))
 		return NULL;
 
     plDrawLayer2D* ptLayer = PyCapsule_GetPointer(ptPythonLayer, "plDrawLayer2D");
 
+    plDrawLineOptions tOptions = {0};
+    pl__get_draw_line_options(ptPythonOptions, &tOptions);
+
+    plVec2 tP0 = {0};
+    plVec2 tP1 = {0};
+    plVec2 tP2 = {0};
+    plVec2 tP3 = {0};
+
+    pl_vec2_from_py(ptPythonP0, &tP0);
+    pl_vec2_from_py(ptPythonP1, &tP1);
+    pl_vec2_from_py(ptPythonP2, &tP2);
+    pl_vec2_from_py(ptPythonP3, &tP3);
+
     gptDraw->add_bezier_cubic(ptLayer,
-        pl_get_vec2_from_python(ptPythonP0),
-        pl_get_vec2_from_python(ptPythonP1),
-        pl_get_vec2_from_python(ptPythonP2),
-        pl_get_vec2_from_python(ptPythonP3),
+        tP0,
+        tP1,
+        tP2,
+        tP3,
         uSegments, tOptions);
 
     Py_RETURN_NONE;
 }
 
 PyObject*
-draw_add_polygon(PyObject* self, PyObject* args, PyObject* kwargs)
+draw_add_polygon(PyObject* self, PyObject* args)
 {
  
     PyObject* ptPythonLayer = NULL;
     PyObject* ptPythonPoints = NULL;
-
-    plDrawLineOptions tOptions = {
-        .uColor = PL_COLOR_32_WHITE,
-        .fThickness = 1.0f
-    };
+    PyObject* ptPythonOptions = NULL;
 
     static const char* apcKeywords[] = {
         "layer",
         "points",
-        "color",
-        "thickness",
+        "options",
         NULL,
     };
 
-	if (!pl_parse("OO|$If", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
-        &ptPythonLayer, &ptPythonPoints, &tOptions.uColor, &tOptions.fThickness))
+	if (!pl_parse("OOO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+        &ptPythonLayer, &ptPythonPoints, &ptPythonOptions))
 		return NULL;
 
     plDrawLayer2D* ptLayer = PyCapsule_GetPointer(ptPythonLayer, "plDrawLayer2D");
+
+    plDrawLineOptions tOptions = {0};
+    pl__get_draw_line_options(ptPythonOptions, &tOptions);
 
     if (PyTuple_Check(ptPythonPoints))
     {
@@ -445,7 +514,7 @@ draw_add_polygon(PyObject* self, PyObject* args, PyObject* kwargs)
         for (Py_ssize_t i = 0; i < pySize; ++i)
         {
             PyObject* ptPythonPoint = PyTuple_GetItem(ptPythonPoints, i);
-            gsbtTempVec2Vec[i] = pl_get_vec2_from_python(ptPythonPoint);
+            pl_vec2_from_py(ptPythonPoint, &gsbtTempVec2Vec[i]);
         }
     }
 
@@ -456,7 +525,7 @@ draw_add_polygon(PyObject* self, PyObject* args, PyObject* kwargs)
         for (Py_ssize_t i = 0; i < pySize; ++i)
         {
             PyObject* ptPythonPoint = PyList_GetItem(ptPythonPoints, i);
-            gsbtTempVec2Vec[i] = pl_get_vec2_from_python(ptPythonPoint);
+            pl_vec2_from_py(ptPythonPoint, &gsbtTempVec2Vec[i]);
         }
     }
 

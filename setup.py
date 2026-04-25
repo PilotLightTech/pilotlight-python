@@ -33,7 +33,7 @@ def setup_package():
 
     metadata = dict(
         name='pilotlight',                                      # Required
-        version="0.1.15",                              # Required
+        version="0.1.16",                              # Required
         author="Jonathan Hoffstadt",       # Optional
         author_email="jonathanhoffstadt@yahoo.com",            # Optional
         description='Pilot Light',  # Required

@@ -81,7 +81,7 @@ ui_checkbox(PyObject* self, PyObject* args, PyObject* kwargs)
 
     if(ptPointer)
     {
-        return PyBool_FromLong(gptUI->checkbox(pcName, (bool*)PyCapsule_GetPointer(ptPointer, "pb")));
+        return PyBool_FromLong(gptUI->checkbox(pcName, (bool*)PyCapsule_GetPointer(ptPointer, "plBoolPointer")));
     }
     else
     {

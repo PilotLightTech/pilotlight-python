@@ -27,53 +27,73 @@ static PyObject* ptpyIO = NULL;
 //-----------------------------------------------------------------------------
 
 PyObject*
-create_bool_pointer(PyObject* self)
+create_bool_pointer(PyObject* self, PyObject* args)
 {
     bool* ptValue = PL_ALLOC(sizeof(bool));
     memset(ptValue, 0, sizeof(bool));
-    return PyCapsule_New(ptValue, "pb", NULL);
+    return PyCapsule_New(ptValue, "plBoolPointer", NULL);
 }
 
 PyObject*
-create_int_pointer(PyObject* self)
+create_int_pointer(PyObject* self, PyObject* args)
 {
-    int* ptValue = PL_ALLOC(sizeof(int));
+    static const char* apcKeywords[] = {
+        "count",
+        NULL,
+    };
+    int iCount = 1;
+	if (!pl_parse("|i", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+        &iCount))
+		return NULL;
+    int* ptValue = PL_ALLOC(sizeof(int) * iCount);
     memset(ptValue, 0, sizeof(int));
-    return PyCapsule_New(ptValue, "pi", NULL);
+    return PyCapsule_New(ptValue, "plIntPointer", NULL);
 }
 
 PyObject*
-create_float_pointer(PyObject* self)
+create_float_pointer(PyObject* self, PyObject* args)
 {
-    float* ptValue = PL_ALLOC(sizeof(float));
+    static const char* apcKeywords[] = {
+        "count",
+        NULL,
+    };
+    int iCount = 1;
+	if (!pl_parse("|i", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+        &iCount))
+		return NULL;
+
+    float* ptValue = PL_ALLOC(sizeof(float) * iCount);
     memset(ptValue, 0, sizeof(float));
-    return PyCapsule_New(ptValue, "pf", NULL);
+    return PyCapsule_New(ptValue, "plFloatPointer", NULL);
 }
 
 PyObject*
-destroy_bool_pointer(PyObject* self, PyObject* args)
+create_double_pointer(PyObject* self, PyObject* args)
 {
-    bool* ptValue = PyCapsule_GetPointer(args, "pb");
-    PL_FREE(ptValue);
-    PyCapsule_SetPointer(args, NULL);
-    Py_RETURN_NONE;
+    static const char* apcKeywords[] = {
+        "count",
+        NULL,
+    };
+    int iCount = 1;
+	if (!pl_parse("|i", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+        &iCount))
+		return NULL;
+
+    double* ptValue = PL_ALLOC(sizeof(double) * iCount);
+    memset(ptValue, 0, sizeof(double));
+    return PyCapsule_New(ptValue, "plDoublePointer", NULL);
 }
 
 PyObject*
-destroy_int_pointer(PyObject* self, PyObject* args)
+destroy_pointer(PyObject* self, PyObject* args)
 {
-    int* ptValue = PyCapsule_GetPointer(args, "pi");
-    PL_FREE(ptValue);
-    PyCapsule_SetPointer(args, NULL);
-    Py_RETURN_NONE;
-}
-
-PyObject*
-destroy_float_pointer(PyObject* self, PyObject* args)
-{
-    float* ptValue = PyCapsule_GetPointer(args, "pf");
-    PL_FREE(ptValue);
-    PyCapsule_SetPointer(args, NULL);
+    const char* pcName = PyCapsule_GetName(args);
+    void* ptValue = PyCapsule_GetPointer(args, pcName);
+    if(ptValue == NULL)
+    {
+        PL_FREE(ptValue);
+        PyCapsule_SetPointer(args, NULL);
+    }
     Py_RETURN_NONE;
 }
 
@@ -83,52 +103,82 @@ set_pointer_value(PyObject* self, PyObject* args)
     static const char* apcKeywords[] = {
         "pointer",
         "value",
+        "index",
         NULL,
     };
 
     PyObject* ptPythonPointer = NULL;
     PyObject* ptPythonValue = NULL;
-	if (!pl_parse("OO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
-        &ptPythonPointer, &ptPythonValue))
+    int iIndex = 0;
+	if (!pl_parse("OO|i", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+        &ptPythonPointer, &ptPythonValue, &iIndex))
 		return NULL;
 
     const char* pcName = PyCapsule_GetName(ptPythonPointer);
-    if(strcmp(pcName, "pd") == 0)
+    if(strcmp(pcName, "plDoublePointer") == 0)
     {
         double* ptValue = PyCapsule_GetPointer(ptPythonPointer, pcName);
-        *ptValue = PyFloat_AsDouble(ptPythonValue);
+        ptValue[iIndex] = PyFloat_AsDouble(ptPythonValue);
         return PyBool_FromLong(1);
     }
-    else if(strcmp(pcName, "pb") == 0)
+    else if(strcmp(pcName, "plFloatPointer") == 0)
+    {
+        float* ptValue = PyCapsule_GetPointer(ptPythonPointer, pcName);
+        ptValue[iIndex] = (float)PyFloat_AsDouble(ptPythonValue);
+        return PyBool_FromLong(1);
+    }
+    else if(strcmp(pcName, "plBoolPointer") == 0)
     {
         bool* ptValue = PyCapsule_GetPointer(ptPythonPointer, pcName);
         *ptValue = PyLong_AsLong(ptPythonValue);
         return PyBool_FromLong(1);
     }
-    else if(strcmp(pcName, "pi") == 0)
+    else if(strcmp(pcName, "plIntPointer") == 0)
     {
         int* ptValue = PyCapsule_GetPointer(ptPythonPointer, pcName);
-        *ptValue = PyLong_AsLong(ptPythonValue);
+        ptValue[iIndex] = PyLong_AsLong(ptPythonValue);
         return PyBool_FromLong(1);
     }
     return PyBool_FromLong(0);
 }
 
 PyObject*
-get_pointer_value(PyObject* self, PyObject* ptPythonPointer)
+get_pointer_value(PyObject* self, PyObject* args)
 {
+
+    static const char* apcKeywords[] = {
+        "pointer",
+        "index",
+        NULL,
+    };
+
+    PyObject* ptPythonPointer = NULL;
+    int iIndex = 0;
+	if (!pl_parse("O|i", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+        &ptPythonPointer, &iIndex))
+		return NULL;
+
     const char* pcName = PyCapsule_GetName(ptPythonPointer);
-    if(strcmp(pcName, "pd") == 0)
+    if(strcmp(pcName, "plDoublePointer") == 0)
     {
         double* ptValue = PyCapsule_GetPointer(ptPythonPointer, pcName);
-        return PyFloat_FromDouble(*ptValue);
+        return PyFloat_FromDouble(ptValue[iIndex]);
     }
-    else if(strcmp(pcName, "pb") == 0)
+    else if(strcmp(pcName, "plFloatPointer") == 0)
+    {
+        float* ptValue = (float*)PyCapsule_GetPointer(ptPythonPointer, pcName);
+        return PyFloat_FromDouble((double)ptValue[iIndex]);
+    }
+    else if(strcmp(pcName, "plBoolPointer") == 0)
     {
         bool* ptValue = PyCapsule_GetPointer(ptPythonPointer, pcName);
-        return PyBool_FromLong(*ptValue);
+        return PyBool_FromLong(ptValue[iIndex]);
     }
-
+    else if(strcmp(pcName, "plIntPointer") == 0)
+    {
+        int* ptValue = PyCapsule_GetPointer(ptPythonPointer, pcName);
+        return PyLong_FromLong(ptValue[iIndex]);
+    }
     Py_RETURN_NONE;
 }
 
@@ -652,19 +702,5 @@ plPythonIntConstantPair gatCoreIntPairs[] = {
     PL_ADD_INT_CONSTANT(PL_MOUSE_CURSOR_WAIT),
     PL_ADD_INT_CONSTANT(PL_MOUSE_CURSOR_PROGRESS),
     PL_ADD_INT_CONSTANT(PL_MOUSE_CURSOR_NOT_ALLOWED),
-    PL_ADD_INT_CONSTANT(PL_MOUSE_CURSOR_COUNT),
-
-    // colors
-    PL_ADD_INT_CONSTANT(PL_COLOR_32_WHITE),
-    PL_ADD_INT_CONSTANT(PL_COLOR_32_BLACK),
-    PL_ADD_INT_CONSTANT(PL_COLOR_32_RED),
-    PL_ADD_INT_CONSTANT(PL_COLOR_32_BLUE),
-    PL_ADD_INT_CONSTANT(PL_COLOR_32_DARK_BLUE),
-    PL_ADD_INT_CONSTANT(PL_COLOR_32_GREEN),
-    PL_ADD_INT_CONSTANT(PL_COLOR_32_YELLOW),
-    PL_ADD_INT_CONSTANT(PL_COLOR_32_ORANGE),
-    PL_ADD_INT_CONSTANT(PL_COLOR_32_MAGENTA),
-    PL_ADD_INT_CONSTANT(PL_COLOR_32_CYAN),
-    PL_ADD_INT_CONSTANT(PL_COLOR_32_GREY),
-    PL_ADD_INT_CONSTANT(PL_COLOR_32_LIGHT_GREY)
+    PL_ADD_INT_CONSTANT(PL_MOUSE_CURSOR_COUNT)
 };

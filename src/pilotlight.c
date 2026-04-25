@@ -33,6 +33,7 @@ Index of this file:
 // [SECTION] includes
 //-----------------------------------------------------------------------------
 
+
 #include "pl_starter_ext_m.c"
 #include "pl_draw_ext_m.c"
 #include "pl_ui_ext_m.c"
@@ -52,6 +53,7 @@ Index of this file:
 #include "pl_renderer_ext_m.c"
 #include "pl_script_ext_m.c"
 #include "pl_core_m.c"
+#include "pl_py_math.c"
 
 
 //-----------------------------------------------------------------------------
@@ -66,6 +68,23 @@ Index of this file:
 //-----------------------------------------------------------------------------
 // [SECTION] helper api implementation
 //-----------------------------------------------------------------------------
+
+static int
+pl_add_u32_constant(PyObject* module, const char* name, uint32_t value)
+{
+    PyObject* obj = PyLong_FromUnsignedLong((unsigned long)value);
+    if(!obj)
+        return -1;
+
+    int result = PyModule_AddObject(module, name, obj);
+    if(result < 0)
+    {
+        Py_DECREF(obj);
+        return -1;
+    }
+
+    return 0; // module steals reference on success
+}
 
 bool
 pl_parse(char* formatstring, const char** keywords, PyObject* args, PyObject* kwargs, const char* message, ...)
@@ -283,13 +302,12 @@ static PyMethodDef gatCommands[] =
 
     // core API
     PL_PYTHON_COMMAND(set_pointer_value, METH_VARARGS, NULL),
-    PL_PYTHON_COMMAND(get_pointer_value, METH_O, NULL),
+    PL_PYTHON_COMMAND(get_pointer_value, METH_VARARGS, NULL),
     PL_PYTHON_COMMAND(create_bool_pointer, METH_NOARGS, NULL),
-    PL_PYTHON_COMMAND(create_int_pointer, METH_NOARGS, NULL),
-    PL_PYTHON_COMMAND(create_float_pointer, METH_NOARGS, NULL),
-    PL_PYTHON_COMMAND(destroy_bool_pointer, METH_O, NULL),
-    PL_PYTHON_COMMAND(destroy_int_pointer, METH_O, NULL),
-    PL_PYTHON_COMMAND(destroy_float_pointer, METH_O, NULL),
+    PL_PYTHON_COMMAND(create_int_pointer, METH_VARARGS, NULL),
+    PL_PYTHON_COMMAND(create_float_pointer, METH_VARARGS, NULL),
+    PL_PYTHON_COMMAND(create_double_pointer, METH_VARARGS, NULL),
+    PL_PYTHON_COMMAND(destroy_pointer, METH_O, NULL),
 
     // window API
     PL_PYTHON_COMMAND(window_create, METH_VARARGS | METH_KEYWORDS, NULL),
@@ -320,16 +338,16 @@ static PyMethodDef gatCommands[] =
     PL_PYTHON_COMMAND(io_set_mouse_cursor, METH_VARARGS, NULL),
 
     // draw API
-    PL_PYTHON_COMMAND(draw_add_triangle_filled, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(draw_add_triangle, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(draw_add_line, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(draw_add_rect, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(draw_add_rect_rounded, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(draw_add_quad, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(draw_add_circle, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(draw_add_polygon, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(draw_add_bezier_quad, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(draw_add_bezier_cubic, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(draw_add_triangle_filled, METH_VARARGS, NULL),
+    PL_PYTHON_COMMAND(draw_add_triangle, METH_VARARGS, NULL),
+    PL_PYTHON_COMMAND(draw_add_line, METH_VARARGS, NULL),
+    PL_PYTHON_COMMAND(draw_add_rect, METH_VARARGS, NULL),
+    PL_PYTHON_COMMAND(draw_add_rect_rounded, METH_VARARGS, NULL),
+    PL_PYTHON_COMMAND(draw_add_quad, METH_VARARGS, NULL),
+    PL_PYTHON_COMMAND(draw_add_circle, METH_VARARGS, NULL),
+    PL_PYTHON_COMMAND(draw_add_polygon, METH_VARARGS, NULL),
+    PL_PYTHON_COMMAND(draw_add_bezier_quad, METH_VARARGS, NULL),
+    PL_PYTHON_COMMAND(draw_add_bezier_cubic, METH_VARARGS, NULL),
 
     // ui API
     PL_PYTHON_COMMAND(ui_begin_window, METH_VARARGS | METH_KEYWORDS, NULL),
@@ -440,6 +458,19 @@ PyInit_pilotlight(void)
 		return NULL;
     }
 
+    PL_ADD_UINT_CONSTANT(ptModule, PL_COLOR_32_WHITE);
+    PL_ADD_UINT_CONSTANT(ptModule, PL_COLOR_32_BLACK);
+    PL_ADD_UINT_CONSTANT(ptModule, PL_COLOR_32_RED);
+    PL_ADD_UINT_CONSTANT(ptModule, PL_COLOR_32_BLUE);
+    PL_ADD_UINT_CONSTANT(ptModule, PL_COLOR_32_DARK_BLUE);
+    PL_ADD_UINT_CONSTANT(ptModule, PL_COLOR_32_GREEN);
+    PL_ADD_UINT_CONSTANT(ptModule, PL_COLOR_32_YELLOW);
+    PL_ADD_UINT_CONSTANT(ptModule, PL_COLOR_32_ORANGE);
+    PL_ADD_UINT_CONSTANT(ptModule, PL_COLOR_32_MAGENTA);
+    PL_ADD_UINT_CONSTANT(ptModule, PL_COLOR_32_CYAN);
+    PL_ADD_UINT_CONSTANT(ptModule, PL_COLOR_32_GREY);
+    PL_ADD_UINT_CONSTANT(ptModule, PL_COLOR_32_LIGHT_GREY);
+
     // add constants
     for(uint32_t i = 0; i < PL_ARRAYSIZE(gatCoreIntPairs); i++)
         PyModule_AddIntConstant(ptModule, gatCoreIntPairs[i].pcName, gatCoreIntPairs[i].iValue);
@@ -461,6 +492,12 @@ PyInit_pilotlight(void)
     {
         return NULL;
     }
+
+    gptVec2Type = PyType_FromSpec(&pl_vec2_spec);
+    if(!gptVec2Type)
+        return NULL;
+
+    PyModule_AddObject(ptModule, "plVec2", gptVec2Type);
 
     return ptModule;
 }
