@@ -1,4 +1,4 @@
-from typing import List, NewType
+from typing import List, NewType, Tuple
 from pilotlight.types import *
 from pilotlight.enums import *
 
@@ -80,31 +80,10 @@ def ImGui_StyleColorsLight():
 def ImGui_StyleColorsClassic():
     ...
 
-def ImGui_Begin(name, bool_pointer: plBoolPointer = None, flags: ImGuiWindowFlags = 0) -> None:
+def ImGui_Begin(name: str, bool_pointer: plBoolPointer = None, flags: ImGuiWindowFlags = 0) -> bool:
     ...
 
 def ImGui_End():
-    ...
-
-def ImGui_BeginMenuBar():
-    ...
-
-def ImGui_BeginMainMenuBar():
-    ...
-
-def ImGui_EndMenuBar():
-    ...
-
-def ImGui_EndMainMenuBar():
-    ...
-
-def ImGui_BeginMenu(label, enabled=True):
-    ...
-
-def ImGui_EndMenu():
-    ...
-
-def ImGui_MenuItem(label, shortcut="", selected=False, enabled=True, selected_pointer: plBoolPointer = None):
     ...
 
 ########################################################################################################################
@@ -126,10 +105,10 @@ def ImGui_IsWindowHovered(flags: ImGuiHoveredFlags = 0) -> bool:
 def ImGui_GetWindowDpiScale() -> float:
     ...
 
-def ImGui_GetWindowPos() -> tuple[float, float]:
+def ImGui_GetWindowPos() -> Tuple[float, float]:
     ...
 
-def ImGui_GetWindowSize() -> tuple[float, float]:
+def ImGui_GetWindowSize() -> Tuple[float, float]:
     ...
 
 def ImGui_GetWindowWidth() -> float:
@@ -179,6 +158,41 @@ def ImGui_SetWindowFocus(name: str = None) -> None:
     ...
 
 ########################################################################################################################
+# [SECTION] imgui menu stuff
+########################################################################################################################
+
+def ImGui_BeginMenuBar() -> bool:
+    ...
+
+def ImGui_BeginMainMenuBar() -> bool:
+    ...
+
+def ImGui_EndMenuBar() -> None:
+    ...
+
+def ImGui_EndMainMenuBar() -> None:
+    ...
+
+def ImGui_BeginMenu(label:str, enabled:bool=True) -> bool:
+    ...
+
+def ImGui_EndMenu() -> None:
+    ...
+
+def ImGui_MenuItem(label:str, shortcut:str="", selected:bool=False, enabled:bool=True, selected_pointer: plBoolPointer = None) -> Tuple[bool, bool]:
+    ...
+
+########################################################################################################################
+# [SECTION] imgui child windows
+########################################################################################################################
+
+def ImGui_BeginChild(str_id: str, size:List[int, int]=None, child_flags: ImGuiChildFlags = 0, window_flags: ImGuiWindowFlags = 0) -> bool:
+    ...
+
+def ImGui_EndChild() -> None:
+    ...
+
+########################################################################################################################
 # [SECTION] imgui input utilities mouse
 ########################################################################################################################
 
@@ -206,16 +220,16 @@ def ImGui_IsMousePosValid(mouse_pos=None) -> bool:
 def ImGui_IsAnyMouseDown() -> bool:
     ...
 
-def ImGui_GetMousePos() -> tuple[float, float]:
+def ImGui_GetMousePos() -> Tuple[float, float]:
     ...
 
-def ImGui_GetMousePosOnOpeningCurrentPopup() -> tuple[float, float]:
+def ImGui_GetMousePosOnOpeningCurrentPopup() -> Tuple[float, float]:
     ...
 
 def ImGui_IsMouseDragging(button: ImGuiMouseButton, lock_threshold: float = -1.0) -> bool:
     ...
 
-def ImGui_GetMouseDragDelta(button: ImGuiMouseButton = 0, lock_threshold: float = -1.0) -> tuple[float, float]:
+def ImGui_GetMouseDragDelta(button: ImGuiMouseButton = 0, lock_threshold: float = -1.0) -> Tuple[float, float]:
     ...
 
 def ImGui_ResetMouseDragDelta(button: ImGuiMouseButton = 0) -> None:
@@ -258,16 +272,6 @@ def ImGui_SaveIniSettingsToMemory() -> str | None:
     ...
 
 ########################################################################################################################
-# [SECTION] imgui child windows
-########################################################################################################################
-
-def ImGui_BeginChild(str_id: str, size=None, child_flags: ImGuiChildFlags = 0, window_flags: ImGuiWindowFlags = 0) -> bool:
-    ...
-
-def ImGui_EndChild() -> None:
-    ...
-
-########################################################################################################################
 # [SECTION] imgui id stack/scopes
 ########################################################################################################################
 
@@ -284,10 +288,10 @@ def ImGui_GetID(id: str | int) -> int:
 # [SECTION] imgui main widgets
 ########################################################################################################################
 
-def ImGui_Button(label, size=None):
+def ImGui_Button(label:str, size=None):
     ...
 
-def ImGui_Checkbox(label, bool_pointer: plBoolPointer):
+def ImGui_Checkbox(label:str, bool_pointer: plBoolPointer):
     ...
 
 def ImGui_SmallButton(label: str) -> bool:
@@ -325,6 +329,9 @@ def ImGui_BeginCombo(label: str, preview_value: str, flags: ImGuiComboFlags = 0)
     ...
 
 def ImGui_EndCombo() -> None:
+    ...
+
+def ImGui_Combo(label: str, current_item: plIntPointer, items: List[str], popup_max_height_in_items: int = -1) -> bool:
     ...
 
 ########################################################################################################################
@@ -552,16 +559,16 @@ def ImGui_GetFrameHeightWithSpacing() -> float:
 # [SECTION] imgui layout cursor positioning
 ########################################################################################################################
 
-def ImGui_GetCursorScreenPos() -> tuple[float, float]:
+def ImGui_GetCursorScreenPos() -> Tuple[float, float]:
     ...
 
 def ImGui_SetCursorScreenPos(pos) -> None:
     ...
 
-def ImGui_GetContentRegionAvail() -> tuple[float, float]:
+def ImGui_GetContentRegionAvail() -> Tuple[float, float]:
     ...
 
-def ImGui_GetCursorPos() -> tuple[float, float]:
+def ImGui_GetCursorPos() -> Tuple[float, float]:
     ...
 
 def ImGui_GetCursorPosX() -> float:
@@ -579,7 +586,7 @@ def ImGui_SetCursorPosX(local_x: float) -> None:
 def ImGui_SetCursorPosY(local_y: float) -> None:
     ...
 
-def ImGui_GetCursorStartPos() -> tuple[float, float]:
+def ImGui_GetCursorStartPos() -> Tuple[float, float]:
     ...
 
 ########################################################################################################################
@@ -793,13 +800,13 @@ def ImGui_IsAnyItemFocused() -> bool:
 def ImGui_GetItemID() -> int:
     ...
 
-def ImGui_GetItemRectMin() -> tuple[float, float]:
+def ImGui_GetItemRectMin() -> Tuple[float, float]:
     ...
 
-def ImGui_GetItemRectMax() -> tuple[float, float]:
+def ImGui_GetItemRectMax() -> Tuple[float, float]:
     ...
 
-def ImGui_GetItemRectSize() -> tuple[float, float]:
+def ImGui_GetItemRectSize() -> Tuple[float, float]:
     ...
 
 def ImGui_SetItemAllowOverlap() -> None:

@@ -7,7 +7,7 @@
       "program": "${workspaceFolder}/out/pilotlight_python.exe",
       "console": "integratedTerminal",
       "request": "launch",
-      "args": [],
+      "args": ["../sandbox/demo.py"],
       "stopAtEntry": false,
       "cwd": "${workspaceFolder}/out/",
       "environment": []

@@ -17,6 +17,7 @@ pilotlight/imgui_d.pyd
 pilotlight/*.pdb
 pilotlight/*.dll
 pilotlight/*.so
+pilotlight/*.rdi
 pilotlight/*.dSYM
 pilotlight/shaders/
 

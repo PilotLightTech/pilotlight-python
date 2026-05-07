@@ -123,10 +123,11 @@ static PyType_Slot pl_vec2_slots[] = {
 };
 
 static PyType_Spec pl_vec2_spec = {
-    .name = "pilotlight.Vec2",
-    .basicsize = sizeof(plPyVec2),
-    .flags = Py_TPFLAGS_DEFAULT,
-    .slots = pl_vec2_slots
+    "pilotlight.Vec2",
+    sizeof(plPyVec2),
+    0,
+    Py_TPFLAGS_DEFAULT,
+    pl_vec2_slots
 };
 
 static bool

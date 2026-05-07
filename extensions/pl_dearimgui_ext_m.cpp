@@ -36,6 +36,7 @@ Index of this file:
 #include "pl_math.h"
 
 #include "pl_graphics_ext.h"
+#include "pl_ds.h"
 
 bool pl_parse(const char* formatstring, const char** keywords, PyObject* args, PyObject* kwargs, const char* message, ...);
 static ImVec2 pl__get_vec2_from_python(PyObject* ptValue);
@@ -315,19 +316,19 @@ ImGui_MenuItem(PyObject* self, PyObject* args, PyObject* kwargs)
     const char* pcLabel = nullptr;
     const char* pcShortcut = nullptr;
     int bEnabled = true;
-    int bSelected = true;
+    int bSelected = false;
     PyObject* ptPointer = Py_None;
 	if (!pl_parse("s|spp$O", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
         &pcLabel, &pcShortcut, &bSelected, &bEnabled, &ptPointer))
 		return nullptr;
     
-    bool* pbSelected = nullptr;
+    bool bbSelected = (bool)bSelected;
+    bool* pbSelected = &bbSelected;
     if(!Py_IsNone(ptPointer))
         pbSelected = (bool*)PyCapsule_GetPointer(ptPointer, "plBoolPointer");
 
-    if(pbSelected)
-        return PyBool_FromLong(ImGui::MenuItem(pcLabel, pcShortcut, pbSelected, bEnabled));
-    return PyBool_FromLong(ImGui::MenuItem(pcLabel, pcShortcut, bSelected, bEnabled));
+    bool bActivated = ImGui::MenuItem(pcLabel, pcShortcut, pbSelected, bEnabled);
+    return Py_BuildValue("(pp)", bActivated, bbSelected);
 }
 
 PyObject*
@@ -2993,6 +2994,42 @@ ImGui_EndCombo(PyObject* self)
 }
 
 PyObject*
+ImGui_Combo(PyObject* self, PyObject* args, PyObject* kwargs)
+{
+    static const char* apcKeywords[] = {
+        "label",
+        "current_item",
+        "items",
+        "popup_max_height_in_items",
+        nullptr,
+    };
+    static const char** sbtEntries = nullptr;
+
+    const char* pcLabel = nullptr;
+    PyObject* ptCurrentItem = nullptr;
+    PyObject* ptItems = nullptr;
+    int popup_max_height_in_items = -1;
+	if (!pl_parse("sOO|i", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+        &pcLabel, &ptCurrentItem, &ptItems, &popup_max_height_in_items))
+		return nullptr;
+    
+    int* ptCurrentItemInt = (int*)PyCapsule_GetPointer(ptCurrentItem, "plIntPointer");
+
+    Py_ssize_t pySize = PyList_Size(ptItems);
+    pl_sb_resize(sbtEntries, (uint32_t)pySize);
+    for(Py_ssize_t i = 0; i < pySize; i++)
+    {
+        PyObject* item = PyList_GetItem(ptItems, i);
+        sbtEntries[i] = PyUnicode_AsUTF8(item);
+    }
+
+    bool bActivated = ImGui::Combo(pcLabel, ptCurrentItemInt, sbtEntries, (int)pySize, popup_max_height_in_items);
+    pl_sb_reset(sbtEntries);
+    return Py_BuildValue("p", bActivated);
+}
+
+
+PyObject*
 ImGui_BeginListBox(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {"label", "size", nullptr};
@@ -3398,6 +3435,7 @@ static PyMethodDef gatCommands[] =
     PL_PYTHON_COMMAND(ImGui_SetKeyboardFocusHere, METH_VARARGS | METH_KEYWORDS, NULL),
 
     // imgui combo box/dropdown widgets
+    PL_PYTHON_COMMAND(ImGui_Combo, METH_VARARGS | METH_KEYWORDS, NULL),
     PL_PYTHON_COMMAND(ImGui_BeginCombo, METH_VARARGS | METH_KEYWORDS, NULL),
     PL_PYTHON_COMMAND(ImGui_EndCombo, METH_NOARGS, NULL),
 
