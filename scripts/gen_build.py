@@ -58,7 +58,7 @@ with pl.project("pilotlight_python"):
     pl.add_profile(compiler_filter=["msvc"],
                     linker_flags=["-incremental:no"],
                     compiler_flags=["-Zc:preprocessor", "-nologo", "-W4", "-WX", "-wd4201",
-                                "-wd4100", "-wd4996", "-wd4505", "-wd4189", "-wd5105", "-wd4115", "-permissive-"])
+                                "-wd4100", "-wd4996", "-wd4505", "-wd4189", "-wd5105", "-wd4115", "-permissive"])
 
     # linux or gcc only
     pl.add_profile(compiler_filter=["gcc"],
