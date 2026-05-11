@@ -41,12 +41,13 @@ class App:
         pl_vfs_mount_directory("/shader-temp", "shader-temp")
 
         # Create and show the OS window.
-        self.ptWindow = pl_window_create(
-            "Pilot Light Python - Drawing API Example",
-            100, 100,   # x, y
-            1280, 720,  # width, height
-            0
-        )
+        window_desc = plWindowDesc()
+        window_desc.pcTitle = "Pilot Light Python - Drawing API Example"
+        window_desc.iXPos = 100
+        window_desc.iYPos = 100
+        window_desc.uWidth = 1280
+        window_desc.uHeight = 720
+        _, self.ptWindow = pl_window_create(window_desc)
         pl_window_show(self.ptWindow)
 
         # Initialize the starter extension.

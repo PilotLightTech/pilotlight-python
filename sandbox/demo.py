@@ -62,7 +62,9 @@ class App:
         pl_vfs_mount_directory("/shaders", os.path.dirname(os.path.abspath(pl.__file__)) + "/shaders")
         pl_vfs_mount_directory("/shader-temp", "shader-temp")
 
-        self.ptWindow = pl_window_create("Demo", 200, 200, 500, 500, 0)
+        window_desc = plWindowDesc()
+        window_desc.pcTitle = "Demo"
+        _, self.ptWindow = pl_window_create(window_desc)
         pl_window_show(self.ptWindow)
 
         starter_flags = plStarterFlag.PL_STARTER_FLAGS_ALL_EXTENSIONS

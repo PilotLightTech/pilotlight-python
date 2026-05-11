@@ -1,4 +1,4 @@
-from typing import List, dict, overload, NewType
+from typing import List, dict, Tuple, overload, NewType
 from enum import IntEnum, IntFlag
 import pilotlight.pilotlight as pl
 from pilotlight.types import *
@@ -27,7 +27,7 @@ class plVec2:
 
     def __neg__(self) -> plVec2: ...
 
-type plVec2Like = plVec2 | tuple[float, float] | List[float, float]
+type plVec2Like = plVec2 | Tuple[float, float] | List[float, float]
 
 ########################################################################################################################
 # [SECTION] opaque types
@@ -137,7 +137,7 @@ def pl_io_set_mouse_cursor(vec: int) -> None:
 # [SECTION] window api
 ########################################################################################################################
 
-def pl_window_create(pcTitle: str, iXPos, iYPos, uWidth, uHeight, tFlags) -> plWindow:
+def pl_window_create(desc: plWindowDesc) -> Tuple[int, plWindow]:
     ...
 
 def pl_window_show(window: plWindow):
@@ -167,7 +167,7 @@ def pl_vfs_mount_directory(directory, physical_directory, **kwargs) -> None:
 # [SECTION] pack api
 ########################################################################################################################
 
-def pl_pack_begin_packing(file, content_version) -> tuple[bool, plPakFile]:
+def pl_pack_begin_packing(file, content_version) -> Tuple[bool, plPakFile]:
     ...
 
 def pl_pack_add_from_disk(pak: plPakFile, pcPakPath, pcFilePath, bCompress) -> bool:

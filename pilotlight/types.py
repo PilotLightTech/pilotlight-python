@@ -22,3 +22,12 @@ class plDrawSolidOptions:
 class plDrawLineOptions:
     uColor: int = 0xFFFFFFFF  # default white
     fThickness: float = 1.0
+
+@dataclass(slots=True)
+class plWindowDesc:
+    tFlags: int = 0
+    pcTitle: str = "Untitled Window"
+    uWidth: int = 500
+    uHeight: int = 500
+    iXPos: int = 200
+    iYPos: int = 200
