@@ -42,10 +42,10 @@ with pl.project("pilotlight_python"):
         "../../pilotlight/extensions",
         "../../pilotlight/src",
         "../../pilotlight/shaders",
-        "../../pilotlight/dependencies/stb",
-        "../../pilotlight/dependencies/glfw/include/",
-        "../../pilotlight/dependencies/imgui/",
-        "../../pilotlight/dependencies/cgltf",
+        "../../pilotlight/thirdparty/stb",
+        "../../pilotlight/thirdparty/glfw/include/",
+        "../../pilotlight/thirdparty/imgui/",
+        "../../pilotlight/thirdparty/cgltf",
         "../dependencies/cpython/",
         "../dependencies/cpython/Include/",
         "../dependencies/cpython/build/debug/"
@@ -95,8 +95,8 @@ with pl.project("pilotlight_python"):
 
     with pl.target("glfw", pl.TargetType.STATIC_LIBRARY, False, False):
 
-        pl.add_source_files("../../pilotlight/dependencies/glfw/src/glfw_unity.c")
-        pl.add_source_files("../../pilotlight/dependencies/glfw/src/null_window.c")
+        pl.add_source_files("../../pilotlight/thirdparty/glfw/src/glfw_unity.c")
+        pl.add_source_files("../../pilotlight/thirdparty/glfw/src/null_window.c")
 
         with pl.configuration("debug"):
 
@@ -117,7 +117,7 @@ with pl.project("pilotlight_python"):
                     pl.add_dynamic_link_libraries("xcb", "X11", "X11-xcb", "xkbcommon", "pthread", "xcb-cursor", "vulkan")
                     pl.add_link_directories('$VULKAN_SDK/lib')
                     pl.add_compiler_flags("-std=gnu99")
-                    pl.add_source_files("../../pilotlight/dependencies/glfw/src/posix_poll.c")
+                    pl.add_source_files("../../pilotlight/thirdparty/glfw/src/posix_poll.c")
 
             # apple
             with pl.platform("Darwin"):
@@ -145,7 +145,7 @@ with pl.project("pilotlight_python"):
                     pl.add_dynamic_link_libraries("xcb", "X11", "X11-xcb", "xkbcommon", "pthread", "xcb-cursor", "vulkan")
                     pl.add_link_directories('$VULKAN_SDK/lib')
                     pl.add_compiler_flags("-std=gnu99")
-                    pl.add_source_files("../../pilotlight/dependencies/glfw/src/posix_poll.c")
+                    pl.add_source_files("../../pilotlight/thirdparty/glfw/src/posix_poll.c")
 
             # apple
             with pl.platform("Darwin"):
@@ -161,7 +161,7 @@ with pl.project("pilotlight_python"):
     with pl.target("imgui", pl.TargetType.STATIC_LIBRARY, False, False):
 
         # imgui & imgui
-        pl.add_source_files("../../pilotlight/dependencies/imgui/imgui_unity.cpp")
+        pl.add_source_files("../../pilotlight/thirdparty/imgui/imgui_unity.cpp")
 
         # default config
         with pl.configuration("debug"):
