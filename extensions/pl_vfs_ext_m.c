@@ -18,8 +18,13 @@ Index of this file:
 // [SECTION] implementations
 //-----------------------------------------------------------------------------
 
+typedef struct _pyplVfsI
+{
+    PyObject_HEAD
+} pyplVfsI;
+
 PyObject*
-vfs_mount_directory(PyObject* self, PyObject* args, PyObject* kwargs)
+mount_directory(PyObject* self, PyObject* args, PyObject* kwargs)
 {
 
     static const char* apcKeywords[] = {
@@ -37,3 +42,23 @@ vfs_mount_directory(PyObject* self, PyObject* args, PyObject* kwargs)
     gptVfs->mount_directory(pcDirectory, pcPhysicalDirectory, PL_VFS_MOUNT_FLAGS_NONE);
     Py_RETURN_NONE;
 }
+
+static PyMethodDef gatplVfsICommands[] =
+{
+    PL_PYTHON_METHOD(mount_directory, METH_VARARGS | METH_KEYWORDS | METH_STATIC, NULL),
+    {NULL, NULL, 0, NULL}
+};
+
+static PyType_Slot gatplVfsISlots[] = {
+    // {Py_tp_init, (void*)pl_io_init},
+    {Py_tp_methods, (void*)gatplVfsICommands},
+    {0, 0}
+};
+
+static PyType_Spec plVfsISpec = {
+    "pilotlight.plVfsI",
+    sizeof(pyplVfsI),
+    0,
+    Py_TPFLAGS_DEFAULT,
+    gatplVfsISlots
+};

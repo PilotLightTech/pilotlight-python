@@ -19,6 +19,11 @@ Index of this file:
 // [SECTION] implementations
 //-----------------------------------------------------------------------------
 
+typedef struct _pyplGraphicsI
+{
+    PyObject_HEAD
+} pyplGraphicsI;
+
 PyObject*
 graphics_flush_device(PyObject* self, PyObject* args, PyObject* kwargs)
 {
@@ -38,3 +43,22 @@ graphics_flush_device(PyObject* self, PyObject* args, PyObject* kwargs)
     gptGfx->flush_device(ptDevice);
     Py_RETURN_NONE;
 }
+
+static PyMethodDef gatplGraphicsICommands[] =
+{
+    {"flush_device", (PyCFunction)graphics_flush_device, METH_VARARGS | METH_KEYWORDS | METH_STATIC, NULL},
+    {NULL, NULL, 0, NULL}
+};
+
+static PyType_Slot gatplGraphicsISlots[] = {
+    {Py_tp_methods, (void*)gatplGraphicsICommands},
+    {0, 0}
+};
+
+static PyType_Spec plGraphicsISpec = {
+    "pilotlight.plGraphicsI",
+    sizeof(pyplGraphicsI),
+    0,
+    Py_TPFLAGS_DEFAULT,
+    gatplGraphicsISlots
+};

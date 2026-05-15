@@ -27,8 +27,6 @@ Index of this file:
 // [SECTION] header mess
 //-----------------------------------------------------------------------------
 
-
-
 //-----------------------------------------------------------------------------
 // [SECTION] includes
 //-----------------------------------------------------------------------------
@@ -119,6 +117,37 @@ pl_get_entity_from_python(PyObject* ptValue)
         tResult.tEntity.uGeneration = PyLong_AsUnsignedLong(PyTuple_GetItem(ptValue, 2));
     }
     return tResult;
+}
+
+plVec2*
+pl_get_vec2_list_from_python(PyObject* ptObject, uint32_t* puCountOut)
+{
+    static plVec2* sbtList = NULL;
+    pl_sb_reset(sbtList);
+
+    if (PyTuple_Check(ptObject))
+    {
+        Py_ssize_t pySize = PyTuple_Size(ptObject);
+        *puCountOut = (uint32_t)pySize;
+        pl_sb_resize(sbtList, *puCountOut);
+        for (Py_ssize_t i = 0; i < pySize; ++i)
+        {
+            sbtList[i] = pl_get_vec2_from_python(PyTuple_GetItem(ptObject, i));
+        }
+    }
+
+    else if (PyList_Check(ptObject))
+    {
+        Py_ssize_t pySize = PyList_Size(ptObject);
+        *puCountOut = (uint32_t)pySize;
+        pl_sb_resize(sbtList, *puCountOut);
+        for (Py_ssize_t i = 0; i < pySize; ++i)
+        {
+            sbtList[i] = pl_get_vec2_from_python(PyList_GetItem(ptObject, i));
+        }
+    }
+
+    return sbtList;
 }
 
 plVec2
@@ -293,6 +322,84 @@ pl_python_run(PyObject* self, PyObject* arg)
     Py_RETURN_NONE;
 }
 
+static int
+pl_io_init(PyObject* self, PyObject* args, PyObject* kwargs)
+{
+    plPyIO* ptPyIO = (plPyIO*)self;
+    ptPyIO->ptIO = gptIOI->get_io();
+    return 0;
+}
+
+static PyObject* pl_io_get_bRunning(plPyIO* self, void *closure){ return PyBool_FromLong(self->ptIO->bRunning);}
+
+static PyObject* pl_io_get_dTime(plPyIO* self, void *closure){ return PyFloat_FromDouble(self->ptIO->dTime);}
+static PyObject* pl_io_get_fFrameRate(plPyIO* self, void *closure){ return PyFloat_FromDouble((double)self->ptIO->fFrameRate);}
+static PyObject* pl_io_get_fMouseDragThreshold(plPyIO* self, void* closure){return PyFloat_FromDouble((double)self->ptIO->fMouseDragThreshold);}
+static PyObject* pl_io_get_fMouseDoubleClickTime(plPyIO* self, void* closure){return PyFloat_FromDouble((double)self->ptIO->fMouseDoubleClickTime);}
+static PyObject* pl_io_get_fMouseDoubleClickMaxDist(plPyIO* self, void* closure){return PyFloat_FromDouble((double)self->ptIO->fMouseDoubleClickMaxDist);}
+static PyObject* pl_io_get_fKeyRepeatDelay(plPyIO* self, void* closure){return PyFloat_FromDouble((double)self->ptIO->fKeyRepeatDelay);}
+static PyObject* pl_io_get_fKeyRepeatRate(plPyIO* self, void* closure){return PyFloat_FromDouble((double)self->ptIO->fKeyRepeatRate);}
+
+static int pl_io_set_fMouseDragThreshold(plPyIO* self, PyObject *value, void *closure){ self->ptIO->fMouseDragThreshold = (float)PyFloat_AsDouble(value); return 0;}
+static int pl_io_set_fMouseDoubleClickTime(plPyIO* self, PyObject* value, void* closure){ self->ptIO->fMouseDoubleClickTime = (float)PyFloat_AsDouble(value); return 0;}
+static int pl_io_set_fMouseDoubleClickMaxDist(plPyIO* self, PyObject* value, void* closure){ self->ptIO->fMouseDoubleClickMaxDist = (float)PyFloat_AsDouble(value); return 0;}
+static int pl_io_set_fKeyRepeatDelay(plPyIO* self, PyObject* value, void* closure){ self->ptIO->fKeyRepeatDelay = (float)PyFloat_AsDouble(value); return 0;}
+static int pl_io_set_fKeyRepeatRate(plPyIO* self, PyObject* value, void* closure){ self->ptIO->fKeyRepeatRate = (float)PyFloat_AsDouble(value); return 0;}
+
+static int
+pl_io_set_bRunning(plPyIO* self, PyObject *value, void *closure)
+{
+
+    self->ptIO->bRunning = PyLong_AsLong(value);
+    return 0;
+}
+
+static PyObject*
+pl_io_get_tMainViewportSize(plPyIO* self, void *closure)
+{
+    return pl_vec2_to_py(self->ptIO->tMainViewportSize);
+}
+
+static PyObject*
+pl_io_get_tMainFramebufferScale(plPyIO* self, void *closure)
+{
+    return pl_vec2_to_py(self->ptIO->tMainFramebufferScale);
+}
+
+#define PL_PYTHON_PROPERTY(ARG) {#ARG, (getter)pl_io_get_##ARG, (setter)pl_io_set_##ARG, "Property: " # ARG}
+#define PL_PYTHON_PROPERTY_GETTER_ONLY(ARG) {#ARG, (getter)pl_io_get_##ARG, (setter)NULL, "Property: " # ARG}
+
+static PyGetSetDef gatIOProps[] =
+{
+    PL_PYTHON_PROPERTY(bRunning),
+    PL_PYTHON_PROPERTY(fMouseDragThreshold),
+    PL_PYTHON_PROPERTY(fMouseDoubleClickTime),
+    PL_PYTHON_PROPERTY(fMouseDoubleClickMaxDist),
+    PL_PYTHON_PROPERTY(fKeyRepeatDelay),
+    PL_PYTHON_PROPERTY(fKeyRepeatRate),
+    PL_PYTHON_PROPERTY_GETTER_ONLY(fFrameRate),
+    PL_PYTHON_PROPERTY_GETTER_ONLY(dTime),
+    PL_PYTHON_PROPERTY_GETTER_ONLY(fFrameRate),
+    PL_PYTHON_PROPERTY_GETTER_ONLY(tMainViewportSize),
+    PL_PYTHON_PROPERTY_GETTER_ONLY(tMainFramebufferScale),
+    {NULL, NULL, 0, NULL}
+};
+
+static PyType_Slot pl_io_slots[] = {
+    {Py_tp_init, (void*)pl_io_init},
+    {Py_tp_getset, (void*)gatIOProps},
+    // {Py_tp_methods, (void*)gatIOCommands},
+    {0, 0}
+};
+
+static PyType_Spec pl_io_spec = {
+    "pilotlight.IO",
+    sizeof(plPyIO),
+    0,
+    Py_TPFLAGS_DEFAULT,
+    pl_io_slots
+};
+
 #define PL_PYTHON_COMMAND(ARG, FLAGS, DOCS) {"pl_" # ARG, (PyCFunction)ARG, FLAGS, DOCS}
 
 static PyMethodDef gatCommands[] =
@@ -308,129 +415,6 @@ static PyMethodDef gatCommands[] =
     PL_PYTHON_COMMAND(create_float_pointer, METH_VARARGS, NULL),
     PL_PYTHON_COMMAND(create_double_pointer, METH_VARARGS, NULL),
     PL_PYTHON_COMMAND(destroy_pointer, METH_O, NULL),
-
-    // window API
-    PL_PYTHON_COMMAND(window_create, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(window_show, METH_O, NULL),
-    PL_PYTHON_COMMAND(window_destroy, METH_O, NULL),
-
-    // vfs API
-    PL_PYTHON_COMMAND(vfs_mount_directory, METH_VARARGS | METH_KEYWORDS, NULL),
-    
-    // io API
-    PL_PYTHON_COMMAND(io_get_version_string, METH_NOARGS, NULL),
-    PL_PYTHON_COMMAND(io_get_io, METH_NOARGS, NULL),
-    PL_PYTHON_COMMAND(io_new_frame, METH_NOARGS, NULL),
-    PL_PYTHON_COMMAND(io_is_key_pressed, METH_VARARGS, NULL),
-    PL_PYTHON_COMMAND(io_is_key_released, METH_VARARGS, NULL),
-    PL_PYTHON_COMMAND(io_is_key_down, METH_VARARGS, NULL),
-    PL_PYTHON_COMMAND(io_get_key_pressed_amount, METH_VARARGS, NULL),
-    PL_PYTHON_COMMAND(io_is_mouse_down, METH_VARARGS, NULL),
-    PL_PYTHON_COMMAND(io_is_mouse_released, METH_VARARGS, NULL),
-    PL_PYTHON_COMMAND(io_is_mouse_double_clicked, METH_VARARGS, NULL),
-    PL_PYTHON_COMMAND(io_is_mouse_clicked, METH_VARARGS, NULL),
-    PL_PYTHON_COMMAND(io_is_mouse_dragging, METH_VARARGS, NULL),
-    PL_PYTHON_COMMAND(io_reset_mouse_drag_delta, METH_VARARGS, NULL),
-    PL_PYTHON_COMMAND(io_get_mouse_drag_delta, METH_VARARGS, NULL),
-    PL_PYTHON_COMMAND(io_get_mouse_pos, METH_NOARGS, NULL),
-    PL_PYTHON_COMMAND(io_get_mouse_wheel, METH_NOARGS, NULL),
-    PL_PYTHON_COMMAND(io_is_mouse_pos_valid, METH_NOARGS, NULL),
-    PL_PYTHON_COMMAND(io_set_mouse_cursor, METH_VARARGS, NULL),
-
-    // draw API
-    PL_PYTHON_COMMAND(draw_add_triangle_filled, METH_VARARGS, NULL),
-    PL_PYTHON_COMMAND(draw_add_triangle, METH_VARARGS, NULL),
-    PL_PYTHON_COMMAND(draw_add_line, METH_VARARGS, NULL),
-    PL_PYTHON_COMMAND(draw_add_rect, METH_VARARGS, NULL),
-    PL_PYTHON_COMMAND(draw_add_rect_rounded, METH_VARARGS, NULL),
-    PL_PYTHON_COMMAND(draw_add_quad, METH_VARARGS, NULL),
-    PL_PYTHON_COMMAND(draw_add_circle, METH_VARARGS, NULL),
-    PL_PYTHON_COMMAND(draw_add_polygon, METH_VARARGS, NULL),
-    PL_PYTHON_COMMAND(draw_add_bezier_quad, METH_VARARGS, NULL),
-    PL_PYTHON_COMMAND(draw_add_bezier_cubic, METH_VARARGS, NULL),
-
-    // ui API
-    PL_PYTHON_COMMAND(ui_begin_window, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(ui_end_window, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(ui_button, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(ui_checkbox, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(ui_input_text, METH_VARARGS | METH_KEYWORDS, NULL),
-
-    // graphics API
-    PL_PYTHON_COMMAND(graphics_flush_device, METH_VARARGS | METH_KEYWORDS, NULL),
-
-    // starter API
-    PL_PYTHON_COMMAND(starter_begin_frame, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(starter_initialize, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(starter_finalize, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(starter_cleanup, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(starter_resize, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(starter_end_frame, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(starter_get_foreground_layer, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(starter_get_background_layer, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(starter_get_device, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(starter_get_swapchain, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(starter_get_render_pass, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(starter_begin_main_pass, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(starter_end_main_pass, METH_VARARGS | METH_KEYWORDS, NULL),
-
-    // shader API
-    PL_PYTHON_COMMAND(shader_initialize, METH_O, NULL),
-    PL_PYTHON_COMMAND(shader_cleanup, METH_NOARGS, NULL),
-    PL_PYTHON_COMMAND(shader_load_glsl, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(shader_compile_glsl, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(shader_write_to_disk, METH_VARARGS, NULL),
-
-    // pak API
-    PL_PYTHON_COMMAND(pak_begin_packing, METH_VARARGS, NULL),
-    PL_PYTHON_COMMAND(pak_add_from_disk, METH_VARARGS, NULL),
-    PL_PYTHON_COMMAND(pak_end_packing, METH_O, NULL),
-
-    // stats API
-    PL_PYTHON_COMMAND(stats_new_frame, METH_NOARGS, NULL),
-    PL_PYTHON_COMMAND(stats_get_counter, METH_O, NULL),
-
-    // screen log API
-    PL_PYTHON_COMMAND(screen_log_clear, METH_NOARGS, NULL),
-    PL_PYTHON_COMMAND(screen_log_add_message, METH_VARARGS, NULL),
-
-    // ecs API
-    PL_PYTHON_COMMAND(ecs_initialize, METH_NOARGS, NULL),
-    PL_PYTHON_COMMAND(ecs_finalize, METH_NOARGS, NULL),
-    PL_PYTHON_COMMAND(ecs_cleanup, METH_NOARGS, NULL),
-    PL_PYTHON_COMMAND(ecs_get_default_library, METH_NOARGS, NULL),
-    PL_PYTHON_COMMAND(ecs_get_component, METH_VARARGS | METH_KEYWORDS, NULL),
-
-    // animation API
-    PL_PYTHON_COMMAND(animation_register_ecs_system, METH_NOARGS, NULL),
-
-    // camera API
-    PL_PYTHON_COMMAND(camera_register_ecs_system, METH_NOARGS, NULL),
-    PL_PYTHON_COMMAND(camera_create_perspective, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(camera_set_fov, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(camera_update, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(camera_get_ecs_type_key, METH_NOARGS, NULL),
-
-    // material API
-    PL_PYTHON_COMMAND(material_register_ecs_system, METH_NOARGS, NULL),
-
-    // mesh API
-    PL_PYTHON_COMMAND(mesh_register_ecs_system, METH_NOARGS, NULL),
-
-    // physics API
-    PL_PYTHON_COMMAND(physics_register_ecs_system, METH_NOARGS, NULL),
-
-    // shader variant API
-    PL_PYTHON_COMMAND(shader_variant_initialize, METH_VARARGS | METH_KEYWORDS, NULL),
-
-    // renderer API
-    PL_PYTHON_COMMAND(renderer_initialize, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(renderer_create_directional_light, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(renderer_cleanup, METH_NOARGS, NULL),
-    PL_PYTHON_COMMAND(renderer_register_ecs_system, METH_NOARGS, NULL),
-
-    // script API
-    PL_PYTHON_COMMAND(script_register_ecs_system, METH_NOARGS, NULL),
 
     {NULL, NULL, 0, NULL}
 };
@@ -494,10 +478,52 @@ PyInit_pilotlight(void)
     }
 
     gptVec2Type = PyType_FromSpec(&pl_vec2_spec);
-    if(!gptVec2Type)
-        return NULL;
+    gptIOType = PyType_FromSpec(&pl_io_spec);
+    gptplUiI = PyType_FromSpec(&plUiISpec);
+    gptplVfsI = PyType_FromSpec(&plVfsISpec);
+    gptplPakI = PyType_FromSpec(&plPakISpec);
+    gptplStatsI = PyType_FromSpec(&plStatsISpec);
+    gptplDrawI = PyType_FromSpec(&plDrawISpec);
+    gptplGraphicsI = PyType_FromSpec(&plGraphicsISpec);
+    gptplStarterI = PyType_FromSpec(&plStarterISpec);
+    gptplIOI = PyType_FromSpec(&plIOISpec);
+    gptplShaderI = PyType_FromSpec(&plShaderISpec);
+    gptplShaderVariantI = PyType_FromSpec(&plShaderVariantISpec);
+    gptplWindowI = PyType_FromSpec(&plWindowISpec);
+    gptplScreenLogI = PyType_FromSpec(&plScreenLogISpec);
+    gptplEcsI = PyType_FromSpec(&plEcsISpec);
+    gptplAnimationI = PyType_FromSpec(&plAnimationISpec);
+    gptplMaterialI = PyType_FromSpec(&plMaterialISpec);
+    gptplMeshI = PyType_FromSpec(&plMeshISpec);
+    gptplPhysicsI = PyType_FromSpec(&plPhysicsISpec);
+    gptplScriptI = PyType_FromSpec(&plScriptISpec);
+    gptplCameraI = PyType_FromSpec(&plCameraISpec);
+    gptplRendererI = PyType_FromSpec(&plRendererISpec);
+    gptplRendererEcsI = PyType_FromSpec(&plRendererEcsISpec);
 
+    PyModule_AddObject(ptModule, "plUiI", gptplUiI);
     PyModule_AddObject(ptModule, "plVec2", gptVec2Type);
+    PyModule_AddObject(ptModule, "plIO", gptIOType);
+    PyModule_AddObject(ptModule, "plVfsI", gptplVfsI);
+    PyModule_AddObject(ptModule, "plPakI", gptplPakI);
+    PyModule_AddObject(ptModule, "plStatsI", gptplStatsI);
+    PyModule_AddObject(ptModule, "plDrawI", gptplDrawI);
+    PyModule_AddObject(ptModule, "plGraphicsI", gptplGraphicsI);
+    PyModule_AddObject(ptModule, "plStarterI", gptplStarterI);
+    PyModule_AddObject(ptModule, "plIOI", gptplIOI);
+    PyModule_AddObject(ptModule, "plShaderI", gptplShaderI);
+    PyModule_AddObject(ptModule, "plShaderVariantI", gptplShaderVariantI);
+    PyModule_AddObject(ptModule, "plWindowI", gptplWindowI);
+    PyModule_AddObject(ptModule, "plScreenLogI", gptplScreenLogI);
+    PyModule_AddObject(ptModule, "plEcsI", gptplEcsI);
+    PyModule_AddObject(ptModule, "plAnimationI", gptplAnimationI);
+    PyModule_AddObject(ptModule, "plMaterialI", gptplMaterialI);
+    PyModule_AddObject(ptModule, "plMeshI", gptplMeshI);
+    PyModule_AddObject(ptModule, "plPhysicsI", gptplPhysicsI);
+    PyModule_AddObject(ptModule, "plScriptI", gptplScriptI);
+    PyModule_AddObject(ptModule, "plCameraI", gptplCameraI);
+    PyModule_AddObject(ptModule, "plRendererI", gptplRendererI);
+    PyModule_AddObject(ptModule, "plRendererEcsI", gptplRendererEcsI);
 
     return ptModule;
 }

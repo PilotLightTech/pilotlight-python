@@ -19,6 +19,11 @@ Index of this file:
 // [SECTION] implementations
 //-----------------------------------------------------------------------------
 
+typedef struct _pyplCameraI
+{
+    PyObject_HEAD
+} pyplCameraI;
+
 PyObject*
 camera_register_ecs_system(PyObject* self)
 {
@@ -121,3 +126,26 @@ camera_update(PyObject* self, PyObject* args, PyObject* kwargs)
     gptCamera->update(ptCamera);
     Py_RETURN_NONE;
 }
+
+static PyMethodDef gatplCameraICommands[] =
+{
+    {"register_ecs_system", (PyCFunction)camera_register_ecs_system, METH_NOARGS | METH_STATIC, NULL},
+    {"create_perspective", (PyCFunction)camera_create_perspective, METH_VARARGS | METH_KEYWORDS | METH_STATIC, NULL},
+    {"set_fov", (PyCFunction)camera_set_fov, METH_VARARGS | METH_KEYWORDS | METH_STATIC, NULL},
+    {"update", (PyCFunction)camera_update, METH_VARARGS | METH_KEYWORDS | METH_STATIC, NULL},
+    {"get_ecs_type_key", (PyCFunction)camera_get_ecs_type_key, METH_NOARGS | METH_STATIC, NULL},
+    {NULL, NULL, 0, NULL}
+};
+
+static PyType_Slot gatplCameraISlots[] = {
+    {Py_tp_methods, (void*)gatplCameraICommands},
+    {0, 0}
+};
+
+static PyType_Spec plCameraISpec = {
+    "pilotlight.plCameraI",
+    sizeof(pyplCameraI),
+    0,
+    Py_TPFLAGS_DEFAULT,
+    gatplCameraISlots
+};

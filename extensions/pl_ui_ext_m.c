@@ -19,8 +19,13 @@ Index of this file:
 // [SECTION] implementations
 //-----------------------------------------------------------------------------
 
+typedef struct _pyplUiI
+{
+    PyObject_HEAD
+} pyplUiI;
+
 PyObject*
-ui_begin_window(PyObject* self, PyObject* args, PyObject* kwargs)
+begin_window(PyObject* self, PyObject* args, PyObject* kwargs)
 {
  
     const char* pcText = NULL;
@@ -36,7 +41,7 @@ ui_begin_window(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-ui_end_window(PyObject* self, PyObject* args, PyObject* kwargs)
+end_window(PyObject* self, PyObject* args, PyObject* kwargs)
 {
  
     gptUI->end_window();
@@ -44,7 +49,7 @@ ui_end_window(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-ui_button(PyObject* self, PyObject* args, PyObject* kwargs)
+button(PyObject* self, PyObject* args, PyObject* kwargs)
 {
  
     const char* pcText = NULL;
@@ -62,7 +67,7 @@ ui_button(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-ui_checkbox(PyObject* self, PyObject* args, PyObject* kwargs)
+checkbox(PyObject* self, PyObject* args, PyObject* kwargs)
 {
 
     static const char* apcKeywords[] = {
@@ -92,7 +97,7 @@ ui_checkbox(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-ui_input_text(PyObject* self, PyObject* args, PyObject* kwargs)
+input_text(PyObject* self, PyObject* args, PyObject* kwargs)
 {
 
     static const char* apcKeywords[] = {
@@ -113,3 +118,27 @@ ui_input_text(PyObject* self, PyObject* args, PyObject* kwargs)
     bool bResult = gptUI->input_text(pcName, acBuffer, szBufferSize, 0);
     return Py_BuildValue("p", bResult);
 }
+
+static PyMethodDef gatplUiICommands[] =
+{
+    PL_PYTHON_METHOD(begin_window, METH_VARARGS | METH_KEYWORDS | METH_STATIC, NULL),
+    PL_PYTHON_METHOD(end_window, METH_VARARGS | METH_KEYWORDS | METH_STATIC, NULL),
+    PL_PYTHON_METHOD(button, METH_VARARGS | METH_KEYWORDS | METH_STATIC, NULL),
+    PL_PYTHON_METHOD(checkbox, METH_VARARGS | METH_KEYWORDS | METH_STATIC, NULL),
+    PL_PYTHON_METHOD(input_text, METH_VARARGS | METH_KEYWORDS | METH_STATIC, NULL),
+    {NULL, NULL, 0, NULL}
+};
+
+static PyType_Slot gatplUiISlots[] = {
+    // {Py_tp_init, (void*)pl_io_init},
+    {Py_tp_methods, (void*)gatplUiICommands},
+    {0, 0}
+};
+
+static PyType_Spec plUiISpec = {
+    "pilotlight.plUiI",
+    sizeof(pyplUiI),
+    0,
+    Py_TPFLAGS_DEFAULT,
+    gatplUiISlots
+};

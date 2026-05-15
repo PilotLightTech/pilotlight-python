@@ -18,6 +18,11 @@ Index of this file:
 // [SECTION] implementations
 //-----------------------------------------------------------------------------
 
+typedef struct _pyplShaderI
+{
+    PyObject_HEAD
+} pyplShaderI;
+
 PyObject*
 shader_initialize(PyObject* self, PyObject* args)
 {
@@ -220,4 +225,28 @@ plPythonIntConstantPair gatShaderIntPairs[] = {
     PL_ADD_INT_CONSTANT(PL_SHADER_OPTIMIZATION_NONE),
     PL_ADD_INT_CONSTANT(PL_SHADER_OPTIMIZATION_SIZE),
     PL_ADD_INT_CONSTANT(PL_SHADER_OPTIMIZATION_PERFORMANCE),
+};
+
+static PyMethodDef gatplShaderICommands[] =
+{
+    {"initialize", (PyCFunction)shader_initialize, METH_O | METH_STATIC, NULL},
+    {"cleanup", (PyCFunction)shader_cleanup, METH_NOARGS | METH_STATIC, NULL},
+    {"load_glsl", (PyCFunction)shader_load_glsl, METH_VARARGS | METH_KEYWORDS | METH_STATIC, NULL},
+    {"compile_glsl", (PyCFunction)shader_compile_glsl, METH_VARARGS | METH_KEYWORDS | METH_STATIC, NULL},
+    {"write_to_disk", (PyCFunction)shader_write_to_disk, METH_VARARGS | METH_STATIC, NULL},
+
+    {NULL, NULL, 0, NULL}
+};
+
+static PyType_Slot gatplShaderISlots[] = {
+    {Py_tp_methods, (void*)gatplShaderICommands},
+    {0, 0}
+};
+
+static PyType_Spec plShaderISpec = {
+    "pilotlight.plShaderI",
+    sizeof(pyplShaderI),
+    0,
+    Py_TPFLAGS_DEFAULT,
+    gatplShaderISlots
 };

@@ -18,8 +18,13 @@ Index of this file:
 // [SECTION] implementations
 //-----------------------------------------------------------------------------
 
+typedef struct _pyplPakI
+{
+    PyObject_HEAD
+} pyplPakI;
+
 PyObject*
-pak_begin_packing(PyObject* self, PyObject* args)
+begin_packing(PyObject* self, PyObject* args)
 {
     static const char* apcKeywords[] = {
         "pcFile",
@@ -43,7 +48,7 @@ pak_begin_packing(PyObject* self, PyObject* args)
 }
 
 PyObject*
-pak_add_from_disk(PyObject* self, PyObject* args)
+add_from_disk(PyObject* self, PyObject* args)
 {
     static const char* apcKeywords[] = {
         "ptPakFile",
@@ -68,10 +73,31 @@ pak_add_from_disk(PyObject* self, PyObject* args)
 }
 
 PyObject*
-pak_end_packing(PyObject* self, PyObject* arg)
+end_packing(PyObject* self, PyObject* arg)
 {
     plPakFile* ptPakPtr = PyCapsule_GetPointer(arg, "plPakFile");
 
     gptPak->end_packing(&ptPakPtr);
     Py_RETURN_NONE;
 }
+
+static PyMethodDef gatplPakICommands[] =
+{
+    PL_PYTHON_METHOD(begin_packing, METH_VARARGS | METH_STATIC, NULL),
+    PL_PYTHON_METHOD(add_from_disk, METH_VARARGS | METH_STATIC, NULL),
+    PL_PYTHON_METHOD(end_packing, METH_O | METH_STATIC, NULL),
+    {NULL, NULL, 0, NULL}
+};
+
+static PyType_Slot gatplPakISlots[] = {
+    {Py_tp_methods, (void*)gatplPakICommands},
+    {0, 0}
+};
+
+static PyType_Spec plPakISpec = {
+    "pilotlight.plPakI",
+    sizeof(pyplPakI),
+    0,
+    Py_TPFLAGS_DEFAULT,
+    gatplPakISlots
+};

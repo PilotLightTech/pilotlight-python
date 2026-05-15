@@ -4,5 +4,9 @@
     "pl_*.m": "objective-c",
     "*.inc": "c"
    },
-  "python.analysis.extraPaths": ["./build"]
+  "python.analysis.extraPaths": [
+    "./build"
+  ],
+  "python.analysis.autoImportCompletions": true,
+  "python.analysis.typeCheckingMode": "basic"
 }

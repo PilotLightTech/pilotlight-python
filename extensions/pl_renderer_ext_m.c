@@ -19,6 +19,16 @@ Index of this file:
 // [SECTION] implementations
 //-----------------------------------------------------------------------------
 
+typedef struct _pyplRendererI
+{
+    PyObject_HEAD
+} pyplRendererI;
+
+typedef struct _pyplRendererEcsI
+{
+    PyObject_HEAD
+} pyplRendererEcsI;
+
 PyObject*
 renderer_initialize(PyObject* self, PyObject* args, PyObject* kwargs)
 {
@@ -40,9 +50,9 @@ renderer_initialize(PyObject* self, PyObject* args, PyObject* kwargs)
 		return NULL;
 
     tRenderSettings.ptDevice = PyCapsule_GetPointer(ptPyDevice, "plDevice");
-    tRenderSettings.ptSwap = PyCapsule_GetPointer(ptPySwapchain, "plSwapchain");
+    tRenderSettings.ptSwapchain = PyCapsule_GetPointer(ptPySwapchain, "plSwapchain");
 
-    gptRenderer->initialize(tRenderSettings);
+    gptRenderer->initialize(&tRenderSettings);
     Py_RETURN_NONE;
 }
 
@@ -55,15 +65,15 @@ renderer_cleanup(PyObject* self)
 }
 
 PyObject*
-renderer_register_ecs_system(PyObject* self)
+renderer_ecs_register_system(PyObject* self)
 {
  
-    gptRenderer->register_ecs_system();
+    gptRendererEcs->register_system();
     Py_RETURN_NONE;
 }
 
 PyObject*
-renderer_create_directional_light(PyObject* self, PyObject* args, PyObject* kwargs)
+renderer_ecs_create_directional_light(PyObject* self, PyObject* args, PyObject* kwargs)
 {
 
     PyObject* ptPyLibrary = NULL;
@@ -82,7 +92,7 @@ renderer_create_directional_light(PyObject* self, PyObject* args, PyObject* kwar
     plComponentLibrary* ptCompLibrary = PyCapsule_GetPointer(ptPyLibrary, "plComponentLibrary");
 
     plLightComponent* ptLight = NULL;
-    gptRenderer->create_directional_light(ptCompLibrary, pcName, pl_create_vec3(0.425f, -1.0f, -0.384f), &ptLight);
+    gptRendererEcs->create_directional_light(ptCompLibrary, pcName, pl_create_vec3(0.425f, -1.0f, -0.384f), &ptLight);
     ptLight->uCascadeCount = 4;
     ptLight->fIntensity = 20.0f;
     ptLight->uShadowResolution = 1024 * 2;
@@ -94,3 +104,43 @@ renderer_create_directional_light(PyObject* self, PyObject* args, PyObject* kwar
 
     Py_RETURN_NONE;
 }
+
+static PyMethodDef gatplRendererICommands[] =
+{
+    {"initialize", (PyCFunction)renderer_initialize, METH_VARARGS | METH_KEYWORDS | METH_STATIC, NULL},
+    {"cleanup", (PyCFunction)renderer_cleanup, METH_NOARGS | METH_STATIC, NULL},
+    {NULL, NULL, 0, NULL}
+};
+
+static PyType_Slot gatplRendererISlots[] = {
+    {Py_tp_methods, (void*)gatplRendererICommands},
+    {0, 0}
+};
+
+static PyType_Spec plRendererISpec = {
+    "pilotlight.plRendererI",
+    sizeof(pyplRendererI),
+    0,
+    Py_TPFLAGS_DEFAULT,
+    gatplRendererISlots
+};
+
+static PyMethodDef gatplRendererEcsICommands[] =
+{
+    {"create_directional_light", (PyCFunction)renderer_ecs_create_directional_light, METH_VARARGS | METH_KEYWORDS | METH_STATIC, NULL},
+    {"register_system", (PyCFunction)renderer_ecs_register_system, METH_NOARGS | METH_STATIC, NULL},
+    {NULL, NULL, 0, NULL}
+};
+
+static PyType_Slot gatplRendererEcsISlots[] = {
+    {Py_tp_methods, (void*)gatplRendererEcsICommands},
+    {0, 0}
+};
+
+static PyType_Spec plRendererEcsISpec = {
+    "pilotlight.plRendererEcsI",
+    sizeof(pyplRendererEcsI),
+    0,
+    Py_TPFLAGS_DEFAULT,
+    gatplRendererEcsISlots
+};

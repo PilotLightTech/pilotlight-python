@@ -3,827 +3,1047 @@ from pilotlight.types import *
 from pilotlight.enums import *
 
 ########################################################################################################################
-# [SECTION] opaque types
-########################################################################################################################
-
-plBoolPointer = NewType("plBoolPointer", object)
-plRenderEncoder = NewType("plRenderEncoder", object)
-plDevice = NewType("plDevice", object)
-plSwapchain = NewType("plSwapchain", object)
-plFloatPointer = NewType("plFloatPointer", object)
-plDoublePointer = NewType("plDoublePointer", object)
-plIntPointer = NewType("plIntPointer", object)
-
-########################################################################################################################
 # [SECTION] pilotlight hooks
 ########################################################################################################################
 
-def pl_dear_imgui_initialize(device: plDevice, swapchain: plSwapchain, renderpass_handle, **kwargs) -> None:
-    ...
+class plDearImGuiI:
 
-def pl_dear_imgui_new_frame(device: plDevice, renderpass_handle, **kwargs) -> None:
-    ...
+    @staticmethod
+    def initialize(device: plDevice, swapchain: plSwapchain, renderpass_handle, **kwargs):
+        ...
 
-def pl_dear_imgui_render(encoder: plRenderEncoder, **kwargs) -> None:
-    ...
+    @staticmethod
+    def new_frame(device: plDevice, renderpass_handle, **kwargs):
+        ...
 
-def pl_dear_imgui_cleanup(**kwargs) -> None:
-    ...
+    @staticmethod
+    def render(encoder: plRenderEncoder, **kwargs):
+        ...
 
-########################################################################################################################
-# [SECTION] imgui demo/debug/information
-########################################################################################################################
+    @staticmethod
+    def cleanup(**kwargs):
+        ...
 
-def ImGui_ShowDemoWindow(bool_pointer = None) -> None:
-    ...
+class ImGui:
 
-def ImGui_ShowDemoWindow(bool_pointer: plBoolPointer = None) -> None:
-    ...
+    ########################################################################################################################
+    # [SECTION] imgui demo/debug/information
+    ########################################################################################################################
 
-def ImGui_ShowMetricsWindow(bool_pointer: plBoolPointer = None) -> None:
-    ...
+    @staticmethod
+    def ShowDemoWindow(bool_pointer: plBoolPointer | None = None):
+        ...
 
-def ImGui_ShowDebugLogWindow(bool_pointer: plBoolPointer = None) -> None:
-    ...
+    @staticmethod
+    def ShowMetricsWindow(bool_pointer: plBoolPointer | None = None):
+        ...
 
-def ImGui_ShowIDStackToolWindow(bool_pointer: plBoolPointer = None) -> None:
-    ...
+    @staticmethod
+    def ShowDebugLogWindow(bool_pointer: plBoolPointer | None = None):
+        ...
 
-def ImGui_ShowAboutWindow(bool_pointer: plBoolPointer = None) -> None:
-    ...
+    @staticmethod
+    def ShowIDStackToolWindow(bool_pointer: plBoolPointer | None = None):
+        ...
 
-def ImGui_ShowStyleEditor() -> None:
-    ...
+    @staticmethod
+    def ShowAboutWindow(bool_pointer: plBoolPointer | None = None):
+        ...
 
-def ImGui_ShowStyleSelector(label: str) -> bool:
-    ...
+    @staticmethod
+    def ShowStyleEditor():
+        ...
 
-def ImGui_ShowFontSelector(label: str) -> None:
-    ...
+    @staticmethod
+    def ShowStyleSelector(label: str) -> bool:
+        ...
 
-def ImGui_ShowUserGuide() -> None:
-    ...
+    @staticmethod
+    def ShowFontSelector(label: str):
+        ...
 
-def ImGui_GetVersion() -> str:
-    ...
+    @staticmethod
+    def ShowUserGuide():
+        ...
 
-########################################################################################################################
-# [SECTION] imgui
-########################################################################################################################
+    @staticmethod
+    def GetVersion() -> str:
+        ...
 
-def ImGui_StyleColorsDark():
-    ...
+    ########################################################################################################################
+    # [SECTION] imgui
+    ########################################################################################################################
 
-def ImGui_StyleColorsLight():
-    ...
+    @staticmethod
+    def StyleColorsDark():
+        ...
 
-def ImGui_StyleColorsClassic():
-    ...
+    @staticmethod
+    def StyleColorsLight():
+        ...
 
-def ImGui_Begin(name: str, bool_pointer: plBoolPointer = None, flags: ImGuiWindowFlags = 0) -> bool:
-    ...
+    @staticmethod
+    def StyleColorsClassic():
+        ...
 
-def ImGui_End():
-    ...
+    @staticmethod
+    def Begin(name: str, bool_pointer: plBoolPointer | None = None, flags: ImGuiWindowFlags | int = 0) -> bool:
+        ...
 
-########################################################################################################################
-# [SECTION] imgui window utilities
-########################################################################################################################
+    @staticmethod
+    def End():
+        ...
 
-def ImGui_IsWindowAppearing() -> bool:
-    ...
+    ########################################################################################################################
+    # [SECTION] imgui window utilities
+    ########################################################################################################################
 
-def ImGui_IsWindowCollapsed() -> bool:
-    ...
+    @staticmethod
+    def IsWindowAppearing() -> bool:
+        ...
 
-def ImGui_IsWindowFocused(flags: ImGuiFocusedFlags = 0) -> bool:
-    ...
+    @staticmethod
+    def IsWindowCollapsed() -> bool:
+        ...
 
-def ImGui_IsWindowHovered(flags: ImGuiHoveredFlags = 0) -> bool:
-    ...
-
-def ImGui_GetWindowDpiScale() -> float:
-    ...
-
-def ImGui_GetWindowPos() -> Tuple[float, float]:
-    ...
-
-def ImGui_GetWindowSize() -> Tuple[float, float]:
-    ...
-
-def ImGui_GetWindowWidth() -> float:
-    ...
-
-def ImGui_GetWindowHeight() -> float:
-    ...
-
-########################################################################################################################
-# [SECTION] imgui window manipulation
-########################################################################################################################
-
-def ImGui_SetNextWindowPos(pos, cond: ImGuiCond = 0, pivot=None) -> None:
-    ...
-
-def ImGui_SetNextWindowSize(size, cond: ImGuiCond = 0) -> None:
-    ...
-
-def ImGui_SetNextWindowContentSize(size) -> None:
-    ...
-
-def ImGui_SetNextWindowCollapsed(collapsed: bool, cond: ImGuiCond = 0) -> None:
-    ...
-
-def ImGui_SetNextWindowFocus() -> None:
-    ...
-
-def ImGui_SetNextWindowScroll(scroll) -> None:
-    ...
-
-def ImGui_SetNextWindowBgAlpha(alpha: float) -> None:
-    ...
-
-def ImGui_SetNextWindowViewport(viewport_id: int) -> None:
-    ...
-
-def ImGui_SetWindowPos(pos, cond: ImGuiCond = 0, name: str = None) -> None:
-    ...
-
-def ImGui_SetWindowSize(size, cond: ImGuiCond = 0, name: str = None) -> None:
-    ...
-
-def ImGui_SetWindowCollapsed(collapsed: bool, cond: ImGuiCond = 0, name: str = None) -> None:
-    ...
-
-def ImGui_SetWindowFocus(name: str = None) -> None:
-    ...
-
-########################################################################################################################
-# [SECTION] imgui menu stuff
-########################################################################################################################
-
-def ImGui_BeginMenuBar() -> bool:
-    ...
-
-def ImGui_BeginMainMenuBar() -> bool:
-    ...
-
-def ImGui_EndMenuBar() -> None:
-    ...
-
-def ImGui_EndMainMenuBar() -> None:
-    ...
-
-def ImGui_BeginMenu(label:str, enabled:bool=True) -> bool:
-    ...
-
-def ImGui_EndMenu() -> None:
-    ...
-
-def ImGui_MenuItem(label:str, shortcut:str="", selected:bool=False, enabled:bool=True, selected_pointer: plBoolPointer = None) -> Tuple[bool, bool]:
-    ...
-
-########################################################################################################################
-# [SECTION] imgui child windows
-########################################################################################################################
-
-def ImGui_BeginChild(str_id: str, size:List[int, int]=None, child_flags: ImGuiChildFlags = 0, window_flags: ImGuiWindowFlags = 0) -> bool:
-    ...
-
-def ImGui_EndChild() -> None:
-    ...
-
-########################################################################################################################
-# [SECTION] imgui input utilities mouse
-########################################################################################################################
-
-def ImGui_IsMouseDown(button: ImGuiMouseButton) -> bool:
-    ...
-
-def ImGui_IsMouseClicked(button: ImGuiMouseButton, repeat: bool = False) -> bool:
-    ...
-
-def ImGui_IsMouseReleased(button: ImGuiMouseButton) -> bool:
-    ...
-
-def ImGui_IsMouseDoubleClicked(button: ImGuiMouseButton) -> bool:
-    ...
-
-def ImGui_GetMouseClickedCount(button: ImGuiMouseButton) -> int:
-    ...
-
-def ImGui_IsMouseHoveringRect(min, max, clip: bool = True) -> bool:
-    ...
-
-def ImGui_IsMousePosValid(mouse_pos=None) -> bool:
-    ...
-
-def ImGui_IsAnyMouseDown() -> bool:
-    ...
-
-def ImGui_GetMousePos() -> Tuple[float, float]:
-    ...
-
-def ImGui_GetMousePosOnOpeningCurrentPopup() -> Tuple[float, float]:
-    ...
-
-def ImGui_IsMouseDragging(button: ImGuiMouseButton, lock_threshold: float = -1.0) -> bool:
-    ...
-
-def ImGui_GetMouseDragDelta(button: ImGuiMouseButton = 0, lock_threshold: float = -1.0) -> Tuple[float, float]:
-    ...
-
-def ImGui_ResetMouseDragDelta(button: ImGuiMouseButton = 0) -> None:
-    ...
-
-def ImGui_GetMouseCursor() -> ImGuiMouseCursor:
-    ...
-
-def ImGui_SetMouseCursor(cursor_type: ImGuiMouseCursor) -> None:
-    ...
-
-def ImGui_SetNextFrameWantCaptureMouse(want_capture_mouse: bool) -> None:
-    ...
-
-########################################################################################################################
-# [SECTION] imgui clipboard utilities
-########################################################################################################################
-
-def ImGui_GetClipboardText() -> str | None:
-    ...
-
-def ImGui_SetClipboardText(text: str) -> None:
-    ...
-
-
-########################################################################################################################
-# [SECTION] imgui settings / ini utilities
-########################################################################################################################
-
-def ImGui_LoadIniSettingsFromDisk(ini_filename: str) -> None:
-    ...
-
-def ImGui_LoadIniSettingsFromMemory(ini_data: str) -> None:
-    ...
-
-def ImGui_SaveIniSettingsToDisk(ini_filename: str) -> None:
-    ...
-
-def ImGui_SaveIniSettingsToMemory() -> str | None:
-    ...
-
-########################################################################################################################
-# [SECTION] imgui id stack/scopes
-########################################################################################################################
-
-def ImGui_PushID(id: str | int) -> None:
-    ...
-
-def ImGui_PopID() -> None:
-    ...
-
-def ImGui_GetID(id: str | int) -> int:
-    ...
-
-########################################################################################################################
-# [SECTION] imgui main widgets
-########################################################################################################################
-
-def ImGui_Button(label:str, size=None):
-    ...
-
-def ImGui_Checkbox(label:str, bool_pointer: plBoolPointer):
-    ...
-
-def ImGui_SmallButton(label: str) -> bool:
-    ...
-
-def ImGui_InvisibleButton(str_id: str, size, flags: ImGuiButtonFlags = 0) -> bool:
-    ...
-
-def ImGui_ArrowButton(str_id: str, dir: ImGuiDir) -> bool:
-    ...
-
-def ImGui_CheckboxFlags(label: str, flags_pointer: plIntPointer, flags_value: int) -> bool:
-    ...
-
-def ImGui_RadioButton(label: str, active: bool = False, value_pointer: plIntPointer = None, button_value: int = 0) -> bool:
-    ...
-
-def ImGui_ProgressBar(fraction: float, size=None, overlay: str = None) -> None:
-    ...
-
-def ImGui_Bullet() -> None:
-    ...
-
-def ImGui_TextLink(label: str) -> bool:
-    ...
-
-def ImGui_TextLinkOpenURL(label: str, url: str = None) -> bool:
-    ...
-
-########################################################################################################################
-# [SECTION] imgui combo box/dropdown widgets
-########################################################################################################################
-
-def ImGui_BeginCombo(label: str, preview_value: str, flags: ImGuiComboFlags = 0) -> bool:
-    ...
-
-def ImGui_EndCombo() -> None:
-    ...
-
-def ImGui_Combo(label: str, current_item: plIntPointer, items: List[str], popup_max_height_in_items: int = -1) -> bool:
-    ...
-
-########################################################################################################################
-# [SECTION] imgui list boxes
-########################################################################################################################
-
-def ImGui_BeginListBox(label: str, size=None) -> bool:
-    ...
-
-def ImGui_EndListBox() -> None:
-    ...
-
-########################################################################################################################
-# [SECTION] imgui tooltips
-########################################################################################################################
-
-def ImGui_BeginTooltip() -> bool:
-    ...
-
-def ImGui_EndTooltip() -> None:
-    ...
-
-def ImGui_SetTooltip(text: str) -> None:
-    ...
-
-def ImGui_BeginItemTooltip() -> bool:
-    ...
-
-def ImGui_SetItemTooltip(text: str) -> None:
-    ...
-
-########################################################################################################################
-# [SECTION] imgui selectables
-########################################################################################################################
-
-def ImGui_Selectable(label: str, selected: bool = False, flags: ImGuiSelectableFlags = 0, size=None, selected_pointer: plBoolPointer = None) -> bool:
-    ...
-
-########################################################################################################################
-# [SECTION] imgui drag widgets
-########################################################################################################################
-
-def ImGui_DragFloat(label, value_pointer: plFloatPointer, speed: float = 1.0, min: float = 0.0, max: float = 0.0, format: str = "%.3f", flags: ImGuiSliderFlags = 0) -> bool:
-    ...
-
-def ImGui_DragFloat2(label, value_pointer: plFloatPointer, speed: float = 1.0, min: float = 0.0, max: float = 0.0, format: str = "%.3f", flags: ImGuiSliderFlags = 0) -> bool:
-    ...
-
-def ImGui_DragFloat3(label, value_pointer: plFloatPointer, speed: float = 1.0, min: float = 0.0, max: float = 0.0, format: str = "%.3f", flags: ImGuiSliderFlags = 0) -> bool:
-    ...
-
-def ImGui_DragFloat4(label, value_pointer: plFloatPointer, speed: float = 1.0, min: float = 0.0, max: float = 0.0, format: str = "%.3f", flags: ImGuiSliderFlags = 0) -> bool:
-    ...
-
-def ImGui_DragFloatRange2(label, current_min_pointer: plFloatPointer, current_max_pointer: plFloatPointer, speed: float = 1.0, min: float = 0.0, max: float = 0.0, format: str = "%.3f", format_max: str = None, flags: ImGuiSliderFlags = 0) -> bool:
-    ...
-
-def ImGui_DragInt(label, value_pointer: plIntPointer, speed: float = 1.0, min: int = 0, max: int = 0, format: str = "%d", flags: ImGuiSliderFlags = 0) -> bool:
-    ...
-
-def ImGui_DragInt2(label, value_pointer: plIntPointer, speed: float = 1.0, min: int = 0, max: int = 0, format: str = "%d", flags: ImGuiSliderFlags = 0) -> bool:
-    ...
-
-def ImGui_DragInt3(label, value_pointer: plIntPointer, speed: float = 1.0, min: int = 0, max: int = 0, format: str = "%d", flags: ImGuiSliderFlags = 0) -> bool:
-    ...
-
-def ImGui_DragInt4(label, value_pointer: plIntPointer, speed: float = 1.0, min: int = 0, max: int = 0, format: str = "%d", flags: ImGuiSliderFlags = 0) -> bool:
-    ...
-
-def ImGui_DragIntRange2(label, current_min_pointer: plIntPointer, current_max_pointer: plIntPointer, speed: float = 1.0, min: int = 0, max: int = 0, format: str = "%d", format_max: str = None, flags: ImGuiSliderFlags = 0) -> bool:
-    ...
-
-########################################################################################################################
-# [SECTION] imgui slider widgets
-########################################################################################################################
-
-def ImGui_SliderFloat(label, value_pointer: plFloatPointer, min: float, max: float, format: str = "%.3f", flags: ImGuiSliderFlags = 0) -> bool:
-    ...
-
-def ImGui_SliderFloat2(label, value_pointer: plFloatPointer, min: float, max: float, format: str = "%.3f", flags: ImGuiSliderFlags = 0) -> bool:
-    ...
-
-def ImGui_SliderFloat3(label, value_pointer: plFloatPointer, min: float, max: float, format: str = "%.3f", flags: ImGuiSliderFlags = 0) -> bool:
-    ...
-
-def ImGui_SliderFloat4(label, value_pointer: plFloatPointer, min: float, max: float, format: str = "%.3f", flags: ImGuiSliderFlags = 0) -> bool:
-    ...
-
-def ImGui_SliderAngle(label, rad_pointer: plFloatPointer, degrees_min: float = -360.0, degrees_max: float = 360.0, format: str = "%.0f deg", flags: ImGuiSliderFlags = 0) -> bool:
-    ...
-
-def ImGui_SliderInt(label, value_pointer: plIntPointer, min: int, max: int, format: str = "%d", flags: ImGuiSliderFlags = 0) -> bool:
-    ...
-
-def ImGui_SliderInt2(label, value_pointer: plIntPointer, min: int, max: int, format: str = "%d", flags: ImGuiSliderFlags = 0) -> bool:
-    ...
-
-def ImGui_SliderInt3(label, value_pointer: plIntPointer, min: int, max: int, format: str = "%d", flags: ImGuiSliderFlags = 0) -> bool:
-    ...
-
-def ImGui_SliderInt4(label, value_pointer: plIntPointer, min: int, max: int, format: str = "%d", flags: ImGuiSliderFlags = 0) -> bool:
-    ...
-
-def ImGui_VSliderFloat(label, size, value_pointer: plFloatPointer, min: float, max: float, format: str = "%.3f", flags: ImGuiSliderFlags = 0) -> bool:
-    ...
-
-def ImGui_VSliderInt(label, size, value_pointer: plIntPointer, min: int, max: int, format: str = "%d", flags: ImGuiSliderFlags = 0) -> bool:
-    ...
-
-########################################################################################################################
-# [SECTION] imgui input widgets
-########################################################################################################################
-
-def ImGui_InputText(label: str, value: bytearray, flags: ImGuiInputTextFlags = 0) -> bool:
-    ...
-
-def ImGui_InputTextMultiline(label: str, value: bytearray, size=None, flags: ImGuiInputTextFlags = 0) -> bool:
-    ...
-
-def ImGui_InputTextWithHint(label: str, hint: str, value: bytearray, flags: ImGuiInputTextFlags = 0) -> bool:
-    ...
-
-def ImGui_InputFloat(label: str, value_pointer: plFloatPointer, step: float = 0.0, step_fast: float = 0.0, format: str = "%.3f", flags: ImGuiInputTextFlags = 0) -> bool:
-    ...
-
-def ImGui_InputFloat2(label: str, value_pointer: plFloatPointer, format: str = "%.3f", flags: ImGuiInputTextFlags = 0) -> bool:
-    ...
-
-def ImGui_InputFloat3(label: str, value_pointer: plFloatPointer, format: str = "%.3f", flags: ImGuiInputTextFlags = 0) -> bool:
-    ...
-
-def ImGui_InputFloat4(label: str, value_pointer: plFloatPointer, format: str = "%.3f", flags: ImGuiInputTextFlags = 0) -> bool:
-    ...
-
-def ImGui_InputInt(label: str, value_pointer: plIntPointer, step: int = 1, step_fast: int = 100, flags: ImGuiInputTextFlags = 0) -> bool:
-    ...
-
-def ImGui_InputInt2(label: str, value_pointer: plIntPointer, flags: ImGuiInputTextFlags = 0) -> bool:
-    ...
-
-def ImGui_InputInt3(label: str, value_pointer: plIntPointer, flags: ImGuiInputTextFlags = 0) -> bool:
-    ...
-
-def ImGui_InputInt4(label: str, value_pointer: plIntPointer, flags: ImGuiInputTextFlags = 0) -> bool:
-    ...
-
-def ImGui_InputDouble(label: str, value_pointer: plDoublePointer, step: float = 0.0, step_fast: float = 0.0, format: str = "%.6f", flags: ImGuiInputTextFlags = 0) -> bool:
-    ...
-
-########################################################################################################################
-# [SECTION] imgui text widgets
-########################################################################################################################
-
-def ImGui_TextUnformatted(text: str) -> None:
-    ...
-
-def ImGui_Text(text: str) -> None:
-    ...
-
-def ImGui_TextColored(color, text: str) -> None:
-    ...
-
-def ImGui_TextDisabled(text: str) -> None:
-    ...
-
-def ImGui_TextWrapped(text: str) -> None:
-    ...
-
-def ImGui_LabelText(label: str, text: str) -> None:
-    ...
-
-def ImGui_BulletText(text: str) -> None:
-    ...
-
-def ImGui_SeparatorText(label: str) -> None:
-    ...
-
-########################################################################################################################
-# [SECTION] imgui layout
-########################################################################################################################
-
-def ImGui_Separator() -> None:
-    ...
-
-def ImGui_SameLine(offset_from_start_x: float = 0.0, spacing: float = -1.0) -> None:
-    ...
-
-def ImGui_NewLine() -> None:
-    ...
-
-def ImGui_Spacing() -> None:
-    ...
-
-def ImGui_Dummy(size) -> None:
-    ...
-
-def ImGui_Indent(indent_w: float = 0.0) -> None:
-    ...
-
-def ImGui_Unindent(indent_w: float = 0.0) -> None:
-    ...
-
-def ImGui_BeginGroup() -> None:
-    ...
-
-def ImGui_EndGroup() -> None:
-    ...
-
-def ImGui_AlignTextToFramePadding() -> None:
-    ...
-
-def ImGui_GetTextLineHeight() -> float:
-    ...
-
-def ImGui_GetTextLineHeightWithSpacing() -> float:
-    ...
-
-def ImGui_GetFrameHeight() -> float:
-    ...
-
-def ImGui_GetFrameHeightWithSpacing() -> float:
-    ...
-
-########################################################################################################################
-# [SECTION] imgui layout cursor positioning
-########################################################################################################################
-
-def ImGui_GetCursorScreenPos() -> Tuple[float, float]:
-    ...
-
-def ImGui_SetCursorScreenPos(pos) -> None:
-    ...
-
-def ImGui_GetContentRegionAvail() -> Tuple[float, float]:
-    ...
-
-def ImGui_GetCursorPos() -> Tuple[float, float]:
-    ...
-
-def ImGui_GetCursorPosX() -> float:
-    ...
-
-def ImGui_GetCursorPosY() -> float:
-    ...
-
-def ImGui_SetCursorPos(local_pos) -> None:
-    ...
-
-def ImGui_SetCursorPosX(local_x: float) -> None:
-    ...
-
-def ImGui_SetCursorPosY(local_y: float) -> None:
-    ...
-
-def ImGui_GetCursorStartPos() -> Tuple[float, float]:
-    ...
-
-########################################################################################################################
-# [SECTION] imgui window scrolling
-########################################################################################################################
-
-def ImGui_GetScrollX() -> float:
-    ...
-
-def ImGui_GetScrollY() -> float:
-    ...
-
-def ImGui_SetScrollX(scroll_x: float) -> None:
-    ...
-
-def ImGui_SetScrollY(scroll_y: float) -> None:
-    ...
-
-def ImGui_GetScrollMaxX() -> float:
-    ...
-
-def ImGui_GetScrollMaxY() -> float:
-    ...
-
-def ImGui_SetScrollHereX(center_x_ratio: float = 0.5) -> None:
-    ...
-
-def ImGui_SetScrollHereY(center_y_ratio: float = 0.5) -> None:
-    ...
-
-def ImGui_SetScrollFromPosX(local_x: float, center_x_ratio: float = 0.5) -> None:
-    ...
-
-def ImGui_SetScrollFromPosY(local_y: float, center_y_ratio: float = 0.5) -> None:
-    ...
-
-########################################################################################################################
-# [SECTION] imgui parameters stacks current window
-########################################################################################################################
-
-def ImGui_PushItemWidth(item_width: float) -> None:
-    ...
-
-def ImGui_PopItemWidth() -> None:
-    ...
-
-def ImGui_SetNextItemWidth(item_width: float) -> None:
-    ...
-
-def ImGui_CalcItemWidth() -> float:
-    ...
-
-def ImGui_PushTextWrapPos(wrap_local_pos_x: float = 0.0) -> None:
-    ...
-
-def ImGui_PopTextWrapPos() -> None:
-    ...
-
-########################################################################################################################
-# [SECTION] imgui color editor/picker widgets
-########################################################################################################################
-
-def ImGui_ColorEdit3(label: str, color_pointer: plFloatPointer, flags: ImGuiColorEditFlags = 0) -> bool:
-    ...
-
-def ImGui_ColorEdit4(label: str, color_pointer: plFloatPointer, flags: ImGuiColorEditFlags = 0) -> bool:
-    ...
-
-def ImGui_ColorPicker3(label: str, color_pointer: plFloatPointer, flags: ImGuiColorEditFlags = 0) -> bool:
-    ...
-
-def ImGui_ColorPicker4(label: str, color_pointer: plFloatPointer, flags: ImGuiColorEditFlags = 0, ref_color: plFloatPointer = None) -> bool:
-    ...
-
-def ImGui_ColorButton(desc_id: str, color, flags: ImGuiColorEditFlags = 0, size=None) -> bool:
-    ...
-
-def ImGui_SetColorEditOptions(flags: ImGuiColorEditFlags) -> None:
-    ...
-
-########################################################################################################################
-# [SECTION] imgui tree widgets
-########################################################################################################################
-
-def ImGui_TreeNode(label: str) -> bool:
-    ...
-
-def ImGui_TreeNodeEx(label: str, flags: ImGuiTreeNodeFlags = 0) -> bool:
-    ...
-
-def ImGui_TreePush(str_id: str) -> None:
-    ...
-
-def ImGui_TreePop() -> None:
-    ...
-
-def ImGui_GetTreeNodeToLabelSpacing() -> float:
-    ...
-
-def ImGui_CollapsingHeader(label: str, visible_pointer: plBoolPointer = None, flags: ImGuiTreeNodeFlags = 0) -> bool:
-    ...
-
-def ImGui_SetNextItemOpen(is_open: bool, cond: ImGuiCond = 0) -> None:
-    ...
-
-def ImGui_SetNextItemStorageID(storage_id: int) -> None:
-    ...
-
-def ImGui_TreeNodeGetOpen(storage_id: int) -> bool:
-    ...
-
-########################################################################################################################
-# [SECTION] imgui popups
-########################################################################################################################
-
-def ImGui_BeginPopup(str_id: str, flags: ImGuiWindowFlags = 0) -> bool:
-    ...
-
-def ImGui_BeginPopupModal(name: str, open: plBoolPointer = None, flags: ImGuiWindowFlags = 0) -> bool:
-    ...
-
-def ImGui_EndPopup() -> None:
-    ...
-
-def ImGui_OpenPopup(str_id: str, popup_flags: ImGuiPopupFlags = 0) -> None:
-    ...
-
-def ImGui_OpenPopupOnItemClick(str_id: str = None, popup_flags: ImGuiPopupFlags = 0) -> None:
-    ...
-
-def ImGui_CloseCurrentPopup() -> None:
-    ...
-
-def ImGui_BeginPopupContextItem(str_id: str = None, popup_flags: ImGuiPopupFlags = 0) -> bool:
-    ...
-
-def ImGui_BeginPopupContextWindow(str_id: str = None, popup_flags: ImGuiPopupFlags = 0) -> bool:
-    ...
-
-def ImGui_BeginPopupContextVoid(str_id: str = None, popup_flags: ImGuiPopupFlags = 0) -> bool:
-    ...
-
-def ImGui_IsPopupOpen(str_id: str, flags: ImGuiPopupFlags = 0) -> bool:
-    ...
-
-########################################################################################################################
-# [SECTION] imgui tab bars / tabs
-########################################################################################################################
-
-def ImGui_BeginTabBar(str_id: str, flags: ImGuiTabBarFlags = 0) -> bool:
-    ...
-
-def ImGui_EndTabBar() -> None:
-    ...
-
-def ImGui_BeginTabItem(label: str, open: plBoolPointer = None, flags: ImGuiTabItemFlags = 0) -> bool:
-    ...
-
-def ImGui_EndTabItem() -> None:
-    ...
-
-def ImGui_TabItemButton(label: str, flags: ImGuiTabItemFlags = 0) -> bool:
-    ...
-
-def ImGui_SetTabItemClosed(tab_or_docked_window_label: str) -> None:
-    ...
-
-########################################################################################################################
-# [SECTION] imgui item/widget utilities and query functions
-########################################################################################################################
-
-def ImGui_IsItemHovered(flags: ImGuiHoveredFlags = 0) -> bool:
-    ...
-
-def ImGui_IsItemActive() -> bool:
-    ...
-
-def ImGui_IsItemFocused() -> bool:
-    ...
-
-def ImGui_IsItemClicked(mouse_button: int = 0) -> bool:
-    ...
-
-def ImGui_IsItemVisible() -> bool:
-    ...
-
-def ImGui_IsItemEdited() -> bool:
-    ...
-
-def ImGui_IsItemActivated() -> bool:
-    ...
-
-def ImGui_IsItemDeactivated() -> bool:
-    ...
-
-def ImGui_IsItemDeactivatedAfterEdit() -> bool:
-    ...
-
-def ImGui_IsItemToggledOpen() -> bool:
-    ...
-
-def ImGui_IsAnyItemHovered() -> bool:
-    ...
-
-def ImGui_IsAnyItemActive() -> bool:
-    ...
-
-def ImGui_IsAnyItemFocused() -> bool:
-    ...
-
-def ImGui_GetItemID() -> int:
-    ...
-
-def ImGui_GetItemRectMin() -> Tuple[float, float]:
-    ...
-
-def ImGui_GetItemRectMax() -> Tuple[float, float]:
-    ...
-
-def ImGui_GetItemRectSize() -> Tuple[float, float]:
-    ...
-
-def ImGui_SetItemAllowOverlap() -> None:
-    ...
-
-def ImGui_SetItemDefaultFocus() -> None:
-    ...
-
-def ImGui_SetKeyboardFocusHere(offset: int = 0) -> None:
-    ...
-
-def ImGui_SetNextItemAllowOverlap() -> None:
-    ...
+    @staticmethod
+    def IsWindowFocused(flags: ImGuiFocusedFlags | int = 0) -> bool:
+        ...
+
+    @staticmethod
+    def IsWindowHovered(flags: ImGuiHoveredFlags | int = 0) -> bool:
+        ...
+
+    @staticmethod
+    def GetWindowDpiScale() -> float:
+        ...
+
+    @staticmethod
+    def GetWindowPos() -> Tuple[float, float]:
+        ...
+
+    @staticmethod
+    def GetWindowSize() -> Tuple[float, float]:
+        ...
+
+    @staticmethod
+    def GetWindowWidth() -> float:
+        ...
+
+    @staticmethod
+    def GetWindowHeight() -> float:
+        ...
+
+    ########################################################################################################################
+    # [SECTION] imgui window manipulation
+    ########################################################################################################################
+
+    @staticmethod
+    def SetNextWindowPos(pos, cond: ImGuiCond | int = 0, pivot=None):
+        ...
+
+    @staticmethod
+    def SetNextWindowSize(size, cond: ImGuiCond | int = 0):
+        ...
+
+    @staticmethod
+    def SetNextWindowContentSize(size):
+        ...
+
+    @staticmethod
+    def SetNextWindowCollapsed(collapsed: bool, cond: ImGuiCond | int = 0):
+        ...
+
+    @staticmethod
+    def SetNextWindowFocus():
+        ...
+
+    @staticmethod
+    def SetNextWindowScroll(scroll):
+        ...
+
+    @staticmethod
+    def SetNextWindowBgAlpha(alpha: float):
+        ...
+
+    @staticmethod
+    def SetNextWindowViewport(viewport_id: int):
+        ...
+
+    @staticmethod
+    def SetWindowPos(pos, cond: ImGuiCond | int = 0, name: str | None = None):
+        ...
+
+    @staticmethod
+    def SetWindowSize(size, cond: ImGuiCond | int = 0, name: str | None = None):
+        ...
+
+    @staticmethod
+    def SetWindowCollapsed(collapsed: bool, cond: ImGuiCond | int = 0, name: str | None = None):
+        ...
+
+    @staticmethod
+    def SetWindowFocus(name: str | None = None):
+        ...
+
+    ########################################################################################################################
+    # [SECTION] imgui menu stuff
+    ########################################################################################################################
+
+    @staticmethod
+    def BeginMenuBar() -> bool:
+        ...
+
+    @staticmethod
+    def BeginMainMenuBar() -> bool:
+        ...
+
+    @staticmethod
+    def EndMenuBar():
+        ...
+
+    @staticmethod
+    def EndMainMenuBar():
+        ...
+
+    @staticmethod
+    def BeginMenu(label:str, enabled:bool=True) -> bool:
+        ...
+
+    @staticmethod
+    def EndMenu():
+        ...
+
+    @staticmethod
+    def MenuItem(label:str, shortcut:str="", selected:bool=False, enabled:bool=True, selected_pointer: plBoolPointer | None = None) -> Tuple[bool, bool]:
+        ...
+
+    ########################################################################################################################
+    # [SECTION] imgui child windows
+    ########################################################################################################################
+
+    @staticmethod
+    def BeginChild(str_id: str, size:List[int] | Tuple[int, int] | None = None, child_flags: ImGuiChildFlags | int = 0, window_flags: ImGuiWindowFlags | int = 0) -> bool:
+        ...
+
+    @staticmethod
+    def EndChild():
+        ...
+
+    ########################################################################################################################
+    # [SECTION] imgui input utilities mouse
+    ########################################################################################################################
+
+    @staticmethod
+    def IsMouseDown(button: ImGuiMouseButton) -> bool:
+        ...
+
+    @staticmethod
+    def IsMouseClicked(button: ImGuiMouseButton, repeat: bool = False) -> bool:
+        ...
+
+    @staticmethod
+    def IsMouseReleased(button: ImGuiMouseButton) -> bool:
+        ...
+
+    @staticmethod
+    def IsMouseDoubleClicked(button: ImGuiMouseButton) -> bool:
+        ...
+
+    @staticmethod
+    def GetMouseClickedCount(button: ImGuiMouseButton) -> int:
+        ...
+
+    @staticmethod
+    def IsMouseHoveringRect(min, max, clip: bool = True) -> bool:
+        ...
+
+    @staticmethod
+    def IsMousePosValid(mouse_pos=None) -> bool:
+        ...
+
+    @staticmethod
+    def IsAnyMouseDown() -> bool:
+        ...
+
+    @staticmethod
+    def GetMousePos() -> Tuple[float, float]:
+        ...
+
+    @staticmethod
+    def GetMousePosOnOpeningCurrentPopup() -> Tuple[float, float]:
+        ...
+
+    @staticmethod
+    def IsMouseDragging(button: ImGuiMouseButton, lock_threshold: float = -1.0) -> bool:
+        ...
+
+    @staticmethod
+    def GetMouseDragDelta(button: ImGuiMouseButton | int = 0, lock_threshold: float = -1.0) -> Tuple[float, float]:
+        ...
+
+    @staticmethod
+    def ResetMouseDragDelta(button: ImGuiMouseButton | int = 0):
+        ...
+
+    @staticmethod
+    def GetMouseCursor() -> ImGuiMouseCursor:
+        ...
+
+    @staticmethod
+    def SetMouseCursor(cursor_type: ImGuiMouseCursor):
+        ...
+
+    @staticmethod
+    def SetNextFrameWantCaptureMouse(want_capture_mouse: bool):
+        ...
+
+    ########################################################################################################################
+    # [SECTION] imgui clipboard utilities
+    ########################################################################################################################
+
+    @staticmethod
+    def GetClipboardText() -> str | None:
+        ...
+
+    @staticmethod
+    def SetClipboardText(text: str):
+        ...
+
+    ########################################################################################################################
+    # [SECTION] imgui settings / ini utilities
+    ########################################################################################################################
+
+    @staticmethod
+    def LoadIniSettingsFromDisk(ini_filename: str):
+        ...
+
+    @staticmethod
+    def LoadIniSettingsFromMemory(ini_data: str):
+        ...
+
+    @staticmethod
+    def SaveIniSettingsToDisk(ini_filename: str):
+        ...
+
+    @staticmethod
+    def SaveIniSettingsToMemory() -> str | None:
+        ...
+
+    ########################################################################################################################
+    # [SECTION] imgui id stack/scopes
+    ########################################################################################################################
+
+    @staticmethod
+    def PushID(id: str | int):
+        ...
+
+    @staticmethod
+    def PopID():
+        ...
+
+    @staticmethod
+    def GetID(id: str | int) -> int:
+        ...
+
+    ########################################################################################################################
+    # [SECTION] imgui main widgets
+    ########################################################################################################################
+
+    @staticmethod
+    def Button(label:str, size=None):
+        ...
+
+    @staticmethod
+    def Checkbox(label:str, bool_pointer: plBoolPointer):
+        ...
+
+    @staticmethod
+    def SmallButton(label: str) -> bool:
+        ...
+
+    @staticmethod
+    def InvisibleButton(str_id: str, size, flags: ImGuiButtonFlags | int = 0) -> bool:
+        ...
+
+    @staticmethod
+    def ArrowButton(str_id: str, dir: ImGuiDir) -> bool:
+        ...
+
+    @staticmethod
+    def CheckboxFlags(label: str, flags_pointer: plIntPointer, flags_value: int) -> bool:
+        ...
+
+    @staticmethod
+    def RadioButton(label: str, active: bool = False, value_pointer: plIntPointer | None = None, button_value: int = 0) -> bool:
+        ...
+
+    @staticmethod
+    def ProgressBar(fraction: float, size=None, overlay: str | None = None):
+        ...
+
+    @staticmethod
+    def Bullet():
+        ...
+
+    @staticmethod
+    def TextLink(label: str) -> bool:
+        ...
+
+    @staticmethod
+    def TextLinkOpenURL(label: str, url: str | None = None) -> bool:
+        ...
+
+    ########################################################################################################################
+    # [SECTION] imgui combo box/dropdown widgets
+    ########################################################################################################################
+
+    @staticmethod
+    def BeginCombo(label: str, preview_value: str, flags: ImGuiComboFlags | int = 0) -> bool:
+        ...
+
+    @staticmethod
+    def EndCombo():
+        ...
+
+    @staticmethod
+    def Combo(label: str, current_item: plIntPointer, items: List[str], popup_max_height_in_items: int = -1) -> bool:
+        ...
+
+    ########################################################################################################################
+    # [SECTION] imgui list boxes
+    ########################################################################################################################
+
+    @staticmethod
+    def BeginListBox(label: str, size=None) -> bool:
+        ...
+
+    @staticmethod
+    def EndListBox():
+        ...
+
+    ########################################################################################################################
+    # [SECTION] imgui tooltips
+    ########################################################################################################################
+
+    @staticmethod
+    def BeginTooltip() -> bool:
+        ...
+
+    @staticmethod
+    def EndTooltip():
+        ...
+
+    @staticmethod
+    def SetTooltip(text: str):
+        ...
+
+    @staticmethod
+    def BeginItemTooltip() -> bool:
+        ...
+
+    @staticmethod
+    def SetItemTooltip(text: str):
+        ...
+
+    ########################################################################################################################
+    # [SECTION] imgui selectables
+    ########################################################################################################################
+
+    @staticmethod
+    def Selectable(label: str, selected: bool = False, flags: ImGuiSelectableFlags | int = 0, size=None, selected_pointer: plBoolPointer | None = None) -> bool:
+        ...
+
+    ########################################################################################################################
+    # [SECTION] imgui drag widgets
+    ########################################################################################################################
+
+    @staticmethod
+    def DragFloat(label, value_pointer: plFloatPointer, speed: float = 1.0, min: float = 0.0, max: float = 0.0, format: str = "%.3f", flags: ImGuiSliderFlags | int = 0) -> bool:
+        ...
+
+    @staticmethod
+    def DragFloat2(label, value_pointer: plFloatPointer, speed: float = 1.0, min: float = 0.0, max: float = 0.0, format: str = "%.3f", flags: ImGuiSliderFlags | int = 0) -> bool:
+        ...
+
+    @staticmethod
+    def DragFloat3(label, value_pointer: plFloatPointer, speed: float = 1.0, min: float = 0.0, max: float = 0.0, format: str = "%.3f", flags: ImGuiSliderFlags | int = 0) -> bool:
+        ...
+
+    @staticmethod
+    def DragFloat4(label, value_pointer: plFloatPointer, speed: float = 1.0, min: float = 0.0, max: float = 0.0, format: str = "%.3f", flags: ImGuiSliderFlags | int = 0) -> bool:
+        ...
+
+    @staticmethod
+    def DragFloatRange2(label, current_min_pointer: plFloatPointer, current_max_pointer: plFloatPointer, speed: float = 1.0, min: float = 0.0, max: float = 0.0, format: str = "%.3f", format_max: str | None = None, flags: ImGuiSliderFlags | int = 0) -> bool:
+        ...
+
+    @staticmethod
+    def DragInt(label, value_pointer: plIntPointer, speed: float = 1.0, min: int = 0, max: int = 0, format: str = "%d", flags: ImGuiSliderFlags | int = 0) -> bool:
+        ...
+
+    @staticmethod
+    def DragInt2(label, value_pointer: plIntPointer, speed: float = 1.0, min: int = 0, max: int = 0, format: str = "%d", flags: ImGuiSliderFlags | int = 0) -> bool:
+        ...
+
+    @staticmethod
+    def DragInt3(label, value_pointer: plIntPointer, speed: float = 1.0, min: int = 0, max: int = 0, format: str = "%d", flags: ImGuiSliderFlags | int = 0) -> bool:
+        ...
+
+    @staticmethod
+    def DragInt4(label, value_pointer: plIntPointer, speed: float = 1.0, min: int = 0, max: int = 0, format: str = "%d", flags: ImGuiSliderFlags | int = 0) -> bool:
+        ...
+
+    @staticmethod
+    def DragIntRange2(label, current_min_pointer: plIntPointer, current_max_pointer: plIntPointer, speed: float = 1.0, min: int = 0, max: int = 0, format: str = "%d", format_max: str | None = None, flags: ImGuiSliderFlags | int = 0) -> bool:
+        ...
+
+    ########################################################################################################################
+    # [SECTION] imgui slider widgets
+    ########################################################################################################################
+
+    @staticmethod
+    def SliderFloat(label, value_pointer: plFloatPointer, min: float, max: float, format: str = "%.3f", flags: ImGuiSliderFlags | int = 0) -> bool:
+        ...
+
+    @staticmethod
+    def SliderFloat2(label, value_pointer: plFloatPointer, min: float, max: float, format: str = "%.3f", flags: ImGuiSliderFlags | int = 0) -> bool:
+        ...
+
+    @staticmethod
+    def SliderFloat3(label, value_pointer: plFloatPointer, min: float, max: float, format: str = "%.3f", flags: ImGuiSliderFlags | int = 0) -> bool:
+        ...
+
+    @staticmethod
+    def SliderFloat4(label, value_pointer: plFloatPointer, min: float, max: float, format: str = "%.3f", flags: ImGuiSliderFlags | int = 0) -> bool:
+        ...
+
+    @staticmethod
+    def SliderAngle(label, rad_pointer: plFloatPointer, degrees_min: float = -360.0, degrees_max: float = 360.0, format: str = "%.0f deg", flags: ImGuiSliderFlags | int = 0) -> bool:
+        ...
+
+    @staticmethod
+    def SliderInt(label, value_pointer: plIntPointer, min: int, max: int, format: str = "%d", flags: ImGuiSliderFlags | int = 0) -> bool:
+        ...
+
+    @staticmethod
+    def SliderInt2(label, value_pointer: plIntPointer, min: int, max: int, format: str = "%d", flags: ImGuiSliderFlags | int = 0) -> bool:
+        ...
+
+    @staticmethod
+    def SliderInt3(label, value_pointer: plIntPointer, min: int, max: int, format: str = "%d", flags: ImGuiSliderFlags | int = 0) -> bool:
+        ...
+
+    @staticmethod
+    def SliderInt4(label, value_pointer: plIntPointer, min: int, max: int, format: str = "%d", flags: ImGuiSliderFlags | int = 0) -> bool:
+        ...
+
+    @staticmethod
+    def VSliderFloat(label, size, value_pointer: plFloatPointer, min: float, max: float, format: str = "%.3f", flags: ImGuiSliderFlags | int = 0) -> bool:
+        ...
+
+    @staticmethod
+    def VSliderInt(label, size, value_pointer: plIntPointer, min: int, max: int, format: str = "%d", flags: ImGuiSliderFlags | int = 0) -> bool:
+        ...
+
+    ########################################################################################################################
+    # [SECTION] imgui input widgets
+    ########################################################################################################################
+
+    @staticmethod
+    def InputText(label: str, value: bytearray, flags: ImGuiInputTextFlags | int = 0) -> bool:
+        ...
+
+    @staticmethod
+    def InputTextMultiline(label: str, value: bytearray, size=None, flags: ImGuiInputTextFlags | int = 0) -> bool:
+        ...
+
+    @staticmethod
+    def InputTextWithHint(label: str, hint: str, value: bytearray, flags: ImGuiInputTextFlags | int = 0) -> bool:
+        ...
+
+    @staticmethod
+    def InputFloat(label: str, value_pointer: plFloatPointer, step: float = 0.0, step_fast: float = 0.0, format: str = "%.3f", flags: ImGuiInputTextFlags | int = 0) -> bool:
+        ...
+
+    @staticmethod
+    def InputFloat2(label: str, value_pointer: plFloatPointer, format: str = "%.3f", flags: ImGuiInputTextFlags | int = 0) -> bool:
+        ...
+
+    @staticmethod
+    def InputFloat3(label: str, value_pointer: plFloatPointer, format: str = "%.3f", flags: ImGuiInputTextFlags | int = 0) -> bool:
+        ...
+
+    @staticmethod
+    def InputFloat4(label: str, value_pointer: plFloatPointer, format: str = "%.3f", flags: ImGuiInputTextFlags | int = 0) -> bool:
+        ...
+
+    @staticmethod
+    def InputInt(label: str, value_pointer: plIntPointer, step: int = 1, step_fast: int = 100, flags: ImGuiInputTextFlags | int = 0) -> bool:
+        ...
+
+    @staticmethod
+    def InputInt2(label: str, value_pointer: plIntPointer, flags: ImGuiInputTextFlags | int = 0) -> bool:
+        ...
+
+    @staticmethod
+    def InputInt3(label: str, value_pointer: plIntPointer, flags: ImGuiInputTextFlags | int = 0) -> bool:
+        ...
+
+    @staticmethod
+    def InputInt4(label: str, value_pointer: plIntPointer, flags: ImGuiInputTextFlags | int = 0) -> bool:
+        ...
+
+    @staticmethod
+    def InputDouble(label: str, value_pointer: plDoublePointer, step: float = 0.0, step_fast: float = 0.0, format: str = "%.6f", flags: ImGuiInputTextFlags | int = 0) -> bool:
+        ...
+
+    ########################################################################################################################
+    # [SECTION] imgui text widgets
+    ########################################################################################################################
+
+    @staticmethod
+    def TextUnformatted(text: str):
+        ...
+
+    @staticmethod
+    def Text(text: str):
+        ...
+
+    @staticmethod
+    def TextColored(color, text: str):
+        ...
+
+    @staticmethod
+    def TextDisabled(text: str):
+        ...
+
+    @staticmethod
+    def TextWrapped(text: str):
+        ...
+
+    @staticmethod
+    def LabelText(label: str, text: str):
+        ...
+
+    @staticmethod
+    def BulletText(text: str):
+        ...
+
+    @staticmethod
+    def SeparatorText(label: str):
+        ...
+
+    ########################################################################################################################
+    # [SECTION] imgui layout
+    ########################################################################################################################
+
+    @staticmethod
+    def Separator():
+        ...
+
+    @staticmethod
+    def SameLine(offset_from_start_x: float = 0.0, spacing: float = -1.0):
+        ...
+
+    @staticmethod
+    def NewLine():
+        ...
+
+    @staticmethod
+    def Spacing():
+        ...
+
+    @staticmethod
+    def Dummy(size):
+        ...
+
+    @staticmethod
+    def Indent(indent_w: float = 0.0):
+        ...
+
+    @staticmethod
+    def Unindent(indent_w: float = 0.0):
+        ...
+
+    @staticmethod
+    def BeginGroup():
+        ...
+
+    @staticmethod
+    def EndGroup():
+        ...
+
+    @staticmethod
+    def AlignTextToFramePadding():
+        ...
+
+    @staticmethod
+    def GetTextLineHeight() -> float:
+        ...
+
+    @staticmethod
+    def GetTextLineHeightWithSpacing() -> float:
+        ...
+
+    @staticmethod
+    def GetFrameHeight() -> float:
+        ...
+
+    @staticmethod
+    def GetFrameHeightWithSpacing() -> float:
+        ...
+
+    ########################################################################################################################
+    # [SECTION] imgui layout cursor positioning
+    ########################################################################################################################
+
+    @staticmethod
+    def GetCursorScreenPos() -> Tuple[float, float]:
+        ...
+
+    @staticmethod
+    def SetCursorScreenPos(pos):
+        ...
+
+    @staticmethod
+    def GetContentRegionAvail() -> Tuple[float, float]:
+        ...
+
+    @staticmethod
+    def GetCursorPos() -> Tuple[float, float]:
+        ...
+
+    @staticmethod
+    def GetCursorPosX() -> float:
+        ...
+
+    @staticmethod
+    def GetCursorPosY() -> float:
+        ...
+
+    @staticmethod
+    def SetCursorPos(local_pos):
+        ...
+
+    @staticmethod
+    def SetCursorPosX(local_x: float):
+        ...
+
+    @staticmethod
+    def SetCursorPosY(local_y: float):
+        ...
+
+    @staticmethod
+    def GetCursorStartPos() -> Tuple[float, float]:
+        ...
+
+    ########################################################################################################################
+    # [SECTION] imgui window scrolling
+    ########################################################################################################################
+
+    @staticmethod
+    def GetScrollX() -> float:
+        ...
+
+    @staticmethod
+    def GetScrollY() -> float:
+        ...
+
+    @staticmethod
+    def SetScrollX(scroll_x: float):
+        ...
+
+    @staticmethod
+    def SetScrollY(scroll_y: float):
+        ...
+
+    @staticmethod
+    def GetScrollMaxX() -> float:
+        ...
+
+    @staticmethod
+    def GetScrollMaxY() -> float:
+        ...
+
+    @staticmethod
+    def SetScrollHereX(center_x_ratio: float = 0.5):
+        ...
+
+    @staticmethod
+    def SetScrollHereY(center_y_ratio: float = 0.5):
+        ...
+
+    @staticmethod
+    def SetScrollFromPosX(local_x: float, center_x_ratio: float = 0.5):
+        ...
+
+    @staticmethod
+    def SetScrollFromPosY(local_y: float, center_y_ratio: float = 0.5):
+        ...
+
+    ########################################################################################################################
+    # [SECTION] imgui parameters stacks current window
+    ########################################################################################################################
+
+    @staticmethod
+    def PushItemWidth(item_width: float):
+        ...
+
+    @staticmethod
+    def PopItemWidth():
+        ...
+
+    @staticmethod
+    def SetNextItemWidth(item_width: float):
+        ...
+
+    @staticmethod
+    def CalcItemWidth() -> float:
+        ...
+
+    @staticmethod
+    def PushTextWrapPos(wrap_local_pos_x: float = 0.0):
+        ...
+
+    @staticmethod
+    def PopTextWrapPos():
+        ...
+
+    ########################################################################################################################
+    # [SECTION] imgui color editor/picker widgets
+    ########################################################################################################################
+
+    @staticmethod
+    def ColorEdit3(label: str, color_pointer: plFloatPointer, flags: ImGuiColorEditFlags | int = 0) -> bool:
+        ...
+
+    @staticmethod
+    def ColorEdit4(label: str, color_pointer: plFloatPointer, flags: ImGuiColorEditFlags | int = 0) -> bool:
+        ...
+
+    @staticmethod
+    def ColorPicker3(label: str, color_pointer: plFloatPointer, flags: ImGuiColorEditFlags | int = 0) -> bool:
+        ...
+
+    @staticmethod
+    def ColorPicker4(label: str, color_pointer: plFloatPointer, flags: ImGuiColorEditFlags | int = 0, ref_color: plFloatPointer | None = None) -> bool:
+        ...
+
+    @staticmethod
+    def ColorButton(desc_id: str, color, flags: ImGuiColorEditFlags | int = 0, size=None) -> bool:
+        ...
+
+    @staticmethod
+    def SetColorEditOptions(flags: ImGuiColorEditFlags):
+        ...
+
+    ########################################################################################################################
+    # [SECTION] imgui tree widgets
+    ########################################################################################################################
+
+    @staticmethod
+    def TreeNode(label: str) -> bool:
+        ...
+
+    @staticmethod
+    def TreeNodeEx(label: str, flags: ImGuiTreeNodeFlags | int = 0) -> bool:
+        ...
+
+    @staticmethod
+    def TreePush(str_id: str):
+        ...
+
+    @staticmethod
+    def TreePop():
+        ...
+
+    @staticmethod
+    def GetTreeNodeToLabelSpacing() -> float:
+        ...
+
+    @staticmethod
+    def CollapsingHeader(label: str, visible_pointer: plBoolPointer | None = None, flags: ImGuiTreeNodeFlags | int = 0) -> bool:
+        ...
+
+    @staticmethod
+    def SetNextItemOpen(is_open: bool, cond: ImGuiCond | int = 0):
+        ...
+
+    @staticmethod
+    def SetNextItemStorageID(storage_id: int):
+        ...
+
+    @staticmethod
+    def TreeNodeGetOpen(storage_id: int) -> bool:
+        ...
+
+    ########################################################################################################################
+    # [SECTION] imgui popups
+    ########################################################################################################################
+
+    @staticmethod
+    def BeginPopup(str_id: str, flags: ImGuiWindowFlags | int = 0) -> bool:
+        ...
+
+    @staticmethod
+    def BeginPopupModal(name: str, open: plBoolPointer | None = None, flags: ImGuiWindowFlags | int = 0) -> bool:
+        ...
+
+    @staticmethod
+    def EndPopup():
+        ...
+
+    @staticmethod
+    def OpenPopup(str_id: str, popup_flags: ImGuiPopupFlags | int = 0):
+        ...
+
+    @staticmethod
+    def OpenPopupOnItemClick(str_id: str | None = None, popup_flags: ImGuiPopupFlags | int = 0):
+        ...
+
+    @staticmethod
+    def CloseCurrentPopup():
+        ...
+
+    @staticmethod
+    def BeginPopupContextItem(str_id: str | None = None, popup_flags: ImGuiPopupFlags | int = 0) -> bool:
+        ...
+
+    @staticmethod
+    def BeginPopupContextWindow(str_id: str | None = None, popup_flags: ImGuiPopupFlags | int = 0) -> bool:
+        ...
+
+    @staticmethod
+    def BeginPopupContextVoid(str_id: str | None = None, popup_flags: ImGuiPopupFlags | int = 0) -> bool:
+        ...
+
+    @staticmethod
+    def IsPopupOpen(str_id: str, flags: ImGuiPopupFlags | int = 0) -> bool:
+        ...
+
+    ########################################################################################################################
+    # [SECTION] imgui tab bars / tabs
+    ########################################################################################################################
+
+    @staticmethod
+    def BeginTabBar(str_id: str, flags: ImGuiTabBarFlags | int = 0) -> bool:
+        ...
+
+    @staticmethod
+    def EndTabBar():
+        ...
+
+    @staticmethod
+    def BeginTabItem(label: str, open: plBoolPointer | None = None, flags: ImGuiTabItemFlags | int = 0) -> bool:
+        ...
+
+    @staticmethod
+    def EndTabItem():
+        ...
+
+    @staticmethod
+    def TabItemButton(label: str, flags: ImGuiTabItemFlags | int = 0) -> bool:
+        ...
+
+    @staticmethod
+    def SetTabItemClosed(tab_or_docked_window_label: str):
+        ...
+
+    ########################################################################################################################
+    # [SECTION] imgui item/widget utilities and query functions
+    ########################################################################################################################
+
+    @staticmethod
+    def IsItemHovered(flags: ImGuiHoveredFlags | int = 0) -> bool:
+        ...
+
+    @staticmethod
+    def IsItemActive() -> bool:
+        ...
+
+    @staticmethod
+    def IsItemFocused() -> bool:
+        ...
+
+    @staticmethod
+    def IsItemClicked(mouse_button: int = 0) -> bool:
+        ...
+
+    @staticmethod
+    def IsItemVisible() -> bool:
+        ...
+
+    @staticmethod
+    def IsItemEdited() -> bool:
+        ...
+
+    @staticmethod
+    def IsItemActivated() -> bool:
+        ...
+
+    @staticmethod
+    def IsItemDeactivated() -> bool:
+        ...
+
+    @staticmethod
+    def IsItemDeactivatedAfterEdit() -> bool:
+        ...
+
+    @staticmethod
+    def IsItemToggledOpen() -> bool:
+        ...
+
+    @staticmethod
+    def IsAnyItemHovered() -> bool:
+        ...
+
+    @staticmethod
+    def IsAnyItemActive() -> bool:
+        ...
+
+    @staticmethod
+    def IsAnyItemFocused() -> bool:
+        ...
+
+    @staticmethod
+    def GetItemID() -> int:
+        ...
+
+    @staticmethod
+    def GetItemRectMin() -> Tuple[float, float]:
+        ...
+
+    @staticmethod
+    def GetItemRectMax() -> Tuple[float, float]:
+        ...
+
+    @staticmethod
+    def GetItemRectSize() -> Tuple[float, float]:
+        ...
+
+    @staticmethod
+    def SetItemAllowOverlap():
+        ...
+
+    @staticmethod
+    def SetItemDefaultFocus():
+        ...
+
+    @staticmethod
+    def SetKeyboardFocusHere(offset: int = 0):
+        ...
+
+    @staticmethod
+    def SetNextItemAllowOverlap():
+        ...
 
 ########################################################################################################################
 # [SECTION] implot
 ########################################################################################################################
 
-def ImPlot_ShowDemoWindow(bool_pointer: plBoolPointer = None) -> None:
-    ...
+class ImPlot:
+
+    @staticmethod
+    def ShowDemoWindow(bool_pointer: plBoolPointer | None = None):
+        ...

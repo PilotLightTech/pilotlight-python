@@ -12,13 +12,14 @@ class App:
     Simple Pilot Light Python example showing how to:
       - create a window
       - initialize the starter/shader systems
+      - manually handle drawing extension
       - draw basic 2D primitives every frame
+      - load font
       - organize drawing code in a readable way
     """
 
     def __init__(self):
-        self.ptWindow = None
-        self.ptFont = None
+        pass
 
     # -------------------------------------------------------------------------
     # Application lifetime
@@ -34,6 +35,7 @@ class App:
         # Mount directories used by the shader system.
         # /shaders points at the Python package shader folder.
         # /shader-temp is where compiled/intermediate shader output can go.
+        plVfsI.mount_directory("/data", os.path.dirname(os.path.abspath(pl.__file__)) + "/../data")
         plVfsI.mount_directory("/cache", "cache")
         plVfsI.mount_directory(
             "/shaders",
@@ -43,7 +45,7 @@ class App:
 
         # Create and show the OS window.
         window_desc = plWindowDesc()
-        window_desc.pcTitle = "Pilot Light Python - Basic Example 0"
+        window_desc.pcTitle = "Pilot Light Python - Basic Example 1"
         window_desc.iXPos = 100
         window_desc.iYPos = 100
         window_desc.uWidth = 1280
@@ -56,9 +58,29 @@ class App:
         # we are going to initialize the shader system ourselves below.
         starter_flags = plStarterFlag.PL_STARTER_FLAGS_ALL_EXTENSIONS
         starter_flags &= ~plStarterFlag.PL_STARTER_FLAGS_SHADER_EXT
-        starter_flags |= plStarterFlag.PL_STARTER_FLAGS_MSAA
+        starter_flags &= ~plStarterFlag.PL_STARTER_FLAGS_DRAW_EXT
+        # starter_flags |= plStarterFlag.PL_STARTER_FLAGS_MSAA
 
         plStarterI.initialize(self.ptWindow, starter_flags)
+
+        ptDevice = plStarterI.get_device()
+        tDrawInit = plDrawInit(ptDevice)
+        plDrawI.initialize(tDrawInit)
+
+        self.ptFontAtlas = plDrawI.create_font_atlas()
+        plDrawI.set_font_atlas(self.ptFontAtlas)
+
+        tFontRange = plFontRange(0x0020, 0x00FF - 0x0020)
+
+        tFontConfig = plFontConfig()
+        tFontConfig.fSize = 18.0
+        tFontConfig.uHOverSampling = 1
+        tFontConfig.uVOverSampling = 1
+        tFontConfig.ptRanges = [tFontRange]
+        self.ptFont = plDrawI.add_font_from_file_ttf(self.ptFontAtlas, tFontConfig, "/data/Cousine-Regular.ttf");
+
+        self.drawlist = plDrawI.request_2d_drawlist()
+        self.ptFGLayer = plDrawI.request_2d_layer(self.drawlist)
 
         # Initialize shader system.
         # This is required even for simple drawing examples because the
@@ -78,8 +100,9 @@ class App:
         # Complete starter initialization after custom systems are ready.
         plStarterI.finalize()
 
-        ptFontAtlas = plDrawI.get_current_font_atlas()
-        self.ptFont = plDrawI.get_first_font(ptFontAtlas)
+        ptCmdBuffer = plStarterI.get_raw_command_buffer() # not recording
+        plDrawI.build_font_atlas(ptCmdBuffer, self.ptFontAtlas) # actually record, submit, & wait
+        plStarterI.return_raw_command_buffer(ptCmdBuffer)
 
     def pl_app_shutdown(self):
         """
@@ -88,6 +111,10 @@ class App:
         """
 
         plGraphicsI.flush_device(plStarterI.get_device())
+        plDrawI.return_2d_layer(self.ptFGLayer)
+        plDrawI.return_2d_drawlist(self.drawlist)
+        plDrawI.cleanup_font_atlas(self.ptFontAtlas)
+        plDrawI.cleanup()
         plStarterI.cleanup()
         plWindowI.destroy(self.ptWindow)
 
@@ -112,144 +139,31 @@ class App:
         if not plStarterI.begin_frame():
             return
 
+        plDrawI.new_frame()
+
         # Foreground fgLayer is a convenient draw list for 2D overlay-style
         # rendering.
         fgLayer = plStarterI.get_foreground_layer()
 
         # Outer frame
         plDrawI.add_rect(
-            fgLayer,
+            self.ptFGLayer,
             [40.0, 40.0],
             [1240.0, 680.0],
             plDrawLineOptions(PL_COLOR_32_YELLOW, 2.0)
         )
 
-        # Diagonal guide line
-        plDrawI.add_line(
-            fgLayer,
-            [40.0, 40.0],
-            [1240.0, 680.0],
-            plDrawLineOptions(PL_COLOR_32_GREEN, 2.0)
-        )
-
-        # Rounded panel region
-        plDrawI.add_rect_rounded(
-            fgLayer,
-            [70.0, 70.0],
-            [500.0, 300.0],
-            16.0,                   # rounding radius
-            0,                      # segment count (0 = automatic/default)
-            plDrawRectFlag.PL_DRAW_RECT_FLAG_NONE,
-            plDrawLineOptions(PL_COLOR_32_CYAN, 2.0)
-        )
-
-        # Triangle outline
-        plDrawI.add_triangle(
-            fgLayer,
-            [120.0, 240.0],
-            [240.0, 120.0],
-            [320.0, 260.0],
-            plDrawLineOptions(PL_COLOR_32_WHITE)
-        )
-
-        # Arbitrary quad outline
-        plDrawI.add_quad(
-            fgLayer,
-            [580.0, 100.0],
-            [760.0, 120.0],
-            [720.0, 260.0],
-            [540.0, 220.0],
-            plDrawLineOptions(PL_COLOR_32_ORANGE)
-        )
-
-        # Circle outline
-        plDrawI.add_circle(
-            fgLayer,
-            [930.0, 180.0],
-            70.0,
-            0,  # segment count (0 = automatic/default)
-            plDrawLineOptions(PL_COLOR_32_BLUE)
-        )
-
-        # Lines
-        plDrawI.add_lines(
-            fgLayer,
-            [
-                [1040.0, 110.0],
-                [1180.0, 250.0],
-                [1140.0, 90.0]
-            ],
-            plDrawLineOptions(PL_COLOR_32_GREEN)
-        )
-
         # text
-        plDrawI.add_text(fgLayer, [300, 300], "Hello Python", plDrawTextOptions(self.ptFont, 25.0, PL_COLOR_32_CYAN))
+        plDrawI.add_text(self.ptFGLayer, [300, 300], "Hello Python", plDrawTextOptions(self.ptFont, 18.0, PL_COLOR_32_CYAN))
 
-        # Polygon outline
-        plDrawI.add_polygon(
-            fgLayer,
-            [
-                [1040.0, 110.0],
-                [1140.0, 90.0],
-                [1200.0, 150.0],
-                [1180.0, 250.0],
-                [1070.0, 260.0],
-                [1010.0, 180.0],
-            ],
-            plDrawLineOptions(PL_COLOR_32_RED)
-        )
+        encoder = plStarterI.begin_main_pass()
 
-        plDrawI.add_bezier_quad(
-            fgLayer,
-            [120.0, 420.0],   # start
-            [260.0, 320.0],   # control
-            [420.0, 450.0],   # end
-            0,                # segment count (0 = automatic/default)
-            plDrawLineOptions(PL_COLOR_32_BLUE)
-        )
+        plDrawI.submit_2d_layer(self.ptFGLayer)
+        io = plIOI.get_io()
+        tMainViewportSize = io.tMainViewportSize
+        plDrawI.submit_2d_drawlist(self.drawlist, encoder, tMainViewportSize.x, tMainViewportSize.y, 1)
 
-        # Cubic bezier with thicker line
-        plDrawI.add_bezier_cubic(
-            fgLayer,
-            [120.0, 560.0],   # start
-            [220.0, 460.0],   # control 1
-            [360.0, 660.0],   # control 2
-            [460.0, 540.0],   # end
-            0,                # segment count
-            plDrawLineOptions(PL_COLOR_32_RED, 3.0)
-        )
-
-        # Filled triangle
-        plDrawI.add_triangle_filled(
-            fgLayer,
-            [640.0, 420.0],
-            [820.0, 360.0],
-            [760.0, 560.0],
-            plDrawSolidOptions(PL_COLOR_32_WHITE)
-        )
-
-        # Filled-looking composition using multiple primitives
-        plDrawI.add_line(
-            fgLayer,
-            [900.0, 360.0],
-            [1180.0, 360.0],
-            plDrawLineOptions(PL_COLOR_32_WHITE, 4.0)
-        )
-
-        plDrawI.add_rect(
-            fgLayer,
-            [920.0, 390.0],
-            [1160.0, 560.0],
-            plDrawLineOptions(PL_COLOR_32_WHITE, 3.0)
-        )
-
-        plDrawI.add_circle(
-            fgLayer,
-            [1040.0, 475.0],
-            50.0,
-            0,
-            plDrawLineOptions(PL_COLOR_32_GREEN)
-        )
+        plStarterI.end_main_pass()
 
         # Submit/present the frame.
         plStarterI.end_frame()

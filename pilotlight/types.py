@@ -1,4 +1,27 @@
 from dataclasses import dataclass
+from typing import List, Dict, Tuple, overload, NewType
+
+########################################################################################################################
+# [SECTION] opaque types
+########################################################################################################################
+
+plFont = NewType("plFont", object)
+plCommandBuffer = NewType("plCommandBuffer", object)
+plFontAtlas = NewType("plFontAtlas", object)
+plDrawList2D = NewType("plDrawList2D", object)
+plDrawLayer2D = NewType("plDrawLayer2D", object)
+plWindow = NewType("plWindow", object)
+plDevice = NewType("plDevice", object)
+plSwapchain = NewType("plSwapchain", object)
+plComponentLibrary = NewType("plComponentLibrary", object)
+plRenderEncoder = NewType("plRenderEncoder", object)
+plPakFile = NewType("plPakFile", object)
+plBoolPointer = NewType("plBoolPointer", object)
+plIntPointer = NewType("plIntPointer", object)
+plFloatPointer = NewType("plFloatPointer", object)
+plDoublePointer = NewType("plDoublePointer", object)
+
+type plPointer = plBoolPointer | plIntPointer | plFloatPointer | plDoublePointer
 
 class plShaderMacroDefinition:
     def __init__(self):
@@ -12,7 +35,7 @@ class plShaderOptions:
         self.ptMacroDefinitions = []
         self.apcIncludeDirectories = []
         self.apcDirectories = []
-        self.pcCacheOutputDirectory = None
+        self.pcCacheOutputDirectory = ""
 
 @dataclass(slots=True)
 class plDrawSolidOptions:
@@ -22,6 +45,31 @@ class plDrawSolidOptions:
 class plDrawLineOptions:
     uColor: int = 0xFFFFFFFF  # default white
     fThickness: float = 1.0
+
+@dataclass(slots=True)
+class plDrawInit:
+    ptDevice: plDevice | None = None
+
+@dataclass(slots=True)
+class plDrawTextOptions:
+    ptFont: plFont | None = None
+    fSize: float = 0.0
+    uColor: int = 0xFFFFFFFF  # default white
+    fWrap: float = 0.0
+    # TODO: need to add transform once plMat3 is binded
+
+@dataclass(slots=True)
+class plFontRange:
+    iFirstCodePoint: int = 0
+    uCharCount: int = 0
+
+class plFontConfig:
+    fSize: float = 0.0
+    ptRanges: List[plFontRange] = []
+    piIndividualChars: List[int] = []
+    ptMergeFont: plFont | None = None
+    uVOverSampling: int = 0 # BITMAP ONLY
+    uHOverSampling: int = 0 # BITMAP ONLY
 
 @dataclass(slots=True)
 class plWindowDesc:

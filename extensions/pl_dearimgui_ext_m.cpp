@@ -48,6 +48,11 @@ typedef struct _plPythonIntConstantPair
    int         iValue;
 } plPythonIntConstantPair;
 
+
+static PyObject* gptplDearImGuiIType = nullptr;
+static PyObject* gptImGuiType = nullptr;
+static PyObject* gptImPlotType = nullptr;
+
 //-----------------------------------------------------------------------------
 // [SECTION] includes
 //-----------------------------------------------------------------------------
@@ -146,21 +151,21 @@ dear_imgui_render(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-ImGui_StyleColorsDark(PyObject* self)
+StyleColorsDark(PyObject* self)
 {
     ImGui::StyleColorsDark();
     Py_RETURN_NONE;
 }
 
 PyObject*
-ImGui_StyleColorsLight(PyObject* self)
+StyleColorsLight(PyObject* self)
 {
     ImGui::StyleColorsLight();
     Py_RETURN_NONE;
 }
 
 PyObject*
-ImGui_StyleColorsClassic(PyObject* self)
+StyleColorsClassic(PyObject* self)
 {
     ImGui::StyleColorsClassic();
     Py_RETURN_NONE;
@@ -174,7 +179,7 @@ dear_imgui_cleanup(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-ImGui_ShowDemoWindow(PyObject* self, PyObject* arg)
+ShowDemoWindow(PyObject* self, PyObject* arg)
 {
     bool* ptShow = NULL;
     if(!Py_IsNone(arg))
@@ -198,7 +203,7 @@ ImPlot_ShowDemoWindow(PyObject* self, PyObject* arg)
 }
 
 PyObject*
-ImGui_Begin(PyObject* self, PyObject* args, PyObject* kwargs)
+Begin(PyObject* self, PyObject* args, PyObject* kwargs)
 {
 
     static const char* apcKeywords[] = {
@@ -222,14 +227,14 @@ ImGui_Begin(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-ImGui_End(PyObject* self)
+End(PyObject* self)
 {
     ImGui::End();
     Py_RETURN_NONE;
 }
 
 PyObject*
-ImGui_Button(PyObject* self, PyObject* args, PyObject* kwargs)
+Button(PyObject* self, PyObject* args, PyObject* kwargs)
 {
 
     static const char* apcKeywords[] = {
@@ -251,40 +256,40 @@ ImGui_Button(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-ImGui_BeginMenuBar(PyObject* self)
+BeginMenuBar(PyObject* self)
 {
     return PyBool_FromLong(ImGui::BeginMenuBar());
 }
 
 PyObject*
-ImGui_BeginMainMenuBar(PyObject* self)
+BeginMainMenuBar(PyObject* self)
 {
     return PyBool_FromLong(ImGui::BeginMainMenuBar());
 }
 
 PyObject*
-ImGui_EndMenuBar(PyObject* self)
+EndMenuBar(PyObject* self)
 {
     ImGui::EndMenuBar();
     Py_RETURN_NONE;
 }
 
 PyObject*
-ImGui_EndMainMenuBar(PyObject* self)
+EndMainMenuBar(PyObject* self)
 {
     ImGui::EndMainMenuBar();
     Py_RETURN_NONE;
 }
 
 PyObject*
-ImGui_EndMenu(PyObject* self)
+EndMenu(PyObject* self)
 {
     ImGui::EndMenu();
     Py_RETURN_NONE;
 }
 
 PyObject*
-ImGui_BeginMenu(PyObject* self, PyObject* args, PyObject* kwargs)
+BeginMenu(PyObject* self, PyObject* args, PyObject* kwargs)
 {
 
     static const char* apcKeywords[] = {
@@ -302,7 +307,7 @@ ImGui_BeginMenu(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-ImGui_MenuItem(PyObject* self, PyObject* args, PyObject* kwargs)
+MenuItem(PyObject* self, PyObject* args, PyObject* kwargs)
 {
 
     static const char* apcKeywords[] = {
@@ -332,7 +337,7 @@ ImGui_MenuItem(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-ImGui_Checkbox(PyObject* self, PyObject* args, PyObject* kwargs)
+Checkbox(PyObject* self, PyObject* args, PyObject* kwargs)
 {
 
     static const char* apcKeywords[] = {
@@ -352,7 +357,7 @@ ImGui_Checkbox(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-ImGui_DragFloat(PyObject* self, PyObject* args, PyObject* kwargs)
+DragFloat(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {
         "label", "value_pointer", "speed", "min", "max", "format", "flags", nullptr,
@@ -375,7 +380,7 @@ ImGui_DragFloat(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-ImGui_DragFloat2(PyObject* self, PyObject* args, PyObject* kwargs)
+DragFloat2(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {
         "label", "value_pointer", "speed", "min", "max", "format", "flags", nullptr,
@@ -398,7 +403,7 @@ ImGui_DragFloat2(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-ImGui_DragFloat3(PyObject* self, PyObject* args, PyObject* kwargs)
+DragFloat3(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {
         "label", "value_pointer", "speed", "min", "max", "format", "flags", nullptr,
@@ -421,7 +426,7 @@ ImGui_DragFloat3(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-ImGui_DragFloat4(PyObject* self, PyObject* args, PyObject* kwargs)
+DragFloat4(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {
         "label", "value_pointer", "speed", "min", "max", "format", "flags", nullptr,
@@ -444,7 +449,7 @@ ImGui_DragFloat4(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-ImGui_DragFloatRange2(PyObject* self, PyObject* args, PyObject* kwargs)
+DragFloatRange2(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {
         "label", "current_min_pointer", "current_max_pointer", "speed", "min", "max",
@@ -474,7 +479,7 @@ ImGui_DragFloatRange2(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-ImGui_DragInt(PyObject* self, PyObject* args, PyObject* kwargs)
+DragInt(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {
         "label", "value_pointer", "speed", "min", "max", "format", "flags", nullptr,
@@ -497,7 +502,7 @@ ImGui_DragInt(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-ImGui_DragInt2(PyObject* self, PyObject* args, PyObject* kwargs)
+DragInt2(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {
         "label", "value_pointer", "speed", "min", "max", "format", "flags", nullptr,
@@ -520,7 +525,7 @@ ImGui_DragInt2(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-ImGui_DragInt3(PyObject* self, PyObject* args, PyObject* kwargs)
+DragInt3(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {
         "label", "value_pointer", "speed", "min", "max", "format", "flags", nullptr,
@@ -543,7 +548,7 @@ ImGui_DragInt3(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-ImGui_DragInt4(PyObject* self, PyObject* args, PyObject* kwargs)
+DragInt4(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {
         "label", "value_pointer", "speed", "min", "max", "format", "flags", nullptr,
@@ -566,7 +571,7 @@ ImGui_DragInt4(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-ImGui_DragIntRange2(PyObject* self, PyObject* args, PyObject* kwargs)
+DragIntRange2(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {
         "label", "current_min_pointer", "current_max_pointer", "speed", "min", "max",
@@ -596,7 +601,7 @@ ImGui_DragIntRange2(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-ImGui_SliderFloat(PyObject* self, PyObject* args, PyObject* kwargs)
+SliderFloat(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {
         "label", "value_pointer", "min", "max", "format", "flags", nullptr,
@@ -618,7 +623,7 @@ ImGui_SliderFloat(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-ImGui_SliderFloat2(PyObject* self, PyObject* args, PyObject* kwargs)
+SliderFloat2(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {
         "label", "value_pointer", "min", "max", "format", "flags", nullptr,
@@ -640,7 +645,7 @@ ImGui_SliderFloat2(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-ImGui_SliderFloat3(PyObject* self, PyObject* args, PyObject* kwargs)
+SliderFloat3(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {
         "label", "value_pointer", "min", "max", "format", "flags", nullptr,
@@ -662,7 +667,7 @@ ImGui_SliderFloat3(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-ImGui_SliderFloat4(PyObject* self, PyObject* args, PyObject* kwargs)
+SliderFloat4(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {
         "label", "value_pointer", "min", "max", "format", "flags", nullptr,
@@ -684,7 +689,7 @@ ImGui_SliderFloat4(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-ImGui_SliderAngle(PyObject* self, PyObject* args, PyObject* kwargs)
+SliderAngle(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {
         "label", "rad_pointer", "degrees_min", "degrees_max", "format", "flags", nullptr,
@@ -706,7 +711,7 @@ ImGui_SliderAngle(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-ImGui_SliderInt(PyObject* self, PyObject* args, PyObject* kwargs)
+SliderInt(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {
         "label", "value_pointer", "min", "max", "format", "flags", nullptr,
@@ -728,7 +733,7 @@ ImGui_SliderInt(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-ImGui_SliderInt2(PyObject* self, PyObject* args, PyObject* kwargs)
+SliderInt2(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {
         "label", "value_pointer", "min", "max", "format", "flags", nullptr,
@@ -750,7 +755,7 @@ ImGui_SliderInt2(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-ImGui_SliderInt3(PyObject* self, PyObject* args, PyObject* kwargs)
+SliderInt3(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {
         "label", "value_pointer", "min", "max", "format", "flags", nullptr,
@@ -772,7 +777,7 @@ ImGui_SliderInt3(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-ImGui_SliderInt4(PyObject* self, PyObject* args, PyObject* kwargs)
+SliderInt4(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {
         "label", "value_pointer", "min", "max", "format", "flags", nullptr,
@@ -794,7 +799,7 @@ ImGui_SliderInt4(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-ImGui_VSliderFloat(PyObject* self, PyObject* args, PyObject* kwargs)
+VSliderFloat(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {
         "label", "size", "value_pointer", "min", "max", "format", "flags", nullptr,
@@ -819,7 +824,7 @@ ImGui_VSliderFloat(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-ImGui_VSliderInt(PyObject* self, PyObject* args, PyObject* kwargs)
+VSliderInt(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {
         "label", "size", "value_pointer", "min", "max", "format", "flags", nullptr,
@@ -844,7 +849,7 @@ ImGui_VSliderInt(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-ImGui_InputText(PyObject* self, PyObject* args, PyObject* kwargs)
+InputText(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {
         "label", "value", "flags", nullptr,
@@ -868,7 +873,7 @@ ImGui_InputText(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-ImGui_InputTextMultiline(PyObject* self, PyObject* args, PyObject* kwargs)
+InputTextMultiline(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {
         "label", "value", "size", "flags", nullptr,
@@ -897,7 +902,7 @@ ImGui_InputTextMultiline(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-ImGui_InputTextWithHint(PyObject* self, PyObject* args, PyObject* kwargs)
+InputTextWithHint(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {
         "label", "hint", "value", "flags", nullptr,
@@ -922,7 +927,7 @@ ImGui_InputTextWithHint(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-ImGui_InputFloat(PyObject* self, PyObject* args, PyObject* kwargs)
+InputFloat(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {
         "label", "value_pointer", "step", "step_fast", "format", "flags", nullptr,
@@ -944,7 +949,7 @@ ImGui_InputFloat(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-ImGui_InputFloat2(PyObject* self, PyObject* args, PyObject* kwargs)
+InputFloat2(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {
         "label", "value_pointer", "format", "flags", nullptr,
@@ -964,7 +969,7 @@ ImGui_InputFloat2(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-ImGui_InputFloat3(PyObject* self, PyObject* args, PyObject* kwargs)
+InputFloat3(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {
         "label", "value_pointer", "format", "flags", nullptr,
@@ -984,7 +989,7 @@ ImGui_InputFloat3(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-ImGui_InputFloat4(PyObject* self, PyObject* args, PyObject* kwargs)
+InputFloat4(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {
         "label", "value_pointer", "format", "flags", nullptr,
@@ -1004,7 +1009,7 @@ ImGui_InputFloat4(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-ImGui_InputInt(PyObject* self, PyObject* args, PyObject* kwargs)
+InputInt(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {
         "label", "value_pointer", "step", "step_fast", "flags", nullptr,
@@ -1025,7 +1030,7 @@ ImGui_InputInt(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-ImGui_InputInt2(PyObject* self, PyObject* args, PyObject* kwargs)
+InputInt2(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {
         "label", "value_pointer", "flags", nullptr,
@@ -1044,7 +1049,7 @@ ImGui_InputInt2(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-ImGui_InputInt3(PyObject* self, PyObject* args, PyObject* kwargs)
+InputInt3(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {
         "label", "value_pointer", "flags", nullptr,
@@ -1063,7 +1068,7 @@ ImGui_InputInt3(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-ImGui_InputInt4(PyObject* self, PyObject* args, PyObject* kwargs)
+InputInt4(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {
         "label", "value_pointer", "flags", nullptr,
@@ -1082,7 +1087,7 @@ ImGui_InputInt4(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-ImGui_InputDouble(PyObject* self, PyObject* args, PyObject* kwargs)
+InputDouble(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {
         "label", "value_pointer", "step", "step_fast", "format", "flags", nullptr,
@@ -1104,7 +1109,7 @@ ImGui_InputDouble(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-ImGui_TextUnformatted(PyObject* self, PyObject* args, PyObject* kwargs)
+TextUnformatted(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {
         "text",
@@ -1122,7 +1127,7 @@ ImGui_TextUnformatted(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-ImGui_Text(PyObject* self, PyObject* args, PyObject* kwargs)
+Text(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {
         "text",
@@ -1140,7 +1145,7 @@ ImGui_Text(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-ImGui_TextColored(PyObject* self, PyObject* args, PyObject* kwargs)
+TextColored(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {
         "color",
@@ -1167,7 +1172,7 @@ ImGui_TextColored(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-ImGui_TextDisabled(PyObject* self, PyObject* args, PyObject* kwargs)
+TextDisabled(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {
         "text",
@@ -1185,7 +1190,7 @@ ImGui_TextDisabled(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-ImGui_TextWrapped(PyObject* self, PyObject* args, PyObject* kwargs)
+TextWrapped(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {
         "text",
@@ -1203,7 +1208,7 @@ ImGui_TextWrapped(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-ImGui_LabelText(PyObject* self, PyObject* args, PyObject* kwargs)
+LabelText(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {
         "label",
@@ -1223,7 +1228,7 @@ ImGui_LabelText(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-ImGui_BulletText(PyObject* self, PyObject* args, PyObject* kwargs)
+BulletText(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {
         "text",
@@ -1241,7 +1246,7 @@ ImGui_BulletText(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-ImGui_SeparatorText(PyObject* self, PyObject* args, PyObject* kwargs)
+SeparatorText(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {
         "label",
@@ -1259,14 +1264,14 @@ ImGui_SeparatorText(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-ImGui_Separator(PyObject* self)
+Separator(PyObject* self)
 {
     ImGui::Separator();
     Py_RETURN_NONE;
 }
 
 PyObject*
-ImGui_SameLine(PyObject* self, PyObject* args, PyObject* kwargs)
+SameLine(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {
         "offset_from_start_x",
@@ -1286,21 +1291,21 @@ ImGui_SameLine(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-ImGui_NewLine(PyObject* self)
+NewLine(PyObject* self)
 {
     ImGui::NewLine();
     Py_RETURN_NONE;
 }
 
 PyObject*
-ImGui_Spacing(PyObject* self)
+Spacing(PyObject* self)
 {
     ImGui::Spacing();
     Py_RETURN_NONE;
 }
 
 PyObject*
-ImGui_Dummy(PyObject* self, PyObject* args, PyObject* kwargs)
+Dummy(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {
         "size",
@@ -1322,7 +1327,7 @@ ImGui_Dummy(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-ImGui_Indent(PyObject* self, PyObject* args, PyObject* kwargs)
+Indent(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {
         "indent_w",
@@ -1340,7 +1345,7 @@ ImGui_Indent(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-ImGui_Unindent(PyObject* self, PyObject* args, PyObject* kwargs)
+Unindent(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {
         "indent_w",
@@ -1358,59 +1363,59 @@ ImGui_Unindent(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-ImGui_BeginGroup(PyObject* self)
+BeginGroup(PyObject* self)
 {
     ImGui::BeginGroup();
     Py_RETURN_NONE;
 }
 
 PyObject*
-ImGui_EndGroup(PyObject* self)
+EndGroup(PyObject* self)
 {
     ImGui::EndGroup();
     Py_RETURN_NONE;
 }
 
 PyObject*
-ImGui_AlignTextToFramePadding(PyObject* self)
+AlignTextToFramePadding(PyObject* self)
 {
     ImGui::AlignTextToFramePadding();
     Py_RETURN_NONE;
 }
 
 PyObject*
-ImGui_GetTextLineHeight(PyObject* self)
+GetTextLineHeight(PyObject* self)
 {
     return PyFloat_FromDouble(ImGui::GetTextLineHeight());
 }
 
 PyObject*
-ImGui_GetTextLineHeightWithSpacing(PyObject* self)
+GetTextLineHeightWithSpacing(PyObject* self)
 {
     return PyFloat_FromDouble(ImGui::GetTextLineHeightWithSpacing());
 }
 
 PyObject*
-ImGui_GetFrameHeight(PyObject* self)
+GetFrameHeight(PyObject* self)
 {
     return PyFloat_FromDouble(ImGui::GetFrameHeight());
 }
 
 PyObject*
-ImGui_GetFrameHeightWithSpacing(PyObject* self)
+GetFrameHeightWithSpacing(PyObject* self)
 {
     return PyFloat_FromDouble(ImGui::GetFrameHeightWithSpacing());
 }
 
 PyObject*
-ImGui_GetCursorScreenPos(PyObject* self)
+GetCursorScreenPos(PyObject* self)
 {
     ImVec2 tPos = ImGui::GetCursorScreenPos();
     return Py_BuildValue("(ff)", tPos.x, tPos.y);
 }
 
 PyObject*
-ImGui_SetCursorScreenPos(PyObject* self, PyObject* args, PyObject* kwargs)
+SetCursorScreenPos(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {
         "pos",
@@ -1428,33 +1433,33 @@ ImGui_SetCursorScreenPos(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-ImGui_GetContentRegionAvail(PyObject* self)
+GetContentRegionAvail(PyObject* self)
 {
     ImVec2 tSize = ImGui::GetContentRegionAvail();
     return Py_BuildValue("(ff)", tSize.x, tSize.y);
 }
 
 PyObject*
-ImGui_GetCursorPos(PyObject* self)
+GetCursorPos(PyObject* self)
 {
     ImVec2 tPos = ImGui::GetCursorPos();
     return Py_BuildValue("(ff)", tPos.x, tPos.y);
 }
 
 PyObject*
-ImGui_GetCursorPosX(PyObject* self)
+GetCursorPosX(PyObject* self)
 {
     return PyFloat_FromDouble(ImGui::GetCursorPosX());
 }
 
 PyObject*
-ImGui_GetCursorPosY(PyObject* self)
+GetCursorPosY(PyObject* self)
 {
     return PyFloat_FromDouble(ImGui::GetCursorPosY());
 }
 
 PyObject*
-ImGui_SetCursorPos(PyObject* self, PyObject* args, PyObject* kwargs)
+SetCursorPos(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {
         "local_pos",
@@ -1472,7 +1477,7 @@ ImGui_SetCursorPos(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-ImGui_SetCursorPosX(PyObject* self, PyObject* args, PyObject* kwargs)
+SetCursorPosX(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {
         "local_x",
@@ -1490,7 +1495,7 @@ ImGui_SetCursorPosX(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-ImGui_SetCursorPosY(PyObject* self, PyObject* args, PyObject* kwargs)
+SetCursorPosY(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {
         "local_y",
@@ -1508,26 +1513,26 @@ ImGui_SetCursorPosY(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-ImGui_GetCursorStartPos(PyObject* self)
+GetCursorStartPos(PyObject* self)
 {
     ImVec2 tPos = ImGui::GetCursorStartPos();
     return Py_BuildValue("(ff)", tPos.x, tPos.y);
 }
 
 PyObject*
-ImGui_GetScrollX(PyObject* self)
+GetScrollX(PyObject* self)
 {
     return PyFloat_FromDouble(ImGui::GetScrollX());
 }
 
 PyObject*
-ImGui_GetScrollY(PyObject* self)
+GetScrollY(PyObject* self)
 {
     return PyFloat_FromDouble(ImGui::GetScrollY());
 }
 
 PyObject*
-ImGui_SetScrollX(PyObject* self, PyObject* args, PyObject* kwargs)
+SetScrollX(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {"scroll_x", nullptr};
 
@@ -1541,7 +1546,7 @@ ImGui_SetScrollX(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-ImGui_SetScrollY(PyObject* self, PyObject* args, PyObject* kwargs)
+SetScrollY(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {"scroll_y", nullptr};
 
@@ -1555,19 +1560,19 @@ ImGui_SetScrollY(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-ImGui_GetScrollMaxX(PyObject* self)
+GetScrollMaxX(PyObject* self)
 {
     return PyFloat_FromDouble(ImGui::GetScrollMaxX());
 }
 
 PyObject*
-ImGui_GetScrollMaxY(PyObject* self)
+GetScrollMaxY(PyObject* self)
 {
     return PyFloat_FromDouble(ImGui::GetScrollMaxY());
 }
 
 PyObject*
-ImGui_SetScrollHereX(PyObject* self, PyObject* args, PyObject* kwargs)
+SetScrollHereX(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {"center_x_ratio", nullptr};
 
@@ -1581,7 +1586,7 @@ ImGui_SetScrollHereX(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-ImGui_SetScrollHereY(PyObject* self, PyObject* args, PyObject* kwargs)
+SetScrollHereY(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {"center_y_ratio", nullptr};
 
@@ -1595,7 +1600,7 @@ ImGui_SetScrollHereY(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-ImGui_SetScrollFromPosX(PyObject* self, PyObject* args, PyObject* kwargs)
+SetScrollFromPosX(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {"local_x", "center_x_ratio", nullptr};
 
@@ -1611,7 +1616,7 @@ ImGui_SetScrollFromPosX(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-ImGui_SetScrollFromPosY(PyObject* self, PyObject* args, PyObject* kwargs)
+SetScrollFromPosY(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {"local_y", "center_y_ratio", nullptr};
 
@@ -1627,7 +1632,7 @@ ImGui_SetScrollFromPosY(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-ImGui_PushItemWidth(PyObject* self, PyObject* args, PyObject* kwargs)
+PushItemWidth(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {"item_width", nullptr};
 
@@ -1641,14 +1646,14 @@ ImGui_PushItemWidth(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-ImGui_PopItemWidth(PyObject* self)
+PopItemWidth(PyObject* self)
 {
     ImGui::PopItemWidth();
     Py_RETURN_NONE;
 }
 
 PyObject*
-ImGui_SetNextItemWidth(PyObject* self, PyObject* args, PyObject* kwargs)
+SetNextItemWidth(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {"item_width", nullptr};
 
@@ -1662,13 +1667,13 @@ ImGui_SetNextItemWidth(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-ImGui_CalcItemWidth(PyObject* self)
+CalcItemWidth(PyObject* self)
 {
     return PyFloat_FromDouble(ImGui::CalcItemWidth());
 }
 
 PyObject*
-ImGui_PushTextWrapPos(PyObject* self, PyObject* args, PyObject* kwargs)
+PushTextWrapPos(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {"wrap_local_pos_x", nullptr};
 
@@ -1682,14 +1687,14 @@ ImGui_PushTextWrapPos(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-ImGui_PopTextWrapPos(PyObject* self)
+PopTextWrapPos(PyObject* self)
 {
     ImGui::PopTextWrapPos();
     Py_RETURN_NONE;
 }
 
 PyObject*
-ImGui_SmallButton(PyObject* self, PyObject* args, PyObject* kwargs)
+SmallButton(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {"label", nullptr};
 
@@ -1702,7 +1707,7 @@ ImGui_SmallButton(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-ImGui_InvisibleButton(PyObject* self, PyObject* args, PyObject* kwargs)
+InvisibleButton(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {"str_id", "size", "flags", nullptr};
 
@@ -1719,7 +1724,7 @@ ImGui_InvisibleButton(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-ImGui_ArrowButton(PyObject* self, PyObject* args, PyObject* kwargs)
+ArrowButton(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {"str_id", "dir", nullptr};
 
@@ -1734,7 +1739,7 @@ ImGui_ArrowButton(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-ImGui_CheckboxFlags(PyObject* self, PyObject* args, PyObject* kwargs)
+CheckboxFlags(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {"label", "flags_pointer", "flags_value", nullptr};
 
@@ -1751,7 +1756,7 @@ ImGui_CheckboxFlags(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-ImGui_RadioButton(PyObject* self, PyObject* args, PyObject* kwargs)
+RadioButton(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {"label", "active", "value_pointer", "button_value", nullptr};
 
@@ -1774,7 +1779,7 @@ ImGui_RadioButton(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-ImGui_ProgressBar(PyObject* self, PyObject* args, PyObject* kwargs)
+ProgressBar(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {"fraction", "size", "overlay", nullptr};
 
@@ -1795,14 +1800,14 @@ ImGui_ProgressBar(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-ImGui_Bullet(PyObject* self)
+Bullet(PyObject* self)
 {
     ImGui::Bullet();
     Py_RETURN_NONE;
 }
 
 PyObject*
-ImGui_TextLink(PyObject* self, PyObject* args, PyObject* kwargs)
+TextLink(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {"label", nullptr};
 
@@ -1815,7 +1820,7 @@ ImGui_TextLink(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-ImGui_TextLinkOpenURL(PyObject* self, PyObject* args, PyObject* kwargs)
+TextLinkOpenURL(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {"label", "url", nullptr};
 
@@ -1830,7 +1835,7 @@ ImGui_TextLinkOpenURL(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-ImGui_ColorEdit3(PyObject* self, PyObject* args, PyObject* kwargs)
+ColorEdit3(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {"label", "color_pointer", "flags", nullptr};
 
@@ -1847,7 +1852,7 @@ ImGui_ColorEdit3(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-ImGui_ColorEdit4(PyObject* self, PyObject* args, PyObject* kwargs)
+ColorEdit4(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {"label", "color_pointer", "flags", nullptr};
 
@@ -1864,7 +1869,7 @@ ImGui_ColorEdit4(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-ImGui_ColorPicker3(PyObject* self, PyObject* args, PyObject* kwargs)
+ColorPicker3(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {"label", "color_pointer", "flags", nullptr};
 
@@ -1881,7 +1886,7 @@ ImGui_ColorPicker3(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-ImGui_ColorPicker4(PyObject* self, PyObject* args, PyObject* kwargs)
+ColorPicker4(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {"label", "color_pointer", "flags", "ref_color", nullptr};
 
@@ -1904,7 +1909,7 @@ ImGui_ColorPicker4(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-ImGui_ColorButton(PyObject* self, PyObject* args, PyObject* kwargs)
+ColorButton(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {"desc_id", "color", "flags", "size", nullptr};
 
@@ -1927,7 +1932,7 @@ ImGui_ColorButton(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-ImGui_SetColorEditOptions(PyObject* self, PyObject* args, PyObject* kwargs)
+SetColorEditOptions(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {"flags", nullptr};
 
@@ -1941,7 +1946,7 @@ ImGui_SetColorEditOptions(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-ImGui_TreeNode(PyObject* self, PyObject* args, PyObject* kwargs)
+TreeNode(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {"label", nullptr};
 
@@ -1954,7 +1959,7 @@ ImGui_TreeNode(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-ImGui_TreeNodeEx(PyObject* self, PyObject* args, PyObject* kwargs)
+TreeNodeEx(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {"label", "flags", nullptr};
 
@@ -1969,7 +1974,7 @@ ImGui_TreeNodeEx(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-ImGui_TreePush(PyObject* self, PyObject* args, PyObject* kwargs)
+TreePush(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {"str_id", nullptr};
 
@@ -1983,20 +1988,20 @@ ImGui_TreePush(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-ImGui_TreePop(PyObject* self)
+TreePop(PyObject* self)
 {
     ImGui::TreePop();
     Py_RETURN_NONE;
 }
 
 PyObject*
-ImGui_GetTreeNodeToLabelSpacing(PyObject* self)
+GetTreeNodeToLabelSpacing(PyObject* self)
 {
     return PyFloat_FromDouble(ImGui::GetTreeNodeToLabelSpacing());
 }
 
 PyObject*
-ImGui_CollapsingHeader(PyObject* self, PyObject* args, PyObject* kwargs)
+CollapsingHeader(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {
         "label",
@@ -2023,7 +2028,7 @@ ImGui_CollapsingHeader(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-ImGui_SetNextItemOpen(PyObject* self, PyObject* args, PyObject* kwargs)
+SetNextItemOpen(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {"is_open", "cond", nullptr};
 
@@ -2039,7 +2044,7 @@ ImGui_SetNextItemOpen(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-ImGui_SetNextItemStorageID(PyObject* self, PyObject* args, PyObject* kwargs)
+SetNextItemStorageID(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {"storage_id", nullptr};
 
@@ -2054,7 +2059,7 @@ ImGui_SetNextItemStorageID(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-ImGui_TreeNodeGetOpen(PyObject* self, PyObject* args, PyObject* kwargs)
+TreeNodeGetOpen(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {"storage_id", nullptr};
 
@@ -2072,19 +2077,19 @@ ImGui_TreeNodeGetOpen(PyObject* self, PyObject* args, PyObject* kwargs)
 //-----------------------------------------------------------------------------
 
 PyObject*
-ImGui_IsWindowAppearing(PyObject* self)
+IsWindowAppearing(PyObject* self)
 {
     return PyBool_FromLong(ImGui::IsWindowAppearing());
 }
 
 PyObject*
-ImGui_IsWindowCollapsed(PyObject* self)
+IsWindowCollapsed(PyObject* self)
 {
     return PyBool_FromLong(ImGui::IsWindowCollapsed());
 }
 
 PyObject*
-ImGui_IsWindowFocused(PyObject* self, PyObject* args, PyObject* kwargs)
+IsWindowFocused(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {"flags", nullptr};
 
@@ -2097,7 +2102,7 @@ ImGui_IsWindowFocused(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-ImGui_IsWindowHovered(PyObject* self, PyObject* args, PyObject* kwargs)
+IsWindowHovered(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {"flags", nullptr};
 
@@ -2110,39 +2115,39 @@ ImGui_IsWindowHovered(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-ImGui_GetWindowDpiScale(PyObject* self)
+GetWindowDpiScale(PyObject* self)
 {
     return PyFloat_FromDouble(ImGui::GetWindowDpiScale());
 }
 
 PyObject*
-ImGui_GetWindowPos(PyObject* self)
+GetWindowPos(PyObject* self)
 {
     ImVec2 tPos = ImGui::GetWindowPos();
     return Py_BuildValue("(ff)", tPos.x, tPos.y);
 }
 
 PyObject*
-ImGui_GetWindowSize(PyObject* self)
+GetWindowSize(PyObject* self)
 {
     ImVec2 tSize = ImGui::GetWindowSize();
     return Py_BuildValue("(ff)", tSize.x, tSize.y);
 }
 
 PyObject*
-ImGui_GetWindowWidth(PyObject* self)
+GetWindowWidth(PyObject* self)
 {
     return PyFloat_FromDouble(ImGui::GetWindowWidth());
 }
 
 PyObject*
-ImGui_GetWindowHeight(PyObject* self)
+GetWindowHeight(PyObject* self)
 {
     return PyFloat_FromDouble(ImGui::GetWindowHeight());
 }
 
 PyObject*
-ImGui_SetNextWindowPos(PyObject* self, PyObject* args, PyObject* kwargs)
+SetNextWindowPos(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {"pos", "cond", "pivot", nullptr};
 
@@ -2163,7 +2168,7 @@ ImGui_SetNextWindowPos(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-ImGui_SetNextWindowSize(PyObject* self, PyObject* args, PyObject* kwargs)
+SetNextWindowSize(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {"size", "cond", nullptr};
 
@@ -2179,7 +2184,7 @@ ImGui_SetNextWindowSize(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-ImGui_SetNextWindowContentSize(PyObject* self, PyObject* args, PyObject* kwargs)
+SetNextWindowContentSize(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {"size", nullptr};
 
@@ -2193,7 +2198,7 @@ ImGui_SetNextWindowContentSize(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-ImGui_SetNextWindowCollapsed(PyObject* self, PyObject* args, PyObject* kwargs)
+SetNextWindowCollapsed(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {"collapsed", "cond", nullptr};
 
@@ -2209,14 +2214,14 @@ ImGui_SetNextWindowCollapsed(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-ImGui_SetNextWindowFocus(PyObject* self)
+SetNextWindowFocus(PyObject* self)
 {
     ImGui::SetNextWindowFocus();
     Py_RETURN_NONE;
 }
 
 PyObject*
-ImGui_SetNextWindowScroll(PyObject* self, PyObject* args, PyObject* kwargs)
+SetNextWindowScroll(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {"scroll", nullptr};
 
@@ -2230,7 +2235,7 @@ ImGui_SetNextWindowScroll(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-ImGui_SetNextWindowBgAlpha(PyObject* self, PyObject* args, PyObject* kwargs)
+SetNextWindowBgAlpha(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {"alpha", nullptr};
 
@@ -2244,7 +2249,7 @@ ImGui_SetNextWindowBgAlpha(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-ImGui_SetNextWindowViewport(PyObject* self, PyObject* args, PyObject* kwargs)
+SetNextWindowViewport(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {"viewport_id", nullptr};
 
@@ -2258,7 +2263,7 @@ ImGui_SetNextWindowViewport(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-ImGui_SetWindowPos(PyObject* self, PyObject* args, PyObject* kwargs)
+SetWindowPos(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {"pos", "cond", "name", nullptr};
 
@@ -2279,7 +2284,7 @@ ImGui_SetWindowPos(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-ImGui_SetWindowSize(PyObject* self, PyObject* args, PyObject* kwargs)
+SetWindowSize(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {"size", "cond", "name", nullptr};
 
@@ -2300,7 +2305,7 @@ ImGui_SetWindowSize(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-ImGui_SetWindowCollapsed(PyObject* self, PyObject* args, PyObject* kwargs)
+SetWindowCollapsed(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {"collapsed", "cond", "name", nullptr};
 
@@ -2321,7 +2326,7 @@ ImGui_SetWindowCollapsed(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-ImGui_SetWindowFocus(PyObject* self, PyObject* args, PyObject* kwargs)
+SetWindowFocus(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {"name", nullptr};
 
@@ -2339,7 +2344,7 @@ ImGui_SetWindowFocus(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-ImGui_Selectable(PyObject* self, PyObject* args, PyObject* kwargs)
+Selectable(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {
         "label",
@@ -2374,20 +2379,20 @@ ImGui_Selectable(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-ImGui_BeginTooltip(PyObject* self)
+BeginTooltip(PyObject* self)
 {
     return PyBool_FromLong(ImGui::BeginTooltip());
 }
 
 PyObject*
-ImGui_EndTooltip(PyObject* self)
+EndTooltip(PyObject* self)
 {
     ImGui::EndTooltip();
     Py_RETURN_NONE;
 }
 
 PyObject*
-ImGui_SetTooltip(PyObject* self, PyObject* args, PyObject* kwargs)
+SetTooltip(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {"text", nullptr};
 
@@ -2401,13 +2406,13 @@ ImGui_SetTooltip(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-ImGui_BeginItemTooltip(PyObject* self)
+BeginItemTooltip(PyObject* self)
 {
     return PyBool_FromLong(ImGui::BeginItemTooltip());
 }
 
 PyObject*
-ImGui_SetItemTooltip(PyObject* self, PyObject* args, PyObject* kwargs)
+SetItemTooltip(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {"text", nullptr};
 
@@ -2421,7 +2426,7 @@ ImGui_SetItemTooltip(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-ImGui_BeginPopup(PyObject* self, PyObject* args, PyObject* kwargs)
+BeginPopup(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {"str_id", "flags", nullptr};
 
@@ -2436,7 +2441,7 @@ ImGui_BeginPopup(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-ImGui_BeginPopupModal(PyObject* self, PyObject* args, PyObject* kwargs)
+BeginPopupModal(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {"name", "open", "flags", nullptr};
 
@@ -2456,14 +2461,14 @@ ImGui_BeginPopupModal(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-ImGui_EndPopup(PyObject* self)
+EndPopup(PyObject* self)
 {
     ImGui::EndPopup();
     Py_RETURN_NONE;
 }
 
 PyObject*
-ImGui_OpenPopup(PyObject* self, PyObject* args, PyObject* kwargs)
+OpenPopup(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {"str_id", "popup_flags", nullptr};
 
@@ -2479,7 +2484,7 @@ ImGui_OpenPopup(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-ImGui_OpenPopupOnItemClick(PyObject* self, PyObject* args, PyObject* kwargs)
+OpenPopupOnItemClick(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {"str_id", "popup_flags", nullptr};
 
@@ -2495,14 +2500,14 @@ ImGui_OpenPopupOnItemClick(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-ImGui_CloseCurrentPopup(PyObject* self)
+CloseCurrentPopup(PyObject* self)
 {
     ImGui::CloseCurrentPopup();
     Py_RETURN_NONE;
 }
 
 PyObject*
-ImGui_BeginPopupContextItem(PyObject* self, PyObject* args, PyObject* kwargs)
+BeginPopupContextItem(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {"str_id", "popup_flags", nullptr};
 
@@ -2517,7 +2522,7 @@ ImGui_BeginPopupContextItem(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-ImGui_BeginPopupContextWindow(PyObject* self, PyObject* args, PyObject* kwargs)
+BeginPopupContextWindow(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {"str_id", "popup_flags", nullptr};
 
@@ -2532,7 +2537,7 @@ ImGui_BeginPopupContextWindow(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-ImGui_BeginPopupContextVoid(PyObject* self, PyObject* args, PyObject* kwargs)
+BeginPopupContextVoid(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {"str_id", "popup_flags", nullptr};
 
@@ -2547,7 +2552,7 @@ ImGui_BeginPopupContextVoid(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-ImGui_IsPopupOpen(PyObject* self, PyObject* args, PyObject* kwargs)
+IsPopupOpen(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {"str_id", "flags", nullptr};
 
@@ -2562,7 +2567,7 @@ ImGui_IsPopupOpen(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-ImGui_BeginTabBar(PyObject* self, PyObject* args, PyObject* kwargs)
+BeginTabBar(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {"str_id", "flags", nullptr};
 
@@ -2577,14 +2582,14 @@ ImGui_BeginTabBar(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-ImGui_EndTabBar(PyObject* self)
+EndTabBar(PyObject* self)
 {
     ImGui::EndTabBar();
     Py_RETURN_NONE;
 }
 
 PyObject*
-ImGui_BeginTabItem(PyObject* self, PyObject* args, PyObject* kwargs)
+BeginTabItem(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {"label", "open", "flags", nullptr};
 
@@ -2604,14 +2609,14 @@ ImGui_BeginTabItem(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-ImGui_EndTabItem(PyObject* self)
+EndTabItem(PyObject* self)
 {
     ImGui::EndTabItem();
     Py_RETURN_NONE;
 }
 
 PyObject*
-ImGui_TabItemButton(PyObject* self, PyObject* args, PyObject* kwargs)
+TabItemButton(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {"label", "flags", nullptr};
 
@@ -2626,7 +2631,7 @@ ImGui_TabItemButton(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-ImGui_SetTabItemClosed(PyObject* self, PyObject* args, PyObject* kwargs)
+SetTabItemClosed(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {"tab_or_docked_window_label", nullptr};
 
@@ -2641,7 +2646,7 @@ ImGui_SetTabItemClosed(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-ImGui_IsItemHovered(PyObject* self, PyObject* args, PyObject* kwargs)
+IsItemHovered(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {"flags", nullptr};
     int iFlags = 0;
@@ -2651,19 +2656,19 @@ ImGui_IsItemHovered(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-ImGui_IsItemActive(PyObject* self)
+IsItemActive(PyObject* self)
 {
     return PyBool_FromLong(ImGui::IsItemActive());
 }
 
 PyObject*
-ImGui_IsItemFocused(PyObject* self)
+IsItemFocused(PyObject* self)
 {
     return PyBool_FromLong(ImGui::IsItemFocused());
 }
 
 PyObject*
-ImGui_IsItemClicked(PyObject* self, PyObject* args, PyObject* kwargs)
+IsItemClicked(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {"mouse_button", nullptr};
     int iMouseButton = 0;
@@ -2673,102 +2678,102 @@ ImGui_IsItemClicked(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-ImGui_IsItemVisible(PyObject* self)
+IsItemVisible(PyObject* self)
 {
     return PyBool_FromLong(ImGui::IsItemVisible());
 }
 
 PyObject*
-ImGui_IsItemEdited(PyObject* self)
+IsItemEdited(PyObject* self)
 {
     return PyBool_FromLong(ImGui::IsItemEdited());
 }
 
 PyObject*
-ImGui_IsItemActivated(PyObject* self)
+IsItemActivated(PyObject* self)
 {
     return PyBool_FromLong(ImGui::IsItemActivated());
 }
 
 PyObject*
-ImGui_IsItemDeactivated(PyObject* self)
+IsItemDeactivated(PyObject* self)
 {
     return PyBool_FromLong(ImGui::IsItemDeactivated());
 }
 
 PyObject*
-ImGui_IsItemDeactivatedAfterEdit(PyObject* self)
+IsItemDeactivatedAfterEdit(PyObject* self)
 {
     return PyBool_FromLong(ImGui::IsItemDeactivatedAfterEdit());
 }
 
 PyObject*
-ImGui_IsItemToggledOpen(PyObject* self)
+IsItemToggledOpen(PyObject* self)
 {
     return PyBool_FromLong(ImGui::IsItemToggledOpen());
 }
 
 PyObject*
-ImGui_IsAnyItemHovered(PyObject* self)
+IsAnyItemHovered(PyObject* self)
 {
     return PyBool_FromLong(ImGui::IsAnyItemHovered());
 }
 
 PyObject*
-ImGui_IsAnyItemActive(PyObject* self)
+IsAnyItemActive(PyObject* self)
 {
     return PyBool_FromLong(ImGui::IsAnyItemActive());
 }
 
 PyObject*
-ImGui_IsAnyItemFocused(PyObject* self)
+IsAnyItemFocused(PyObject* self)
 {
     return PyBool_FromLong(ImGui::IsAnyItemFocused());
 }
 
 PyObject*
-ImGui_GetItemID(PyObject* self)
+GetItemID(PyObject* self)
 {
     return PyLong_FromUnsignedLong((unsigned long)ImGui::GetItemID());
 }
 
 PyObject*
-ImGui_GetItemRectMin(PyObject* self)
+GetItemRectMin(PyObject* self)
 {
     ImVec2 tValue = ImGui::GetItemRectMin();
     return Py_BuildValue("(ff)", tValue.x, tValue.y);
 }
 
 PyObject*
-ImGui_GetItemRectMax(PyObject* self)
+GetItemRectMax(PyObject* self)
 {
     ImVec2 tValue = ImGui::GetItemRectMax();
     return Py_BuildValue("(ff)", tValue.x, tValue.y);
 }
 
 PyObject*
-ImGui_GetItemRectSize(PyObject* self)
+GetItemRectSize(PyObject* self)
 {
     ImVec2 tValue = ImGui::GetItemRectSize();
     return Py_BuildValue("(ff)", tValue.x, tValue.y);
 }
 
 PyObject*
-ImGui_SetNextItemAllowOverlap(PyObject* self)
+SetNextItemAllowOverlap(PyObject* self)
 {
     ImGui::SetNextItemAllowOverlap();
     Py_RETURN_NONE;
 }
 
 PyObject*
-ImGui_SetItemDefaultFocus(PyObject* self)
+SetItemDefaultFocus(PyObject* self)
 {
     ImGui::SetItemDefaultFocus();
     Py_RETURN_NONE;
 }
 
 PyObject*
-ImGui_SetKeyboardFocusHere(PyObject* self, PyObject* args, PyObject* kwargs)
+SetKeyboardFocusHere(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {"offset", nullptr};
     int iOffset = 0;
@@ -2779,7 +2784,7 @@ ImGui_SetKeyboardFocusHere(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-ImGui_BeginChild(PyObject* self, PyObject* args, PyObject* kwargs)
+BeginChild(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {
         "str_id",
@@ -2806,14 +2811,14 @@ ImGui_BeginChild(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-ImGui_EndChild(PyObject* self)
+EndChild(PyObject* self)
 {
     ImGui::EndChild();
     Py_RETURN_NONE;
 }
 
 PyObject*
-ImGui_PushID(PyObject* self, PyObject* args, PyObject* kwargs)
+PushID(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {"id", nullptr};
 
@@ -2841,14 +2846,14 @@ ImGui_PushID(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-ImGui_PopID(PyObject* self)
+PopID(PyObject* self)
 {
     ImGui::PopID();
     Py_RETURN_NONE;
 }
 
 PyObject*
-ImGui_GetID(PyObject* self, PyObject* args, PyObject* kwargs)
+GetID(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {"id", nullptr};
 
@@ -2880,7 +2885,7 @@ ImGui_GetID(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-ImGui_ShowMetricsWindow(PyObject* self, PyObject* arg)
+ShowMetricsWindow(PyObject* self, PyObject* arg)
 {
     bool* ptShow = NULL;
     if(!Py_IsNone(arg))
@@ -2891,7 +2896,7 @@ ImGui_ShowMetricsWindow(PyObject* self, PyObject* arg)
 }
 
 PyObject*
-ImGui_ShowDebugLogWindow(PyObject* self, PyObject* arg)
+ShowDebugLogWindow(PyObject* self, PyObject* arg)
 {
     bool* ptShow = NULL;
     if(!Py_IsNone(arg))
@@ -2902,7 +2907,7 @@ ImGui_ShowDebugLogWindow(PyObject* self, PyObject* arg)
 }
 
 PyObject*
-ImGui_ShowIDStackToolWindow(PyObject* self, PyObject* arg)
+ShowIDStackToolWindow(PyObject* self, PyObject* arg)
 {
     bool* ptShow = NULL;
     if(!Py_IsNone(arg))
@@ -2913,7 +2918,7 @@ ImGui_ShowIDStackToolWindow(PyObject* self, PyObject* arg)
 }
 
 PyObject*
-ImGui_ShowAboutWindow(PyObject* self, PyObject* arg)
+ShowAboutWindow(PyObject* self, PyObject* arg)
 {
     bool* ptShow = NULL;
     if(!Py_IsNone(arg))
@@ -2924,14 +2929,14 @@ ImGui_ShowAboutWindow(PyObject* self, PyObject* arg)
 }
 
 PyObject*
-ImGui_ShowStyleEditor(PyObject* self)
+ShowStyleEditor(PyObject* self)
 {
     ImGui::ShowStyleEditor();
     Py_RETURN_NONE;
 }
 
 PyObject*
-ImGui_ShowStyleSelector(PyObject* self, PyObject* args, PyObject* kwargs)
+ShowStyleSelector(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {"label", nullptr};
 
@@ -2944,7 +2949,7 @@ ImGui_ShowStyleSelector(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-ImGui_ShowFontSelector(PyObject* self, PyObject* args, PyObject* kwargs)
+ShowFontSelector(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {"label", nullptr};
 
@@ -2958,20 +2963,20 @@ ImGui_ShowFontSelector(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-ImGui_ShowUserGuide(PyObject* self)
+ShowUserGuide(PyObject* self)
 {
     ImGui::ShowUserGuide();
     Py_RETURN_NONE;
 }
 
 PyObject*
-ImGui_GetVersion(PyObject* self)
+GetVersion(PyObject* self)
 {
     return PyUnicode_FromString(ImGui::GetVersion());
 }
 
 PyObject*
-ImGui_BeginCombo(PyObject* self, PyObject* args, PyObject* kwargs)
+BeginCombo(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {"label", "preview_value", "flags", nullptr};
 
@@ -2987,14 +2992,14 @@ ImGui_BeginCombo(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-ImGui_EndCombo(PyObject* self)
+EndCombo(PyObject* self)
 {
     ImGui::EndCombo();
     Py_RETURN_NONE;
 }
 
 PyObject*
-ImGui_Combo(PyObject* self, PyObject* args, PyObject* kwargs)
+Combo(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {
         "label",
@@ -3030,7 +3035,7 @@ ImGui_Combo(PyObject* self, PyObject* args, PyObject* kwargs)
 
 
 PyObject*
-ImGui_BeginListBox(PyObject* self, PyObject* args, PyObject* kwargs)
+BeginListBox(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {"label", "size", nullptr};
 
@@ -3049,14 +3054,14 @@ ImGui_BeginListBox(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-ImGui_EndListBox(PyObject* self)
+EndListBox(PyObject* self)
 {
     ImGui::EndListBox();
     Py_RETURN_NONE;
 }
 
 PyObject*
-ImGui_IsMouseDown(PyObject* self, PyObject* args, PyObject* kwargs)
+IsMouseDown(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {"button", nullptr};
 
@@ -3069,7 +3074,7 @@ ImGui_IsMouseDown(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-ImGui_IsMouseClicked(PyObject* self, PyObject* args, PyObject* kwargs)
+IsMouseClicked(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {"button", "repeat", nullptr};
 
@@ -3084,7 +3089,7 @@ ImGui_IsMouseClicked(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-ImGui_IsMouseReleased(PyObject* self, PyObject* args, PyObject* kwargs)
+IsMouseReleased(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {"button", nullptr};
 
@@ -3097,7 +3102,7 @@ ImGui_IsMouseReleased(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-ImGui_IsMouseDoubleClicked(PyObject* self, PyObject* args, PyObject* kwargs)
+IsMouseDoubleClicked(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {"button", nullptr};
 
@@ -3110,7 +3115,7 @@ ImGui_IsMouseDoubleClicked(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-ImGui_GetMouseClickedCount(PyObject* self, PyObject* args, PyObject* kwargs)
+GetMouseClickedCount(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {"button", nullptr};
 
@@ -3123,7 +3128,7 @@ ImGui_GetMouseClickedCount(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-ImGui_IsMouseHoveringRect(PyObject* self, PyObject* args, PyObject* kwargs)
+IsMouseHoveringRect(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {"min", "max", "clip", nullptr};
 
@@ -3142,7 +3147,7 @@ ImGui_IsMouseHoveringRect(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-ImGui_IsMousePosValid(PyObject* self, PyObject* args, PyObject* kwargs)
+IsMousePosValid(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {"mouse_pos", nullptr};
 
@@ -3160,27 +3165,27 @@ ImGui_IsMousePosValid(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-ImGui_IsAnyMouseDown(PyObject* self)
+IsAnyMouseDown(PyObject* self)
 {
     return PyBool_FromLong(ImGui::IsAnyMouseDown());
 }
 
 PyObject*
-ImGui_GetMousePos(PyObject* self)
+GetMousePos(PyObject* self)
 {
     ImVec2 tPos = ImGui::GetMousePos();
     return Py_BuildValue("(ff)", tPos.x, tPos.y);
 }
 
 PyObject*
-ImGui_GetMousePosOnOpeningCurrentPopup(PyObject* self)
+GetMousePosOnOpeningCurrentPopup(PyObject* self)
 {
     ImVec2 tPos = ImGui::GetMousePosOnOpeningCurrentPopup();
     return Py_BuildValue("(ff)", tPos.x, tPos.y);
 }
 
 PyObject*
-ImGui_IsMouseDragging(PyObject* self, PyObject* args, PyObject* kwargs)
+IsMouseDragging(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {"button", "lock_threshold", nullptr};
 
@@ -3195,7 +3200,7 @@ ImGui_IsMouseDragging(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-ImGui_GetMouseDragDelta(PyObject* self, PyObject* args, PyObject* kwargs)
+GetMouseDragDelta(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {"button", "lock_threshold", nullptr};
 
@@ -3211,7 +3216,7 @@ ImGui_GetMouseDragDelta(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-ImGui_ResetMouseDragDelta(PyObject* self, PyObject* args, PyObject* kwargs)
+ResetMouseDragDelta(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {"button", nullptr};
 
@@ -3225,13 +3230,13 @@ ImGui_ResetMouseDragDelta(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-ImGui_GetMouseCursor(PyObject* self)
+GetMouseCursor(PyObject* self)
 {
     return PyLong_FromLong(ImGui::GetMouseCursor());
 }
 
 PyObject*
-ImGui_SetMouseCursor(PyObject* self, PyObject* args, PyObject* kwargs)
+SetMouseCursor(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {"cursor_type", nullptr};
 
@@ -3245,7 +3250,7 @@ ImGui_SetMouseCursor(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-ImGui_SetNextFrameWantCaptureMouse(PyObject* self, PyObject* args, PyObject* kwargs)
+SetNextFrameWantCaptureMouse(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {"want_capture_mouse", nullptr};
 
@@ -3264,7 +3269,7 @@ ImGui_SetNextFrameWantCaptureMouse(PyObject* self, PyObject* args, PyObject* kwa
 //-----------------------------------------------------------------------------
 
 PyObject*
-ImGui_GetClipboardText(PyObject* self)
+GetClipboardText(PyObject* self)
 {
     const char* pcText = ImGui::GetClipboardText();
     if(!pcText)
@@ -3274,7 +3279,7 @@ ImGui_GetClipboardText(PyObject* self)
 }
 
 PyObject*
-ImGui_SetClipboardText(PyObject* self, PyObject* args, PyObject* kwargs)
+SetClipboardText(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {"text", nullptr};
 
@@ -3293,7 +3298,7 @@ ImGui_SetClipboardText(PyObject* self, PyObject* args, PyObject* kwargs)
 //-----------------------------------------------------------------------------
 
 PyObject*
-ImGui_LoadIniSettingsFromDisk(PyObject* self, PyObject* args, PyObject* kwargs)
+LoadIniSettingsFromDisk(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {"ini_filename", nullptr};
 
@@ -3307,7 +3312,7 @@ ImGui_LoadIniSettingsFromDisk(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-ImGui_LoadIniSettingsFromMemory(PyObject* self, PyObject* args, PyObject* kwargs)
+LoadIniSettingsFromMemory(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {"ini_data", nullptr};
 
@@ -3321,7 +3326,7 @@ ImGui_LoadIniSettingsFromMemory(PyObject* self, PyObject* args, PyObject* kwargs
 }
 
 PyObject*
-ImGui_SaveIniSettingsToDisk(PyObject* self, PyObject* args, PyObject* kwargs)
+SaveIniSettingsToDisk(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {"ini_filename", nullptr};
 
@@ -3335,7 +3340,7 @@ ImGui_SaveIniSettingsToDisk(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-ImGui_SaveIniSettingsToMemory(PyObject* self)
+SaveIniSettingsToMemory(PyObject* self)
 {
     const char* pcIniData = ImGui::SaveIniSettingsToMemory();
 
@@ -3346,299 +3351,360 @@ ImGui_SaveIniSettingsToMemory(PyObject* self)
 }
 
 #define PL_ADD_INT_CONSTANT(X_ARG) {#X_ARG, X_ARG}
-#define PL_PYTHON_COMMAND_PL(ARG, FLAGS, DOCS) {"pl_" # ARG, (PyCFunction)ARG, FLAGS, DOCS}
-#define PL_PYTHON_COMMAND(ARG, FLAGS, DOCS) {#ARG, (PyCFunction)ARG, FLAGS, DOCS}
+#define PL_PYTHON_COMMAND(ARG, FLAGS, DOCS) {#ARG, (PyCFunction)ARG, FLAGS | METH_STATIC, DOCS}
+
+typedef struct _pyplDearImGuiI
+{
+    PyObject_HEAD
+} pyplDearImGuiI;
+
+typedef struct _pyImGui
+{
+    PyObject_HEAD
+} pyImGui;
+
+typedef struct _pyImPlot
+{
+    PyObject_HEAD
+} pyImPlot;
+
+static PyMethodDef gatImGuiCommands[] =
+{
+    PL_PYTHON_COMMAND(Begin, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(End, METH_NOARGS, NULL),
+    PL_PYTHON_COMMAND(StyleColorsDark, METH_NOARGS, NULL),
+    PL_PYTHON_COMMAND(StyleColorsLight, METH_NOARGS, NULL),
+    PL_PYTHON_COMMAND(StyleColorsClassic, METH_NOARGS, NULL),
+
+    // imgui demo/debug/info
+    PL_PYTHON_COMMAND(ShowMetricsWindow, METH_O, NULL),
+    PL_PYTHON_COMMAND(ShowDebugLogWindow, METH_O, NULL),
+    PL_PYTHON_COMMAND(ShowIDStackToolWindow, METH_O, NULL),
+    PL_PYTHON_COMMAND(ShowAboutWindow, METH_O, NULL),
+    PL_PYTHON_COMMAND(ShowStyleEditor, METH_NOARGS, NULL),
+    PL_PYTHON_COMMAND(ShowStyleSelector, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(ShowFontSelector, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(ShowUserGuide, METH_NOARGS, NULL),
+    PL_PYTHON_COMMAND(GetVersion, METH_NOARGS, NULL),
+    PL_PYTHON_COMMAND(ShowDemoWindow, METH_O, NULL),
+    PL_PYTHON_COMMAND(IsMouseDown, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(IsMouseClicked, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(IsMouseReleased, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(IsMouseDoubleClicked, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(GetMouseClickedCount, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(IsMouseHoveringRect, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(IsMousePosValid, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(IsAnyMouseDown, METH_NOARGS, NULL),
+    PL_PYTHON_COMMAND(GetMousePos, METH_NOARGS, NULL),
+    PL_PYTHON_COMMAND(GetMousePosOnOpeningCurrentPopup, METH_NOARGS, NULL),
+    PL_PYTHON_COMMAND(IsMouseDragging, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(GetMouseDragDelta, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(ResetMouseDragDelta, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(GetMouseCursor, METH_NOARGS, NULL),
+    PL_PYTHON_COMMAND(SetMouseCursor, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(SetNextFrameWantCaptureMouse, METH_VARARGS | METH_KEYWORDS, NULL),
+
+    // imgui clipboard utilities
+    PL_PYTHON_COMMAND(GetClipboardText, METH_NOARGS, NULL),
+    PL_PYTHON_COMMAND(SetClipboardText, METH_VARARGS | METH_KEYWORDS, NULL),
+
+    // imgui settings / ini utilities
+    PL_PYTHON_COMMAND(LoadIniSettingsFromDisk, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(LoadIniSettingsFromMemory, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(SaveIniSettingsToDisk, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(SaveIniSettingsToMemory, METH_NOARGS, NULL),
+
+    // imgui id stack/scopes
+    PL_PYTHON_COMMAND(PushID, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(PopID, METH_NOARGS, NULL),
+    PL_PYTHON_COMMAND(GetID, METH_VARARGS | METH_KEYWORDS, NULL),
+
+    // imgui child windows
+    PL_PYTHON_COMMAND(BeginChild, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(EndChild, METH_NOARGS, NULL),
+
+    // imgui item/widget utilities and query functions
+    PL_PYTHON_COMMAND(IsItemHovered, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(IsItemActive, METH_NOARGS, NULL),
+    PL_PYTHON_COMMAND(IsItemFocused, METH_NOARGS, NULL),
+    PL_PYTHON_COMMAND(IsItemClicked, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(IsItemVisible, METH_NOARGS, NULL),
+    PL_PYTHON_COMMAND(IsItemEdited, METH_NOARGS, NULL),
+    PL_PYTHON_COMMAND(IsItemActivated, METH_NOARGS, NULL),
+    PL_PYTHON_COMMAND(IsItemDeactivated, METH_NOARGS, NULL),
+    PL_PYTHON_COMMAND(IsItemDeactivatedAfterEdit, METH_NOARGS, NULL),
+    PL_PYTHON_COMMAND(IsItemToggledOpen, METH_NOARGS, NULL),
+    PL_PYTHON_COMMAND(IsAnyItemHovered, METH_NOARGS, NULL),
+    PL_PYTHON_COMMAND(IsAnyItemActive, METH_NOARGS, NULL),
+    PL_PYTHON_COMMAND(IsAnyItemFocused, METH_NOARGS, NULL),
+    PL_PYTHON_COMMAND(GetItemID, METH_NOARGS, NULL),
+    PL_PYTHON_COMMAND(GetItemRectMin, METH_NOARGS, NULL),
+    PL_PYTHON_COMMAND(GetItemRectMax, METH_NOARGS, NULL),
+    PL_PYTHON_COMMAND(GetItemRectSize, METH_NOARGS, NULL),
+    PL_PYTHON_COMMAND(SetNextItemAllowOverlap, METH_NOARGS, NULL),
+    PL_PYTHON_COMMAND(SetItemDefaultFocus, METH_NOARGS, NULL),
+    PL_PYTHON_COMMAND(SetKeyboardFocusHere, METH_VARARGS | METH_KEYWORDS, NULL),
+
+    // imgui combo box/dropdown widgets
+    PL_PYTHON_COMMAND(Combo, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(BeginCombo, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(EndCombo, METH_NOARGS, NULL),
+
+    // imgui list boxes
+    PL_PYTHON_COMMAND(BeginListBox, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(EndListBox, METH_NOARGS, NULL),
+
+    // imgui tooltips
+    PL_PYTHON_COMMAND(BeginTooltip, METH_NOARGS, NULL),
+    PL_PYTHON_COMMAND(EndTooltip, METH_NOARGS, NULL),
+    PL_PYTHON_COMMAND(SetTooltip, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(BeginItemTooltip, METH_NOARGS, NULL),
+    PL_PYTHON_COMMAND(SetItemTooltip, METH_VARARGS | METH_KEYWORDS, NULL),
+
+    // imgui main widgets
+    PL_PYTHON_COMMAND(Button, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(Checkbox, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(SmallButton, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(InvisibleButton, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(ArrowButton, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(CheckboxFlags, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(RadioButton, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(ProgressBar, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(Bullet, METH_NOARGS, NULL),
+    PL_PYTHON_COMMAND(TextLink, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(TextLinkOpenURL, METH_VARARGS | METH_KEYWORDS, NULL),
+
+    // imgui drag widgets
+    PL_PYTHON_COMMAND(DragFloat, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(DragFloat2, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(DragFloat3, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(DragFloat4, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(DragFloatRange2, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(DragInt, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(DragInt2, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(DragInt3, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(DragInt4, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(DragIntRange2, METH_VARARGS | METH_KEYWORDS, NULL),
+
+    // imgui slider widgets
+    PL_PYTHON_COMMAND(SliderFloat, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(SliderFloat2, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(SliderFloat3, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(SliderFloat4, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(SliderAngle, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(SliderInt, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(SliderInt2, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(SliderInt3, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(SliderInt4, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(VSliderFloat, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(VSliderInt, METH_VARARGS | METH_KEYWORDS, NULL),
+
+    // imgui menus
+    PL_PYTHON_COMMAND(BeginMenuBar, METH_NOARGS, NULL),
+    PL_PYTHON_COMMAND(BeginMainMenuBar, METH_NOARGS, NULL),
+    PL_PYTHON_COMMAND(EndMenuBar, METH_NOARGS, NULL),
+    PL_PYTHON_COMMAND(EndMainMenuBar, METH_NOARGS, NULL),
+    PL_PYTHON_COMMAND(EndMenu, METH_NOARGS, NULL),
+    PL_PYTHON_COMMAND(BeginMenu, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(MenuItem, METH_VARARGS | METH_KEYWORDS, NULL),
+
+    // imgui input widgets
+    PL_PYTHON_COMMAND(InputText, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(InputTextMultiline, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(InputTextWithHint, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(InputFloat, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(InputFloat2, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(InputFloat3, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(InputFloat4, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(InputInt, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(InputInt2, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(InputInt3, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(InputInt4, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(InputDouble, METH_VARARGS | METH_KEYWORDS, NULL),
+    
+    // imgui text widgets
+    PL_PYTHON_COMMAND(TextUnformatted, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(Text, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(TextColored, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(TextDisabled, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(TextWrapped, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(LabelText, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(BulletText, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(SeparatorText, METH_VARARGS | METH_KEYWORDS, NULL),
+
+    // imgui layout
+    PL_PYTHON_COMMAND(Separator, METH_NOARGS, NULL),
+    PL_PYTHON_COMMAND(SameLine, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(NewLine, METH_NOARGS, NULL),
+    PL_PYTHON_COMMAND(Spacing, METH_NOARGS, NULL),
+    PL_PYTHON_COMMAND(Dummy, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(Indent, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(Unindent, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(BeginGroup, METH_NOARGS, NULL),
+    PL_PYTHON_COMMAND(EndGroup, METH_NOARGS, NULL),
+    PL_PYTHON_COMMAND(AlignTextToFramePadding, METH_NOARGS, NULL),
+    PL_PYTHON_COMMAND(GetTextLineHeight, METH_NOARGS, NULL),
+    PL_PYTHON_COMMAND(GetTextLineHeightWithSpacing, METH_NOARGS, NULL),
+    PL_PYTHON_COMMAND(GetFrameHeight, METH_NOARGS, NULL),
+    PL_PYTHON_COMMAND(GetFrameHeightWithSpacing, METH_NOARGS, NULL),
+
+    // imgui layout cursor positioning
+    PL_PYTHON_COMMAND(GetCursorScreenPos, METH_NOARGS, NULL),
+    PL_PYTHON_COMMAND(SetCursorScreenPos, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(GetContentRegionAvail, METH_NOARGS, NULL),
+    PL_PYTHON_COMMAND(GetCursorPos, METH_NOARGS, NULL),
+    PL_PYTHON_COMMAND(GetCursorPosX, METH_NOARGS, NULL),
+    PL_PYTHON_COMMAND(GetCursorPosY, METH_NOARGS, NULL),
+    PL_PYTHON_COMMAND(SetCursorPos, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(SetCursorPosX, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(SetCursorPosY, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(GetCursorStartPos, METH_NOARGS, NULL),
+
+    // imgui window scrolling
+    PL_PYTHON_COMMAND(GetScrollX, METH_NOARGS, NULL),
+    PL_PYTHON_COMMAND(GetScrollY, METH_NOARGS, NULL),
+    PL_PYTHON_COMMAND(SetScrollX, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(SetScrollY, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(GetScrollMaxX, METH_NOARGS, NULL),
+    PL_PYTHON_COMMAND(GetScrollMaxY, METH_NOARGS, NULL),
+    PL_PYTHON_COMMAND(SetScrollHereX, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(SetScrollHereY, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(SetScrollFromPosX, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(SetScrollFromPosY, METH_VARARGS | METH_KEYWORDS, NULL),
+
+    // imgui parameters stacks (current window)
+    PL_PYTHON_COMMAND(PushItemWidth, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(PopItemWidth, METH_NOARGS, NULL),
+    PL_PYTHON_COMMAND(SetNextItemWidth, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(CalcItemWidth, METH_NOARGS, NULL),
+    PL_PYTHON_COMMAND(PushTextWrapPos, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(PopTextWrapPos, METH_NOARGS, NULL),
+
+    // imgui color editor/picker widgets
+    PL_PYTHON_COMMAND(ColorEdit3, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(ColorEdit4, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(ColorPicker3, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(ColorPicker4, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(ColorButton, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(SetColorEditOptions, METH_VARARGS | METH_KEYWORDS, NULL),
+
+    // imgui tree widgets
+    PL_PYTHON_COMMAND(TreeNode, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(TreeNodeEx, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(TreePush, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(TreePop, METH_NOARGS, NULL),
+    PL_PYTHON_COMMAND(GetTreeNodeToLabelSpacing, METH_NOARGS, NULL),
+    PL_PYTHON_COMMAND(CollapsingHeader, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(SetNextItemOpen, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(SetNextItemStorageID, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(TreeNodeGetOpen, METH_VARARGS | METH_KEYWORDS, NULL),
+
+    // imgui window utilities
+    PL_PYTHON_COMMAND(IsWindowAppearing, METH_NOARGS, NULL),
+    PL_PYTHON_COMMAND(IsWindowCollapsed, METH_NOARGS, NULL),
+    PL_PYTHON_COMMAND(IsWindowFocused, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(IsWindowHovered, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(GetWindowDpiScale, METH_NOARGS, NULL),
+    PL_PYTHON_COMMAND(GetWindowPos, METH_NOARGS, NULL),
+    PL_PYTHON_COMMAND(GetWindowSize, METH_NOARGS, NULL),
+    PL_PYTHON_COMMAND(GetWindowWidth, METH_NOARGS, NULL),
+    PL_PYTHON_COMMAND(GetWindowHeight, METH_NOARGS, NULL),
+
+    // imgui window manipulation
+    PL_PYTHON_COMMAND(SetNextWindowPos, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(SetNextWindowSize, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(SetNextWindowContentSize, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(SetNextWindowCollapsed, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(SetNextWindowFocus, METH_NOARGS, NULL),
+    PL_PYTHON_COMMAND(SetNextWindowScroll, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(SetNextWindowBgAlpha, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(SetNextWindowViewport, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(SetWindowPos, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(SetWindowSize, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(SetWindowCollapsed, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(SetWindowFocus, METH_VARARGS | METH_KEYWORDS, NULL),
+
+    // imgui selectables
+    PL_PYTHON_COMMAND(Selectable, METH_VARARGS | METH_KEYWORDS, NULL),
+
+    // imgui popups
+    PL_PYTHON_COMMAND(BeginPopup, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(BeginPopupModal, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(EndPopup, METH_NOARGS, NULL),
+    PL_PYTHON_COMMAND(OpenPopup, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(OpenPopupOnItemClick, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(CloseCurrentPopup, METH_NOARGS, NULL),
+    PL_PYTHON_COMMAND(BeginPopupContextItem, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(BeginPopupContextWindow, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(BeginPopupContextVoid, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(IsPopupOpen, METH_VARARGS | METH_KEYWORDS, NULL),
+
+    // imgui tab bars / tabs
+    PL_PYTHON_COMMAND(BeginTabBar, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(EndTabBar, METH_NOARGS, NULL),
+    PL_PYTHON_COMMAND(BeginTabItem, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(EndTabItem, METH_NOARGS, NULL),
+    PL_PYTHON_COMMAND(TabItemButton, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(SetTabItemClosed, METH_VARARGS | METH_KEYWORDS, NULL),
+    {NULL, NULL, 0, NULL}
+};
+
+static PyMethodDef gatPlotCommands[] =
+{
+    {"ShowDemoWindow", (PyCFunction)ImPlot_ShowDemoWindow, METH_O | METH_STATIC, NULL},
+    {NULL, NULL, 0, NULL}
+};
+
+static PyMethodDef gatplDearImGuiICommands[] =
+{
+    {"initialize", (PyCFunction)dear_imgui_initialize, METH_VARARGS | METH_KEYWORDS | METH_STATIC, NULL},
+    {"new_frame", (PyCFunction)dear_imgui_new_frame, METH_VARARGS | METH_KEYWORDS | METH_STATIC, NULL},
+    {"render", (PyCFunction)dear_imgui_render, METH_VARARGS | METH_KEYWORDS | METH_STATIC, NULL},
+    {"cleanup", (PyCFunction)dear_imgui_cleanup, METH_VARARGS | METH_KEYWORDS | METH_STATIC, NULL},
+    {NULL, NULL, 0, NULL}
+};
+
+static PyType_Slot gatImPlotSlots[] = {
+    {Py_tp_methods, (void*)gatPlotCommands},
+    {0, 0}
+};
+
+static PyType_Slot gatImGuiSlots[] = {
+    {Py_tp_methods, (void*)gatImGuiCommands},
+    {0, 0}
+};
+
+static PyType_Slot gatplDearImGuiISlots[] = {
+    {Py_tp_methods, (void*)gatplDearImGuiICommands},
+    {0, 0}
+};
+
+static PyType_Spec ImPlotSpec = {
+    "imgui.ImPlot",
+    sizeof(pyImPlot),
+    0,
+    Py_TPFLAGS_DEFAULT,
+    gatImPlotSlots
+};
+
+static PyType_Spec ImGuiSpec = {
+    "imgui.ImGui",
+    sizeof(pyImGui),
+    0,
+    Py_TPFLAGS_DEFAULT,
+    gatImGuiSlots
+};
+
+static PyType_Spec plDearImGuiISpec = {
+    "imgui.plDearImGuiI",
+    sizeof(pyplDearImGuiI),
+    0,
+    Py_TPFLAGS_DEFAULT,
+    gatplDearImGuiISlots
+};
 
 static PyMethodDef gatCommands[] =
 {
-    // imgui
-    PL_PYTHON_COMMAND_PL(dear_imgui_initialize, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND_PL(dear_imgui_new_frame, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND_PL(dear_imgui_render, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND_PL(dear_imgui_cleanup, METH_VARARGS | METH_KEYWORDS, NULL),
-
-    PL_PYTHON_COMMAND(ImGui_Begin, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(ImGui_End, METH_NOARGS, NULL),
-    PL_PYTHON_COMMAND(ImGui_StyleColorsDark, METH_NOARGS, NULL),
-    PL_PYTHON_COMMAND(ImGui_StyleColorsLight, METH_NOARGS, NULL),
-    PL_PYTHON_COMMAND(ImGui_StyleColorsClassic, METH_NOARGS, NULL),
-
-    // imgui demo/debug/info
-    PL_PYTHON_COMMAND(ImGui_ShowMetricsWindow, METH_O, NULL),
-    PL_PYTHON_COMMAND(ImGui_ShowDebugLogWindow, METH_O, NULL),
-    PL_PYTHON_COMMAND(ImGui_ShowIDStackToolWindow, METH_O, NULL),
-    PL_PYTHON_COMMAND(ImGui_ShowAboutWindow, METH_O, NULL),
-    PL_PYTHON_COMMAND(ImGui_ShowStyleEditor, METH_NOARGS, NULL),
-    PL_PYTHON_COMMAND(ImGui_ShowStyleSelector, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(ImGui_ShowFontSelector, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(ImGui_ShowUserGuide, METH_NOARGS, NULL),
-    PL_PYTHON_COMMAND(ImGui_GetVersion, METH_NOARGS, NULL),
-    PL_PYTHON_COMMAND(ImGui_ShowDemoWindow, METH_O, NULL),
-
-    // imgui input utilities mouse
-    PL_PYTHON_COMMAND(ImGui_IsMouseDown, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(ImGui_IsMouseClicked, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(ImGui_IsMouseReleased, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(ImGui_IsMouseDoubleClicked, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(ImGui_GetMouseClickedCount, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(ImGui_IsMouseHoveringRect, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(ImGui_IsMousePosValid, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(ImGui_IsAnyMouseDown, METH_NOARGS, NULL),
-    PL_PYTHON_COMMAND(ImGui_GetMousePos, METH_NOARGS, NULL),
-    PL_PYTHON_COMMAND(ImGui_GetMousePosOnOpeningCurrentPopup, METH_NOARGS, NULL),
-    PL_PYTHON_COMMAND(ImGui_IsMouseDragging, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(ImGui_GetMouseDragDelta, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(ImGui_ResetMouseDragDelta, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(ImGui_GetMouseCursor, METH_NOARGS, NULL),
-    PL_PYTHON_COMMAND(ImGui_SetMouseCursor, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(ImGui_SetNextFrameWantCaptureMouse, METH_VARARGS | METH_KEYWORDS, NULL),
-
-    // imgui clipboard utilities
-    PL_PYTHON_COMMAND(ImGui_GetClipboardText, METH_NOARGS, NULL),
-    PL_PYTHON_COMMAND(ImGui_SetClipboardText, METH_VARARGS | METH_KEYWORDS, NULL),
-
-    // imgui settings / ini utilities
-    PL_PYTHON_COMMAND(ImGui_LoadIniSettingsFromDisk, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(ImGui_LoadIniSettingsFromMemory, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(ImGui_SaveIniSettingsToDisk, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(ImGui_SaveIniSettingsToMemory, METH_NOARGS, NULL),
-
-    // imgui id stack/scopes
-    PL_PYTHON_COMMAND(ImGui_PushID, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(ImGui_PopID, METH_NOARGS, NULL),
-    PL_PYTHON_COMMAND(ImGui_GetID, METH_VARARGS | METH_KEYWORDS, NULL),
-
-    // imgui child windows
-    PL_PYTHON_COMMAND(ImGui_BeginChild, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(ImGui_EndChild, METH_NOARGS, NULL),
-
-    // imgui item/widget utilities and query functions
-    PL_PYTHON_COMMAND(ImGui_IsItemHovered, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(ImGui_IsItemActive, METH_NOARGS, NULL),
-    PL_PYTHON_COMMAND(ImGui_IsItemFocused, METH_NOARGS, NULL),
-    PL_PYTHON_COMMAND(ImGui_IsItemClicked, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(ImGui_IsItemVisible, METH_NOARGS, NULL),
-    PL_PYTHON_COMMAND(ImGui_IsItemEdited, METH_NOARGS, NULL),
-    PL_PYTHON_COMMAND(ImGui_IsItemActivated, METH_NOARGS, NULL),
-    PL_PYTHON_COMMAND(ImGui_IsItemDeactivated, METH_NOARGS, NULL),
-    PL_PYTHON_COMMAND(ImGui_IsItemDeactivatedAfterEdit, METH_NOARGS, NULL),
-    PL_PYTHON_COMMAND(ImGui_IsItemToggledOpen, METH_NOARGS, NULL),
-    PL_PYTHON_COMMAND(ImGui_IsAnyItemHovered, METH_NOARGS, NULL),
-    PL_PYTHON_COMMAND(ImGui_IsAnyItemActive, METH_NOARGS, NULL),
-    PL_PYTHON_COMMAND(ImGui_IsAnyItemFocused, METH_NOARGS, NULL),
-    PL_PYTHON_COMMAND(ImGui_GetItemID, METH_NOARGS, NULL),
-    PL_PYTHON_COMMAND(ImGui_GetItemRectMin, METH_NOARGS, NULL),
-    PL_PYTHON_COMMAND(ImGui_GetItemRectMax, METH_NOARGS, NULL),
-    PL_PYTHON_COMMAND(ImGui_GetItemRectSize, METH_NOARGS, NULL),
-    PL_PYTHON_COMMAND(ImGui_SetNextItemAllowOverlap, METH_NOARGS, NULL),
-    PL_PYTHON_COMMAND(ImGui_SetItemDefaultFocus, METH_NOARGS, NULL),
-    PL_PYTHON_COMMAND(ImGui_SetKeyboardFocusHere, METH_VARARGS | METH_KEYWORDS, NULL),
-
-    // imgui combo box/dropdown widgets
-    PL_PYTHON_COMMAND(ImGui_Combo, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(ImGui_BeginCombo, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(ImGui_EndCombo, METH_NOARGS, NULL),
-
-    // imgui list boxes
-    PL_PYTHON_COMMAND(ImGui_BeginListBox, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(ImGui_EndListBox, METH_NOARGS, NULL),
-
-    // imgui tooltips
-    PL_PYTHON_COMMAND(ImGui_BeginTooltip, METH_NOARGS, NULL),
-    PL_PYTHON_COMMAND(ImGui_EndTooltip, METH_NOARGS, NULL),
-    PL_PYTHON_COMMAND(ImGui_SetTooltip, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(ImGui_BeginItemTooltip, METH_NOARGS, NULL),
-    PL_PYTHON_COMMAND(ImGui_SetItemTooltip, METH_VARARGS | METH_KEYWORDS, NULL),
-
-    // imgui main widgets
-    PL_PYTHON_COMMAND(ImGui_Button, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(ImGui_Checkbox, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(ImGui_SmallButton, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(ImGui_InvisibleButton, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(ImGui_ArrowButton, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(ImGui_CheckboxFlags, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(ImGui_RadioButton, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(ImGui_ProgressBar, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(ImGui_Bullet, METH_NOARGS, NULL),
-    PL_PYTHON_COMMAND(ImGui_TextLink, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(ImGui_TextLinkOpenURL, METH_VARARGS | METH_KEYWORDS, NULL),
-
-    // imgui drag widgets
-    PL_PYTHON_COMMAND(ImGui_DragFloat, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(ImGui_DragFloat2, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(ImGui_DragFloat3, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(ImGui_DragFloat4, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(ImGui_DragFloatRange2, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(ImGui_DragInt, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(ImGui_DragInt2, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(ImGui_DragInt3, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(ImGui_DragInt4, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(ImGui_DragIntRange2, METH_VARARGS | METH_KEYWORDS, NULL),
-
-    // imgui slider widgets
-    PL_PYTHON_COMMAND(ImGui_SliderFloat, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(ImGui_SliderFloat2, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(ImGui_SliderFloat3, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(ImGui_SliderFloat4, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(ImGui_SliderAngle, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(ImGui_SliderInt, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(ImGui_SliderInt2, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(ImGui_SliderInt3, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(ImGui_SliderInt4, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(ImGui_VSliderFloat, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(ImGui_VSliderInt, METH_VARARGS | METH_KEYWORDS, NULL),
-
-    // imgui menus
-    PL_PYTHON_COMMAND(ImGui_BeginMenuBar, METH_NOARGS, NULL),
-    PL_PYTHON_COMMAND(ImGui_BeginMainMenuBar, METH_NOARGS, NULL),
-    PL_PYTHON_COMMAND(ImGui_EndMenuBar, METH_NOARGS, NULL),
-    PL_PYTHON_COMMAND(ImGui_EndMainMenuBar, METH_NOARGS, NULL),
-    PL_PYTHON_COMMAND(ImGui_EndMenu, METH_NOARGS, NULL),
-    PL_PYTHON_COMMAND(ImGui_BeginMenu, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(ImGui_MenuItem, METH_VARARGS | METH_KEYWORDS, NULL),
-
-    // imgui input widgets
-    PL_PYTHON_COMMAND(ImGui_InputText, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(ImGui_InputTextMultiline, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(ImGui_InputTextWithHint, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(ImGui_InputFloat, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(ImGui_InputFloat2, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(ImGui_InputFloat3, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(ImGui_InputFloat4, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(ImGui_InputInt, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(ImGui_InputInt2, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(ImGui_InputInt3, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(ImGui_InputInt4, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(ImGui_InputDouble, METH_VARARGS | METH_KEYWORDS, NULL),
-    
-    // imgui text widgets
-    PL_PYTHON_COMMAND(ImGui_TextUnformatted, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(ImGui_Text, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(ImGui_TextColored, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(ImGui_TextDisabled, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(ImGui_TextWrapped, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(ImGui_LabelText, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(ImGui_BulletText, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(ImGui_SeparatorText, METH_VARARGS | METH_KEYWORDS, NULL),
-
-    // imgui layout
-    PL_PYTHON_COMMAND(ImGui_Separator, METH_NOARGS, NULL),
-    PL_PYTHON_COMMAND(ImGui_SameLine, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(ImGui_NewLine, METH_NOARGS, NULL),
-    PL_PYTHON_COMMAND(ImGui_Spacing, METH_NOARGS, NULL),
-    PL_PYTHON_COMMAND(ImGui_Dummy, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(ImGui_Indent, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(ImGui_Unindent, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(ImGui_BeginGroup, METH_NOARGS, NULL),
-    PL_PYTHON_COMMAND(ImGui_EndGroup, METH_NOARGS, NULL),
-    PL_PYTHON_COMMAND(ImGui_AlignTextToFramePadding, METH_NOARGS, NULL),
-    PL_PYTHON_COMMAND(ImGui_GetTextLineHeight, METH_NOARGS, NULL),
-    PL_PYTHON_COMMAND(ImGui_GetTextLineHeightWithSpacing, METH_NOARGS, NULL),
-    PL_PYTHON_COMMAND(ImGui_GetFrameHeight, METH_NOARGS, NULL),
-    PL_PYTHON_COMMAND(ImGui_GetFrameHeightWithSpacing, METH_NOARGS, NULL),
-
-    // imgui layout cursor positioning
-    PL_PYTHON_COMMAND(ImGui_GetCursorScreenPos, METH_NOARGS, NULL),
-    PL_PYTHON_COMMAND(ImGui_SetCursorScreenPos, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(ImGui_GetContentRegionAvail, METH_NOARGS, NULL),
-    PL_PYTHON_COMMAND(ImGui_GetCursorPos, METH_NOARGS, NULL),
-    PL_PYTHON_COMMAND(ImGui_GetCursorPosX, METH_NOARGS, NULL),
-    PL_PYTHON_COMMAND(ImGui_GetCursorPosY, METH_NOARGS, NULL),
-    PL_PYTHON_COMMAND(ImGui_SetCursorPos, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(ImGui_SetCursorPosX, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(ImGui_SetCursorPosY, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(ImGui_GetCursorStartPos, METH_NOARGS, NULL),
-
-    // imgui window scrolling
-    PL_PYTHON_COMMAND(ImGui_GetScrollX, METH_NOARGS, NULL),
-    PL_PYTHON_COMMAND(ImGui_GetScrollY, METH_NOARGS, NULL),
-    PL_PYTHON_COMMAND(ImGui_SetScrollX, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(ImGui_SetScrollY, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(ImGui_GetScrollMaxX, METH_NOARGS, NULL),
-    PL_PYTHON_COMMAND(ImGui_GetScrollMaxY, METH_NOARGS, NULL),
-    PL_PYTHON_COMMAND(ImGui_SetScrollHereX, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(ImGui_SetScrollHereY, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(ImGui_SetScrollFromPosX, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(ImGui_SetScrollFromPosY, METH_VARARGS | METH_KEYWORDS, NULL),
-
-    // imgui parameters stacks (current window)
-    PL_PYTHON_COMMAND(ImGui_PushItemWidth, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(ImGui_PopItemWidth, METH_NOARGS, NULL),
-    PL_PYTHON_COMMAND(ImGui_SetNextItemWidth, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(ImGui_CalcItemWidth, METH_NOARGS, NULL),
-    PL_PYTHON_COMMAND(ImGui_PushTextWrapPos, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(ImGui_PopTextWrapPos, METH_NOARGS, NULL),
-
-    // imgui color editor/picker widgets
-    PL_PYTHON_COMMAND(ImGui_ColorEdit3, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(ImGui_ColorEdit4, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(ImGui_ColorPicker3, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(ImGui_ColorPicker4, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(ImGui_ColorButton, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(ImGui_SetColorEditOptions, METH_VARARGS | METH_KEYWORDS, NULL),
-
-    // imgui tree widgets
-    PL_PYTHON_COMMAND(ImGui_TreeNode, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(ImGui_TreeNodeEx, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(ImGui_TreePush, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(ImGui_TreePop, METH_NOARGS, NULL),
-    PL_PYTHON_COMMAND(ImGui_GetTreeNodeToLabelSpacing, METH_NOARGS, NULL),
-    PL_PYTHON_COMMAND(ImGui_CollapsingHeader, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(ImGui_SetNextItemOpen, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(ImGui_SetNextItemStorageID, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(ImGui_TreeNodeGetOpen, METH_VARARGS | METH_KEYWORDS, NULL),
-
-    // imgui window utilities
-    PL_PYTHON_COMMAND(ImGui_IsWindowAppearing, METH_NOARGS, NULL),
-    PL_PYTHON_COMMAND(ImGui_IsWindowCollapsed, METH_NOARGS, NULL),
-    PL_PYTHON_COMMAND(ImGui_IsWindowFocused, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(ImGui_IsWindowHovered, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(ImGui_GetWindowDpiScale, METH_NOARGS, NULL),
-    PL_PYTHON_COMMAND(ImGui_GetWindowPos, METH_NOARGS, NULL),
-    PL_PYTHON_COMMAND(ImGui_GetWindowSize, METH_NOARGS, NULL),
-    PL_PYTHON_COMMAND(ImGui_GetWindowWidth, METH_NOARGS, NULL),
-    PL_PYTHON_COMMAND(ImGui_GetWindowHeight, METH_NOARGS, NULL),
-
-    // imgui window manipulation
-    PL_PYTHON_COMMAND(ImGui_SetNextWindowPos, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(ImGui_SetNextWindowSize, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(ImGui_SetNextWindowContentSize, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(ImGui_SetNextWindowCollapsed, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(ImGui_SetNextWindowFocus, METH_NOARGS, NULL),
-    PL_PYTHON_COMMAND(ImGui_SetNextWindowScroll, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(ImGui_SetNextWindowBgAlpha, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(ImGui_SetNextWindowViewport, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(ImGui_SetWindowPos, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(ImGui_SetWindowSize, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(ImGui_SetWindowCollapsed, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(ImGui_SetWindowFocus, METH_VARARGS | METH_KEYWORDS, NULL),
-
-    // imgui selectables
-    PL_PYTHON_COMMAND(ImGui_Selectable, METH_VARARGS | METH_KEYWORDS, NULL),
-
-    // imgui popups
-    PL_PYTHON_COMMAND(ImGui_BeginPopup, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(ImGui_BeginPopupModal, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(ImGui_EndPopup, METH_NOARGS, NULL),
-    PL_PYTHON_COMMAND(ImGui_OpenPopup, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(ImGui_OpenPopupOnItemClick, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(ImGui_CloseCurrentPopup, METH_NOARGS, NULL),
-    PL_PYTHON_COMMAND(ImGui_BeginPopupContextItem, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(ImGui_BeginPopupContextWindow, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(ImGui_BeginPopupContextVoid, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(ImGui_IsPopupOpen, METH_VARARGS | METH_KEYWORDS, NULL),
-
-    // imgui tab bars / tabs
-    PL_PYTHON_COMMAND(ImGui_BeginTabBar, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(ImGui_EndTabBar, METH_NOARGS, NULL),
-    PL_PYTHON_COMMAND(ImGui_BeginTabItem, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(ImGui_EndTabItem, METH_NOARGS, NULL),
-    PL_PYTHON_COMMAND(ImGui_TabItemButton, METH_VARARGS | METH_KEYWORDS, NULL),
-    PL_PYTHON_COMMAND(ImGui_SetTabItemClosed, METH_VARARGS | METH_KEYWORDS, NULL),
-
-    // implot
-    PL_PYTHON_COMMAND(ImPlot_ShowDemoWindow, METH_O, NULL),
-
     {NULL, NULL, 0, NULL}
 };
 
@@ -3922,6 +3988,14 @@ PyInit_imgui(void)
 
     for(uint32_t i = 0; i < PL_ARRAYSIZE(gatImguiIntPairs); i++)
         PyModule_AddIntConstant(ptModule, gatImguiIntPairs[i].pcName, gatImguiIntPairs[i].iValue);
+
+    gptImPlotType = PyType_FromSpec(&ImPlotSpec);
+    gptImGuiType = PyType_FromSpec(&ImGuiSpec);
+    gptplDearImGuiIType = PyType_FromSpec(&plDearImGuiISpec);
+
+    PyModule_AddObject(ptModule, "ImPlot", gptImPlotType);
+    PyModule_AddObject(ptModule, "ImGui", gptImGuiType);
+    PyModule_AddObject(ptModule, "plDearImGuiI", gptplDearImGuiIType);
 
     return ptModule;
 }

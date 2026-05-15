@@ -20,11 +20,20 @@ Index of this file:
 //-----------------------------------------------------------------------------
 
 const plWindowI* ptWindows2;
-static PyObject* ptpyIO = NULL;
 
 //-----------------------------------------------------------------------------
 // [SECTION] implementations
 //-----------------------------------------------------------------------------
+
+typedef struct _pyplIOI
+{
+    PyObject_HEAD
+} pyplIOI;
+
+typedef struct _pyplWindowI
+{
+    PyObject_HEAD
+} pyplWindowI;
 
 PyObject*
 create_bool_pointer(PyObject* self, PyObject* args)
@@ -478,32 +487,37 @@ PyObject*
 io_get_io(PyObject* self, PyObject* arg)
 {
 
-    if(ptpyIO == NULL)
-    {
-        ptpyIO = PyDict_New();
-    }
+    plPyVec2* obj = (plPyVec2*)PyObject_CallObject(gptIOType, NULL);
+    if(!obj)
+        return NULL;
+    return (PyObject*)obj;
 
-    plIO* ptIO = gptIOI->get_io();
+    // if(ptpyIO == NULL)
+    // {
+    //     ptpyIO = PyDict_New();
+    // }
 
-    PyDict_SetItemString(ptpyIO, "fDeltaTime", PyFloat_FromDouble((double)ptIO->fDeltaTime));
-    PyDict_SetItemString(ptpyIO, "fMouseDragThreshold", PyFloat_FromDouble((double)ptIO->fMouseDragThreshold));
-    PyDict_SetItemString(ptpyIO, "fMouseDoubleClickTime", PyFloat_FromDouble((double)ptIO->fMouseDoubleClickTime));
-    PyDict_SetItemString(ptpyIO, "fMouseDoubleClickMaxDist", PyFloat_FromDouble((double)ptIO->fMouseDoubleClickMaxDist));
-    PyDict_SetItemString(ptpyIO, "fKeyRepeatDelay", PyFloat_FromDouble((double)ptIO->fKeyRepeatDelay));
-    PyDict_SetItemString(ptpyIO, "fKeyRepeatRate", PyFloat_FromDouble((double)ptIO->fKeyRepeatRate));
-    PyDict_SetItemString(ptpyIO, "fFrameRate", PyFloat_FromDouble((double)ptIO->fFrameRate));
-    PyDict_SetItemString(ptpyIO, "ulFrameCount", PyLong_FromInt64(ptIO->ulFrameCount));
-    PyDict_SetItemString(ptpyIO, "dTime", PyFloat_FromDouble(ptIO->dTime));
-    PyDict_SetItemString(ptpyIO, "bKeyCtrl", PyBool_FromLong(ptIO->bKeyCtrl));
-    PyDict_SetItemString(ptpyIO, "bKeyShift", PyBool_FromLong(ptIO->bKeyShift));
-    PyDict_SetItemString(ptpyIO, "bKeyAlt", PyBool_FromLong(ptIO->bKeyAlt));
-    PyDict_SetItemString(ptpyIO, "bKeySuper", PyBool_FromLong(ptIO->bKeySuper));
-    PyDict_SetItemString(ptpyIO, "bRunning", PyBool_FromLong(ptIO->bRunning));
-    PyDict_SetItemString(ptpyIO, "tMainViewportSize", Py_BuildValue("[ii]", (int)ptIO->tMainViewportSize.x, (int)ptIO->tMainViewportSize.y));
-    PyDict_SetItemString(ptpyIO, "tMainFramebufferScale", Py_BuildValue("[ff]", ptIO->tMainFramebufferScale.x, ptIO->tMainFramebufferScale.y));
+    // plIO* ptIO = gptIOI->get_io();
 
-    Py_XINCREF(ptpyIO);
-    return ptpyIO;
+    // PyDict_SetItemString(ptpyIO, "fDeltaTime", PyFloat_FromDouble((double)ptIO->fDeltaTime));
+    // PyDict_SetItemString(ptpyIO, "fMouseDragThreshold", PyFloat_FromDouble((double)ptIO->fMouseDragThreshold));
+    // PyDict_SetItemString(ptpyIO, "fMouseDoubleClickTime", PyFloat_FromDouble((double)ptIO->fMouseDoubleClickTime));
+    // PyDict_SetItemString(ptpyIO, "fMouseDoubleClickMaxDist", PyFloat_FromDouble((double)ptIO->fMouseDoubleClickMaxDist));
+    // PyDict_SetItemString(ptpyIO, "fKeyRepeatDelay", PyFloat_FromDouble((double)ptIO->fKeyRepeatDelay));
+    // PyDict_SetItemString(ptpyIO, "fKeyRepeatRate", PyFloat_FromDouble((double)ptIO->fKeyRepeatRate));
+    // PyDict_SetItemString(ptpyIO, "fFrameRate", PyFloat_FromDouble((double)ptIO->fFrameRate));
+    // PyDict_SetItemString(ptpyIO, "ulFrameCount", PyLong_FromInt64(ptIO->ulFrameCount));
+    // PyDict_SetItemString(ptpyIO, "dTime", PyFloat_FromDouble(ptIO->dTime));
+    // PyDict_SetItemString(ptpyIO, "bKeyCtrl", PyBool_FromLong(ptIO->bKeyCtrl));
+    // PyDict_SetItemString(ptpyIO, "bKeyShift", PyBool_FromLong(ptIO->bKeyShift));
+    // PyDict_SetItemString(ptpyIO, "bKeyAlt", PyBool_FromLong(ptIO->bKeyAlt));
+    // PyDict_SetItemString(ptpyIO, "bKeySuper", PyBool_FromLong(ptIO->bKeySuper));
+    // PyDict_SetItemString(ptpyIO, "bRunning", PyBool_FromLong(ptIO->bRunning));
+    // PyDict_SetItemString(ptpyIO, "tMainViewportSize", Py_BuildValue("[ii]", (int)ptIO->tMainViewportSize.x, (int)ptIO->tMainViewportSize.y));
+    // PyDict_SetItemString(ptpyIO, "tMainFramebufferScale", Py_BuildValue("[ff]", ptIO->tMainFramebufferScale.x, ptIO->tMainFramebufferScale.y));
+
+    // Py_XINCREF(ptpyIO);
+    // return ptpyIO;
 }
 
 PyObject*
@@ -579,6 +593,64 @@ window_destroy(PyObject* self, PyObject* args)
     ptWindows2->destroy(ptWindowPtr);
     Py_RETURN_NONE;
 }
+
+static PyMethodDef gatplIOICommands[] =
+{
+    {"get_version_string", (PyCFunction)io_get_version_string, METH_NOARGS | METH_STATIC, NULL},
+    {"get_io", (PyCFunction)io_get_io, METH_NOARGS | METH_STATIC, NULL},
+    {"new_frame", (PyCFunction)io_new_frame, METH_NOARGS | METH_STATIC, NULL},
+    {"is_key_pressed", (PyCFunction)io_is_key_pressed, METH_VARARGS | METH_STATIC, NULL},
+    {"is_key_released", (PyCFunction)io_is_key_released, METH_VARARGS | METH_STATIC, NULL},
+    {"is_key_down", (PyCFunction)io_is_key_down, METH_VARARGS | METH_STATIC, NULL},
+    {"get_key_pressed_amount", (PyCFunction)io_get_key_pressed_amount, METH_VARARGS | METH_STATIC, NULL},
+    {"is_mouse_down", (PyCFunction)io_is_mouse_down, METH_VARARGS | METH_STATIC, NULL},
+    {"is_mouse_released", (PyCFunction)io_is_mouse_released, METH_VARARGS | METH_STATIC, NULL},
+    {"is_mouse_double_clicked", (PyCFunction)io_is_mouse_double_clicked, METH_VARARGS | METH_STATIC, NULL},
+    {"is_mouse_clicked", (PyCFunction)io_is_mouse_clicked, METH_VARARGS | METH_STATIC, NULL},
+    {"is_mouse_dragging", (PyCFunction)io_is_mouse_dragging, METH_VARARGS | METH_STATIC, NULL},
+    {"reset_mouse_drag_delta", (PyCFunction)io_reset_mouse_drag_delta, METH_VARARGS | METH_STATIC, NULL},
+    {"get_mouse_drag_delta", (PyCFunction)io_get_mouse_drag_delta, METH_VARARGS | METH_STATIC, NULL},
+    {"get_mouse_pos", (PyCFunction)io_get_mouse_pos, METH_NOARGS | METH_STATIC, NULL},
+    {"get_mouse_wheel", (PyCFunction)io_get_mouse_wheel, METH_NOARGS | METH_STATIC, NULL},
+    {"is_mouse_pos_valid", (PyCFunction)io_is_mouse_pos_valid, METH_NOARGS | METH_STATIC, NULL},
+    {"set_mouse_cursor", (PyCFunction)io_set_mouse_cursor, METH_VARARGS | METH_STATIC, NULL},
+
+    {NULL, NULL, 0, NULL}
+};
+
+static PyType_Slot gatplIOISlots[] = {
+    {Py_tp_methods, (void*)gatplIOICommands},
+    {0, 0}
+};
+
+static PyType_Spec plIOISpec = {
+    "pilotlight.plIOI",
+    sizeof(pyplIOI),
+    0,
+    Py_TPFLAGS_DEFAULT,
+    gatplIOISlots
+};
+
+static PyMethodDef gatplWindowICommands[] =
+{
+    {"create", (PyCFunction)window_create, METH_VARARGS | METH_KEYWORDS | METH_STATIC, NULL},
+    {"show", (PyCFunction)window_show, METH_O | METH_STATIC, NULL},
+    {"destroy", (PyCFunction)window_destroy, METH_O | METH_STATIC, NULL},
+    {NULL, NULL, 0, NULL}
+};
+
+static PyType_Slot gatplWindowISlots[] = {
+    {Py_tp_methods, (void*)gatplWindowICommands},
+    {0, 0}
+};
+
+static PyType_Spec plWindowISpec = {
+    "pilotlight.plWindowI",
+    sizeof(pyplWindowI),
+    0,
+    Py_TPFLAGS_DEFAULT,
+    gatplWindowISlots
+};
 
 plPythonIntConstantPair gatCoreIntPairs[] = {
     PL_ADD_INT_CONSTANT(PL_KEY_NONE),

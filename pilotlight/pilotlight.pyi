@@ -1,4 +1,4 @@
-from typing import List, dict, Tuple, overload, NewType
+from typing import List, Dict, Tuple, overload, NewType
 from enum import IntEnum, IntFlag
 import pilotlight.pilotlight as pl
 from pilotlight.types import *
@@ -27,25 +27,25 @@ class plVec2:
 
     def __neg__(self) -> plVec2: ...
 
-type plVec2Like = plVec2 | Tuple[float, float] | List[float, float]
+type plVec2Like = plVec2 | Tuple[float] | List[float]
+type plVec2ListLike = Tuple[plVec2Like] | List[plVec2Like]
 
-########################################################################################################################
-# [SECTION] opaque types
-########################################################################################################################
+@dataclass(slots=True)
+class plIO:
 
-plDrawLayer2D = NewType("plDrawLayer2D", object)
-plWindow = NewType("plWindow", object)
-plDevice = NewType("plDevice", object)
-plSwapchain = NewType("plSwapchain", object)
-plComponentLibrary = NewType("plComponentLibrary", object)
-plRenderEncoder = NewType("plRenderEncoder", object)
-plPakFile = NewType("plPakFile", object)
-plBoolPointer = NewType("plBoolPointer", object)
-plIntPointer = NewType("plIntPointer", object)
-plFloatPointer = NewType("plFloatPointer", object)
-plDoublePointer = NewType("plDoublePointer", object)
+    # configurable
+    bRunning: bool
+    fMouseDragThreshold: float 
+    fMouseDoubleClickTime: float 
+    fMouseDoubleClickMaxDist: float 
+    fKeyRepeatDelay: float 
+    fKeyRepeatRate: float
 
-type plPointer = plBoolPointer | plIntPointer | plFloatPointer | plDoublePointer
+    # do not set these
+    fFrameRate: float
+    dTime: float
+    tMainViewportSize: plVec2
+    tMainFramebufferScale: plVec2
 
 ########################################################################################################################
 # [SECTION] core api
@@ -54,13 +54,13 @@ type plPointer = plBoolPointer | plIntPointer | plFloatPointer | plDoublePointer
 def pl_run(app):
     ...
 
-def pl_get_pointer_value(pointer: plPointer, index: int = 0):
+def pl_get_pointer_value(pointer: plPointer | None, index: int = 0):
     ...
 
-def pl_set_pointer_value(pointer: plPointer, value, index: int = 0):
+def pl_set_pointer_value(pointer: plPointer | None, value, index: int = 0):
     ...
 
-def pl_destroy_pointer(pointer: plPointer):
+def pl_destroy_pointer(pointer: plPointer | None):
     ...
 
 def pl_create_bool_pointer() -> plBoolPointer:
@@ -76,333 +76,594 @@ def pl_create_float_pointer(count: int = 1) -> plFloatPointer:
 # [SECTION] io api
 ########################################################################################################################
 
-def pl_io_get_io() -> dict:
-    ...
+class plIOI:
 
-def pl_io_get_version_string() -> str:
-    return...
+    @staticmethod
+    def get_io() -> plIO:
+        ...
 
-def pl_io_new_frame() -> None:
-    ...
+    @staticmethod
+    def get_version_string() -> str:
+        ...
 
-def pl_io_is_key_pressed(key: plKey, repeat: bool = False) -> bool:
-    ...
+    @staticmethod
+    def new_frame() -> None:
+        ...
 
-def pl_io_is_key_released(key: plKey) -> bool:
-    ...
+    @staticmethod
+    def is_key_pressed(key: plKey, repeat: bool = False) -> bool:
+        ...
 
-def pl_io_is_key_down(key: plKey) -> bool:
-    ...
+    @staticmethod
+    def is_key_released(key: plKey) -> bool:
+        ...
 
-def pl_io_get_key_pressed_amount(key: plKey, fRepeatDelay: float, fRate: float) -> int:
-    ...
+    @staticmethod
+    def is_key_down(key: plKey) -> bool:
+        ...
 
-def pl_io_is_mouse_down(button: plMouseButton) -> bool:
-    ...
+    @staticmethod
+    def get_key_pressed_amount(key: plKey, fRepeatDelay: float, fRate: float) -> int:
+        ...
 
-def pl_io_is_mouse_released(button: plMouseButton) -> bool:
-    ...
+    @staticmethod
+    def is_mouse_down(button: plMouseButton) -> bool:
+        ...
 
-def pl_io_is_mouse_double_clicked(button: plMouseButton) -> bool:
-    ...
+    @staticmethod
+    def is_mouse_released(button: plMouseButton) -> bool:
+        ...
 
-def pl_io_is_mouse_clicked(button: plMouseButton, repeat: bool = False) -> bool:
-    ...
+    @staticmethod
+    def is_mouse_double_clicked(button: plMouseButton) -> bool:
+        ...
 
-def pl_io_is_mouse_dragging(button: plMouseButton, threshold: float) -> bool:
-    ...
+    @staticmethod
+    def is_mouse_clicked(button: plMouseButton, repeat: bool = False) -> bool:
+        ...
 
-def pl_io_is_mouse_hovering_rect(minvec: List[float], maxvec: List[float]) -> bool:
-    ...
+    @staticmethod
+    def is_mouse_dragging(button: plMouseButton, threshold: float) -> bool:
+        ...
 
-def pl_io_reset_mouse_drag_delta(button: plMouseButton) -> None:
-    ...
+    @staticmethod
+    def is_mouse_hovering_rect(minvec: List[float], maxvec: List[float]) -> bool:
+        ...
 
-def pl_io_get_mouse_drag_delta(button: plMouseButton, threshold: float) -> List[float]:
-    ...
+    @staticmethod
+    def reset_mouse_drag_delta(button: plMouseButton) -> None:
+        ...
 
-def pl_io_get_mouse_pos() -> None:
-    ...
+    @staticmethod
+    def get_mouse_drag_delta(button: plMouseButton, threshold: float) -> List[float]:
+        ...
 
-def pl_io_get_mouse_wheel() -> float:
-    ...
+    @staticmethod
+    def get_mouse_pos() -> None:
+        ...
 
-def pl_io_is_mouse_pos_valid(vec: List[float]) -> bool:
-    ...
+    @staticmethod
+    def get_mouse_wheel() -> float:
+        ...
 
-def pl_io_set_mouse_cursor(vec: int) -> None:
-    ...
+    @staticmethod
+    def is_mouse_pos_valid(vec: List[float]) -> bool:
+        ...
+
+    @staticmethod
+    def set_mouse_cursor(vec: int) -> None:
+        ...
 
 ########################################################################################################################
 # [SECTION] window api
 ########################################################################################################################
 
-def pl_window_create(desc: plWindowDesc) -> Tuple[int, plWindow]:
-    ...
+class plWindowI:
 
-def pl_window_show(window: plWindow):
-    ...
+    @staticmethod
+    def create(desc: plWindowDesc) -> Tuple[int, plWindow]:
+        ...
 
-def pl_window_destroy(window: plWindow):
-    ...
+    @staticmethod
+    def show(window: plWindow):
+        ...
+
+    @staticmethod
+    def destroy(window: plWindow | None):
+        ...
 
 ########################################################################################################################
 # [SECTION] stats api
 ########################################################################################################################
 
-def pl_stats_new_frame(name):
-    ...
+class plStatsI:
 
-def pl_stats_get_counter(name):
-    ...
+    @staticmethod
+    def new_frame(name):
+        ...
+
+    @staticmethod
+    def get_counter(name):
+        ...
 
 ########################################################################################################################
 # [SECTION] vfs api
 ########################################################################################################################
 
-def pl_vfs_mount_directory(directory, physical_directory, **kwargs) -> None:
-    ...
+class plVfsI:
+
+    @staticmethod
+    def mount_directory(directory, physical_directory, **kwargs) -> None:
+        ...
 
 ########################################################################################################################
 # [SECTION] pack api
 ########################################################################################################################
 
-def pl_pack_begin_packing(file, content_version) -> Tuple[bool, plPakFile]:
-    ...
+class plPakI:
 
-def pl_pack_add_from_disk(pak: plPakFile, pcPakPath, pcFilePath, bCompress) -> bool:
-    ...
+    @staticmethod
+    def begin_packing(file, content_version) -> Tuple[bool, plPakFile]:
+        ...
 
-def pl_pack_end_packing(pak: plPakFile):
-    ...
+    @staticmethod
+    def add_from_disk(pak: plPakFile, pcPakPath, pcFilePath, bCompress) -> bool:
+        ...
+    @staticmethod
+    def end_packing(pak: plPakFile):
+        ...
 
 ########################################################################################################################
 # [SECTION] graphics api
 ########################################################################################################################
 
-def pl_graphics_flush_device(device: plDevice, **kwargs) -> None:
-    ...
+class plGraphicsI:
+
+    @staticmethod
+    def flush_device(device: plDevice, **kwargs) -> None:
+        ...
 
 ########################################################################################################################
 # [SECTION] shader api
 ########################################################################################################################
 
-def pl_shader_initialize(options):
-    ...
+class plShaderI:
 
-def pl_shader_cleanup():
-    ...
+    @staticmethod
+    def initialize(options):
+        ...
 
-def pl_shader_load_glsl(shader, entry_func, **kwargs):
-    ...
+    @staticmethod
+    def cleanup():
+        ...
 
-def pl_shader_compile_gls(shader, entry_func, **kwargs):
-    ...
+    @staticmethod
+    def load_glsl(shader, entry_func, **kwargs):
+        ...
 
-def pl_shader_write_to_disk(shader, module):
-    ...
+    @staticmethod
+    def compile_gls(shader, entry_func, **kwargs):
+        ...
+
+    @staticmethod
+    def write_to_disk(shader, module):
+        ...
 
 ########################################################################################################################
 # [SECTION] draw api
 ########################################################################################################################
 
-def pl_draw_add_triangle_filled(layer: plDrawLayer2D, p0: plVec2Like, p1: plVec2Like, p2: plVec2Like, options: plDrawSolidOptions):
-    ...
+class plDrawI:
 
-def pl_draw_add_triangle(layer: plDrawLayer2D, p0: plVec2Like, p1: plVec2Like, p2: plVec2Like, options: plDrawLineOptions):
-    ...
+    @staticmethod
+    def initialize(init: plDrawInit):
+        ...
 
-def pl_draw_add_line(layer: plDrawLayer2D, p0: plVec2Like, p1: plVec2Like, options: plDrawLineOptions):
-    ...
+    @staticmethod
+    def cleanup():
+        ...
 
-def pl_draw_add_rect(layer: plDrawLayer2D, pMin: plVec2Like, pMax: plVec2Like, options: plDrawLineOptions):
-    ...
+    @staticmethod
+    def new_frame():
+        ...
 
-def pl_draw_add_rect_rounded(layer: plDrawLayer2D, pMin: plVec2Like, pMax: plVec2Like, radius: float, segments: int, flags: plDrawRectFlag, options: plDrawLineOptions):
-    ...
+    @staticmethod
+    def create_font_atlas() -> plFontAtlas:
+        ...
 
-def pl_draw_add_quad(layer: plDrawLayer2D, p0: plVec2Like, p1: plVec2Like, p2: plVec2Like, p3: plVec2Like, options: plDrawLineOptions):
-    ...
+    @staticmethod
+    def build_font_atlas(commandBuffer: plCommandBuffer, atlas: plFontAtlas) -> bool:
+        ...
 
-def pl_draw_add_circle(layer: plDrawLayer2D, p: plVec2Like, radius: float, segments: int, options: plDrawLineOptions):
-    ...
+    @staticmethod
+    def get_current_font_atlas() -> plFontAtlas:
+        ...
 
-def pl_draw_add_polygon(layer: plDrawLayer2D, points, options: plDrawLineOptions):
-    ...
+    @staticmethod
+    def cleanup_font_atlas(atlas: plFontAtlas | None):
+        ...
 
-def pl_draw_add_bezier_quad(layer: plDrawLayer2D, p0: plVec2Like, p1: plVec2Like, p2: plVec2Like, segments: int, options: plDrawLineOptions):
-    ...
+    @staticmethod
+    def set_font_atlas(atlas: plFontAtlas):
+        ...
 
-def pl_draw_add_bezier_cubic(layer: plDrawLayer2D, p0: plVec2Like, p1: plVec2Like, p2: plVec2Like, p3: plVec2Like, segments: int, options: plDrawLineOptions):
-    ...
+    @staticmethod
+    def get_first_font(atlas: plFontAtlas) -> plFont:
+        ...
+
+    @staticmethod
+    def add_default_font(atlas: plFontAtlas) -> plFont:
+        ...
+
+    @staticmethod
+    def add_font_from_file_ttf(atlas: plFontAtlas, config: plFontConfig, file: str) -> plFont:
+        ...
+
+    @staticmethod
+    def submit_2d_drawlist(drawlist: plDrawList2D, encoder: plRenderEncoder, width: float, height: float, sampleCount: int):
+        ...
+
+    @staticmethod
+    def request_2d_drawlist() -> plDrawList2D:
+        ...
+
+    @staticmethod
+    def return_2d_drawlist(drawlist: plDrawList2D):
+        ...
+
+    @staticmethod
+    def request_2d_layer(drawlist: plDrawList2D) -> plDrawLayer2D:
+        ...
+
+    @staticmethod
+    def return_2d_layer(layer: plDrawLayer2D):
+        ...
+
+    @staticmethod
+    def submit_2d_layer(layer: plDrawLayer2D):
+        ...
+
+    @staticmethod
+    def calculate_text_size(text: str, options: plDrawTextOptions) -> plVec2:
+        ...
+
+    @staticmethod
+    def add_text(layer: plDrawLayer2D, p: plVec2Like, text: str, options: plDrawTextOptions):
+        ...
+
+    @staticmethod
+    def add_text_clipped(layer: plDrawLayer2D, p: plVec2Like, text: str, clipMin: plVec2Like, clipMax: plVec2Like, options: plDrawTextOptions):
+        ...
+
+    @staticmethod
+    def add_triangle(layer: plDrawLayer2D, p0: plVec2Like, p1: plVec2Like, p2: plVec2Like, options: plDrawLineOptions):
+        ...
+
+    @staticmethod
+    def add_line(layer: plDrawLayer2D, p0: plVec2Like, p1: plVec2Like, options: plDrawLineOptions):
+        ...
+
+    @staticmethod
+    def add_lines(layer: plDrawLayer2D, points: plVec2ListLike, options: plDrawLineOptions):
+        ...
+
+    @staticmethod
+    def add_rect(layer: plDrawLayer2D, pMin: plVec2Like, pMax: plVec2Like, options: plDrawLineOptions):
+        ...
+
+    @staticmethod
+    def add_rect_rounded(layer: plDrawLayer2D, pMin: plVec2Like, pMax: plVec2Like, radius: float, segments: int, flags: plDrawRectFlag, options: plDrawLineOptions):
+        ...
+
+    @staticmethod
+    def add_quad(layer: plDrawLayer2D, p0: plVec2Like, p1: plVec2Like, p2: plVec2Like, p3: plVec2Like, options: plDrawLineOptions):
+        ...
+
+    @staticmethod
+    def add_circle(layer: plDrawLayer2D, p: plVec2Like, radius: float, segments: int, options: plDrawLineOptions):
+        ...
+
+    @staticmethod
+    def add_polygon(layer: plDrawLayer2D, points, options: plDrawLineOptions):
+        ...
+
+    @staticmethod
+    def add_bezier_quad(layer: plDrawLayer2D, p0: plVec2Like, p1: plVec2Like, p2: plVec2Like, segments: int, options: plDrawLineOptions):
+        ...
+
+    @staticmethod
+    def add_bezier_cubic(layer: plDrawLayer2D, p0: plVec2Like, p1: plVec2Like, p2: plVec2Like, p3: plVec2Like, segments: int, options: plDrawLineOptions):
+        ...
+
+    @staticmethod
+    def add_triangle_filled(layer: plDrawLayer2D, p0: plVec2Like, p1: plVec2Like, p2: plVec2Like, options: plDrawSolidOptions):
+        ...
+
+    @staticmethod
+    def add_triangles_filled(layer: plDrawLayer2D, points: plVec2ListLike, options: plDrawSolidOptions):
+        ...
+
+    @staticmethod
+    def add_rect_filled(layer: plDrawLayer2D, pMin: plVec2Like, pMax: plVec2Like, options: plDrawSolidOptions):
+        ...
+
+    @staticmethod
+    def add_rect_rounded_filled(layer: plDrawLayer2D, pMin: plVec2Like, pMax: plVec2Like, radius: float, segments: int, flags: plDrawRectFlag, options: plDrawSolidOptions):
+        ...
+
+    @staticmethod
+    def add_quad_filled(layer: plDrawLayer2D, p0: plVec2Like, p1: plVec2Like, p2: plVec2Like, p3: plVec2Like, options: plDrawSolidOptions):
+        ...
+
+    @staticmethod
+    def add_circle_filled(layer: plDrawLayer2D, p: plVec2Like, radius: float, segments: int, options: plDrawSolidOptions):
+        ...
+
+    @staticmethod
+    def add_convex_polygon_filled(layer: plDrawLayer2D, points: plVec2ListLike, options: plDrawLineOptions):
+        ...
 
 ########################################################################################################################
 # [SECTION] screen log api
 ########################################################################################################################
 
-def pl_screen_log_clear():
-    ...
+class plScreenLogI:
 
-def pl_screen_log_add_message(time_to_display, message):
-    ...
+    @staticmethod
+    def clear():
+        ...
+
+    @staticmethod
+    def add_message(time_to_display, message):
+        ...
 
 ########################################################################################################################
 # [SECTION] ui api
 ########################################################################################################################
 
-def pl_ui_begin_window(name : str, **kwargs):
-    ...
+class plUiI:
 
-def pl_ui_end_window(**kwargs) -> None:
-    ...
+    @staticmethod
+    def begin_window(name : str, **kwargs):
+        ...
 
-def pl_ui_button(name : str, **kwargs):
-    ...
+    @staticmethod
+    def end_window(**kwargs) -> None:
+        ...
 
-def pl_ui_checkbox(name, value = None, **kwargs):
-    ...
+    @staticmethod
+    def button(name : str, **kwargs):
+        ...
 
-def pl_ui_input_text(name, value, **kwargs):
-    ...
+    @staticmethod
+    def checkbox(name, value = None, **kwargs):
+        ...
+
+    @staticmethod
+    def input_text(name, value, **kwargs):
+        ...
 
 ########################################################################################################################
 # [SECTION] ecs api
 ########################################################################################################################
 
-def pl_ecs_initialize():
-    ...
+class plEcsI:
 
-def pl_ecs_finalize():
-    ...
+    @staticmethod
+    def initialize():
+        ...
 
-def pl_ecs_cleanup():
-    ...
+    @staticmethod
+    def finalize():
+        ...
 
-def pl_ecs_get_default_library():
-    ...
+    @staticmethod
+    def cleanup():
+        ...
 
-def pl_ecs_get_component(library: plComponentLibrary, key, entity):
-    ...
+    @staticmethod
+    def get_default_library():
+        ...
+
+    @staticmethod
+    def get_component(library: plComponentLibrary, key, entity):
+        ...
 
 ########################################################################################################################
 # [SECTION] animation api
 ########################################################################################################################
 
-def pl_animation_register_ecs_system():
-    ...
+class plAnimationI:
+
+    @staticmethod
+    def register_ecs_system():
+        ...
 
 ########################################################################################################################
 # [SECTION] camera api
 ########################################################################################################################
 
-def pl_camera_register_ecs_system():
-    ...
+class plCameraI:
 
-def pl_camera_get_ecs_type_key():
-    ...
+    @staticmethod
+    def register_ecs_system():
+        ...
 
-def pl_camera_create_perspective(library: plComponentLibrary, name, pos, yFov, aspect, nearZ, farZ, reverseZ):
-    ...
+    @staticmethod
+    def get_ecs_type_key():
+        ...
 
-def pl_camera_set_fov(camera, yFov):
-    ...
+    @staticmethod
+    def create_perspective(library: plComponentLibrary, name, pos, yFov, aspect, nearZ, farZ, reverseZ):
+        ...
 
-def pl_camera_update(camera):
-    ...
+    @staticmethod
+    def set_fov(camera, yFov):
+        ...
+
+    @staticmethod
+    def update(camera):
+        ...
 
 ########################################################################################################################
 # [SECTION] material api
 ########################################################################################################################
 
-def pl_material_register_ecs_system():
-    ...
+class plMaterialI:
+
+    @staticmethod
+    def register_ecs_system():
+        ...
 
 ########################################################################################################################
 # [SECTION] mesh api
 ########################################################################################################################
 
-def pl_mesh_register_ecs_system():
-    ...
+class plMeshI:
+
+    @staticmethod
+    def register_ecs_system():
+        ...
 
 ########################################################################################################################
 # [SECTION] physics api
 ########################################################################################################################
 
-def pl_physics_register_ecs_system():
-    ...
+class plPhysicsI:
+
+    @staticmethod
+    def register_ecs_system():
+        ...
 
 ########################################################################################################################
 # [SECTION] script api
 ########################################################################################################################
 
-def pl_script_register_ecs_system():
-    ...
+class plScriptI:
+
+    @staticmethod
+    def register_ecs_system():
+        ...
 
 ########################################################################################################################
 # [SECTION] shader variant api
 ########################################################################################################################
 
-def pl_shader_variant_initialize(device):
-    ...
+class plShaderVariantI:
+
+    @staticmethod
+    def initialize(device: plDevice):
+        ...
 
 ########################################################################################################################
 # [SECTION] starter api
 ########################################################################################################################
 
-def pl_starter_initialize(window: plWindow, flags: plStarterFlag):
-    ...
+class plStarterI:
 
-def pl_starter_cleanup(**kwargs):
-    ...
+    @staticmethod
+    def initialize(window: plWindow, flags: plStarterFlag):
+        ...
 
-def pl_starter_begin_frame(**kwargs) -> None:
-    ...
+    @staticmethod
+    def cleanup():
+        ...
 
-def pl_starter_finalize(**kwargs) -> None:
-    ...
+    @staticmethod
+    def begin_frame():
+        ...
 
-def pl_starter_resize(**kwargs) -> None:
-    ...
+    @staticmethod
+    def finalize():
+        ...
 
-def pl_starter_end_frame(**kwargs) -> None:
-    ...
+    @staticmethod
+    def resize():
+        ...
 
-def pl_starter_get_foreground_layer(**kwargs) -> plDrawLayer2D:
-    ...
+    @staticmethod
+    def end_frame():
+        ...
 
-def pl_starter_get_background_layer(**kwargs) -> plDrawLayer2D:
-    ...
+    @staticmethod
+    def get_foreground_layer() -> plDrawLayer2D:
+        ...
 
-def pl_starter_get_device(**kwargs) -> plDevice:
-    ...
+    @staticmethod
+    def get_background_layer() -> plDrawLayer2D:
+        ...
 
-def pl_starter_get_swapchain(**kwargs) -> plSwapchain:
-    ...
+    @staticmethod
+    def get_device() -> plDevice:
+        ...
 
-def pl_starter_get_render_pass(**kwargs) -> None:
-    ...
+    @staticmethod
+    def get_swapchain() -> plSwapchain:
+        ...
 
-def pl_starter_begin_main_pass(**kwargs) -> None:
-    ...
+    @staticmethod
+    def get_render_pass() -> int: # TODO: figure out handles
+        ...
 
-def pl_starter_end_main_pass(**kwargs) -> None:
-    ...
+    @staticmethod
+    def begin_main_pass() -> plRenderEncoder:
+        ...
+
+    @staticmethod
+    def end_main_pass():
+        ...
+
+    @staticmethod
+    def get_command_buffer() -> plCommandBuffer:
+        ...
+
+    @staticmethod
+    def get_temporary_command_buffer() -> plCommandBuffer:
+        ...
+
+    @staticmethod
+    def get_raw_command_buffer() -> plCommandBuffer:
+        ...
+
+    @staticmethod
+    def submit_command_buffer(commandBuffer: plCommandBuffer):
+        ...
+
+    @staticmethod
+    def submit_temporary_command_buffer(commandBuffer: plCommandBuffer):
+        ...
+
+    @staticmethod
+    def return_raw_command_buffer(commandBuffer: plCommandBuffer):
+        ...
 
 ########################################################################################################################
 # [SECTION] renderer api
 ########################################################################################################################
 
-def pl_renderer_initialize(device: plDevice, swapchain: plSwapchain, **kwargs):
-    ...
+class plRendererI:
 
-def pl_renderer_cleanup():
-    ...
+    @staticmethod
+    def initialize(device: plDevice, swapchain: plSwapchain, **kwargs):
+        ...
 
-def pl_renderer_register_ecs_system():
-    ...
+    @staticmethod
+    def cleanup():
+        ...
 
-def pl_renderer_create_directional_light(library: plComponentLibrary, name):
-    ...
+########################################################################################################################
+# [SECTION] renderer ecs api
+########################################################################################################################
+
+class plRendererEcsI:
+
+    @staticmethod
+    def register_system():
+        ...
+
+    @staticmethod
+    def create_directional_light(library: plComponentLibrary, name):
+        ...
 
 ########################################################################################################################
 # [SECTION] constants
