@@ -1172,6 +1172,9 @@ pl__python_pre_update(void)
         {
             bool bResize = false;
 
+            if(gptIOCtx->bViewportSizeChanged)
+                bResize = true;
+
             if(w != gptIOCtx->tMainViewportSize.x || h != gptIOCtx->tMainViewportSize.y)
                 bResize = true;
             else if(fCurrentScale != gptIOCtx->tMainFramebufferScale.x || fCurrentScale != gptIOCtx->tMainFramebufferScale.y )
@@ -1198,6 +1201,9 @@ pl__python_pre_update(void)
         if (w > 0 && h > 0)
         {
             bool bResize = false;
+
+            if(gptIOCtx->bViewportSizeChanged)
+                bResize = true;
 
             if((float)w != gptIOCtx->tMainViewportSize.x || (float)h != gptIOCtx->tMainViewportSize.y)
                 bResize = true;

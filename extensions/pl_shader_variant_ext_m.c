@@ -19,11 +19,6 @@ Index of this file:
 // [SECTION] implementations
 //-----------------------------------------------------------------------------
 
-typedef struct _pyplShaderVariantI
-{
-    PyObject_HEAD
-} pyplShaderVariantI;
-
 PyObject*
 shader_variant_initialize(PyObject* self, PyObject* args, PyObject* kwargs)
 {
@@ -45,21 +40,10 @@ shader_variant_initialize(PyObject* self, PyObject* args, PyObject* kwargs)
     Py_RETURN_NONE;
 }
 
-static PyMethodDef gatplShaderVariantICommands[] =
+static PyMethodDef gatCommandsplShaderVariantI[] =
 {
     {"initialize", (PyCFunction)shader_variant_initialize, METH_VARARGS | METH_KEYWORDS | METH_STATIC, NULL},
     {NULL, NULL, 0, NULL}
 };
 
-static PyType_Slot gatplShaderVariantISlots[] = {
-    {Py_tp_methods, (void*)gatplShaderVariantICommands},
-    {0, 0}
-};
-
-static PyType_Spec plShaderVariantISpec = {
-    "pilotlight.plShaderVariantI",
-    sizeof(pyplShaderVariantI),
-    0,
-    Py_TPFLAGS_DEFAULT,
-    gatplShaderVariantISlots
-};
+PL_NEW_PYTHON_API(plShaderVariantI)

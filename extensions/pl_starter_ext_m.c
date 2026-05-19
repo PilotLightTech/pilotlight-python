@@ -19,11 +19,6 @@ Index of this file:
 // [SECTION] implementations
 //-----------------------------------------------------------------------------
 
-typedef struct _pyplStarterI
-{
-    PyObject_HEAD
-} pyplStarterI;
-
 PyObject*
 starter_initialize(PyObject* self, PyObject* args, PyObject* kwargs)
 {
@@ -200,7 +195,7 @@ plPythonIntConstantPair gatStarterIntPairs[] = {
     PL_ADD_INT_CONSTANT(PL_STARTER_FLAGS_ALL_EXTENSIONS)
 };
 
-static PyMethodDef gatplStarterICommands[] =
+static PyMethodDef gatCommandsplStarterI[] =
 {
     {"begin_frame", (PyCFunction)starter_begin_frame, METH_NOARGS | METH_STATIC, NULL},
     {"initialize", (PyCFunction)starter_initialize, METH_VARARGS | METH_STATIC, NULL},
@@ -224,15 +219,4 @@ static PyMethodDef gatplStarterICommands[] =
     {NULL, NULL, 0, NULL}
 };
 
-static PyType_Slot gatplStarterISlots[] = {
-    {Py_tp_methods, (void*)gatplStarterICommands},
-    {0, 0}
-};
-
-static PyType_Spec plStarterISpec = {
-    "pilotlight.plStarterI",
-    sizeof(pyplStarterI),
-    0,
-    Py_TPFLAGS_DEFAULT,
-    gatplStarterISlots
-};
+PL_NEW_PYTHON_API(plStarterI)

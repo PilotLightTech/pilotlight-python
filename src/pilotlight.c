@@ -332,6 +332,7 @@ pl_io_init(PyObject* self, PyObject* args, PyObject* kwargs)
 
 static PyObject* pl_io_get_bRunning(plPyIO* self, void *closure){ return PyBool_FromLong(self->ptIO->bRunning);}
 
+static PyObject* pl_io_get_fDeltaTime(plPyIO* self, void *closure){ return PyFloat_FromDouble(self->ptIO->fDeltaTime);}
 static PyObject* pl_io_get_dTime(plPyIO* self, void *closure){ return PyFloat_FromDouble(self->ptIO->dTime);}
 static PyObject* pl_io_get_fFrameRate(plPyIO* self, void *closure){ return PyFloat_FromDouble((double)self->ptIO->fFrameRate);}
 static PyObject* pl_io_get_fMouseDragThreshold(plPyIO* self, void* closure){return PyFloat_FromDouble((double)self->ptIO->fMouseDragThreshold);}
@@ -377,6 +378,7 @@ static PyGetSetDef gatIOProps[] =
     PL_PYTHON_PROPERTY(fMouseDoubleClickMaxDist),
     PL_PYTHON_PROPERTY(fKeyRepeatDelay),
     PL_PYTHON_PROPERTY(fKeyRepeatRate),
+    PL_PYTHON_PROPERTY_GETTER_ONLY(fDeltaTime),
     PL_PYTHON_PROPERTY_GETTER_ONLY(fFrameRate),
     PL_PYTHON_PROPERTY_GETTER_ONLY(dTime),
     PL_PYTHON_PROPERTY_GETTER_ONLY(fFrameRate),
@@ -398,6 +400,40 @@ static PyType_Spec pl_io_spec = {
     0,
     Py_TPFLAGS_DEFAULT,
     pl_io_slots
+};
+
+static PyObject*
+pl_camera_tProjMat(plPyCamera* self, void* closure)
+{ 
+    return pl_mat4_new(self->tCamera.tProjMat);
+}
+
+static PyObject*
+pl_camera_tViewMat(plPyCamera* self, void* closure)
+{ 
+    return pl_mat4_new(self->tCamera.tViewMat);
+}
+
+static PyGetSetDef gatCameraProps[] =
+{
+    {"tProjMat", (getter)pl_camera_tProjMat, (setter)NULL, "Property: tProjMat"},
+    {"tViewMat", (getter)pl_camera_tViewMat, (setter)NULL, "Property: tViewMat"},
+    {NULL, NULL, 0, NULL}
+};
+
+static PyType_Slot pl_camera_slots[] = {
+    // {Py_tp_init, (void*)pl_io_init},
+    {Py_tp_getset, (void*)gatCameraProps},
+    // {Py_tp_methods, (void*)gatIOCommands},
+    {0, 0}
+};
+
+static PyType_Spec pl_camera_spec = {
+    "pilotlight.plCamera",
+    sizeof(plPyCamera),
+    0,
+    Py_TPFLAGS_DEFAULT,
+    pl_camera_slots
 };
 
 #define PL_PYTHON_COMMAND(ARG, FLAGS, DOCS) {"pl_" # ARG, (PyCFunction)ARG, FLAGS, DOCS}
@@ -478,52 +514,43 @@ PyInit_pilotlight(void)
     }
 
     gptVec2Type = PyType_FromSpec(&pl_vec2_spec);
+    gptVec3Type = PyType_FromSpec(&pl_vec3_spec);
+    gptVec4Type = PyType_FromSpec(&pl_vec4_spec);
+    gptMat4Type = PyType_FromSpec(&pl_mat4_spec);
     gptIOType = PyType_FromSpec(&pl_io_spec);
-    gptplUiI = PyType_FromSpec(&plUiISpec);
-    gptplVfsI = PyType_FromSpec(&plVfsISpec);
-    gptplPakI = PyType_FromSpec(&plPakISpec);
-    gptplStatsI = PyType_FromSpec(&plStatsISpec);
-    gptplDrawI = PyType_FromSpec(&plDrawISpec);
-    gptplGraphicsI = PyType_FromSpec(&plGraphicsISpec);
-    gptplStarterI = PyType_FromSpec(&plStarterISpec);
-    gptplIOI = PyType_FromSpec(&plIOISpec);
-    gptplShaderI = PyType_FromSpec(&plShaderISpec);
-    gptplShaderVariantI = PyType_FromSpec(&plShaderVariantISpec);
-    gptplWindowI = PyType_FromSpec(&plWindowISpec);
-    gptplScreenLogI = PyType_FromSpec(&plScreenLogISpec);
-    gptplEcsI = PyType_FromSpec(&plEcsISpec);
-    gptplAnimationI = PyType_FromSpec(&plAnimationISpec);
-    gptplMaterialI = PyType_FromSpec(&plMaterialISpec);
-    gptplMeshI = PyType_FromSpec(&plMeshISpec);
-    gptplPhysicsI = PyType_FromSpec(&plPhysicsISpec);
-    gptplScriptI = PyType_FromSpec(&plScriptISpec);
-    gptplCameraI = PyType_FromSpec(&plCameraISpec);
-    gptplRendererI = PyType_FromSpec(&plRendererISpec);
-    gptplRendererEcsI = PyType_FromSpec(&plRendererEcsISpec);
-
-    PyModule_AddObject(ptModule, "plUiI", gptplUiI);
+    gptSwapchainInfoType = PyType_FromSpec(&pl_swapchain_info_spec);
+    gptCameraType = PyType_FromSpec(&pl_camera_spec);
+    
     PyModule_AddObject(ptModule, "plVec2", gptVec2Type);
+    PyModule_AddObject(ptModule, "plVec3", gptVec3Type);
+    PyModule_AddObject(ptModule, "plVec4", gptVec4Type);
+    PyModule_AddObject(ptModule, "plMat4", gptMat4Type);
+    PyModule_AddObject(ptModule, "plCamera", gptCameraType);
     PyModule_AddObject(ptModule, "plIO", gptIOType);
-    PyModule_AddObject(ptModule, "plVfsI", gptplVfsI);
-    PyModule_AddObject(ptModule, "plPakI", gptplPakI);
-    PyModule_AddObject(ptModule, "plStatsI", gptplStatsI);
-    PyModule_AddObject(ptModule, "plDrawI", gptplDrawI);
-    PyModule_AddObject(ptModule, "plGraphicsI", gptplGraphicsI);
-    PyModule_AddObject(ptModule, "plStarterI", gptplStarterI);
-    PyModule_AddObject(ptModule, "plIOI", gptplIOI);
-    PyModule_AddObject(ptModule, "plShaderI", gptplShaderI);
-    PyModule_AddObject(ptModule, "plShaderVariantI", gptplShaderVariantI);
-    PyModule_AddObject(ptModule, "plWindowI", gptplWindowI);
-    PyModule_AddObject(ptModule, "plScreenLogI", gptplScreenLogI);
-    PyModule_AddObject(ptModule, "plEcsI", gptplEcsI);
-    PyModule_AddObject(ptModule, "plAnimationI", gptplAnimationI);
-    PyModule_AddObject(ptModule, "plMaterialI", gptplMaterialI);
-    PyModule_AddObject(ptModule, "plMeshI", gptplMeshI);
-    PyModule_AddObject(ptModule, "plPhysicsI", gptplPhysicsI);
-    PyModule_AddObject(ptModule, "plScriptI", gptplScriptI);
-    PyModule_AddObject(ptModule, "plCameraI", gptplCameraI);
-    PyModule_AddObject(ptModule, "plRendererI", gptplRendererI);
-    PyModule_AddObject(ptModule, "plRendererEcsI", gptplRendererEcsI);
+    PyModule_AddObject(ptModule, "plSwapchainInfo", gptSwapchainInfoType);
+
+    PL_ADD_PYTHON_API(plCameraI);
+    PL_ADD_PYTHON_API(plCameraEcsI);
+    PL_ADD_PYTHON_API(plUiI);
+    PL_ADD_PYTHON_API(plVfsI);
+    PL_ADD_PYTHON_API(plPakI);
+    PL_ADD_PYTHON_API(plStatsI);
+    PL_ADD_PYTHON_API(plDrawI);
+    PL_ADD_PYTHON_API(plGraphicsI);
+    PL_ADD_PYTHON_API(plStarterI);
+    PL_ADD_PYTHON_API(plIOI);
+    PL_ADD_PYTHON_API(plShaderI);
+    PL_ADD_PYTHON_API(plShaderVariantI);
+    PL_ADD_PYTHON_API(plWindowI);
+    PL_ADD_PYTHON_API(plScreenLogI);
+    PL_ADD_PYTHON_API(plEcsI);
+    PL_ADD_PYTHON_API(plAnimationI);
+    PL_ADD_PYTHON_API(plMaterialI);
+    PL_ADD_PYTHON_API(plMeshI);
+    PL_ADD_PYTHON_API(plPhysicsI);
+    PL_ADD_PYTHON_API(plScriptI);
+    PL_ADD_PYTHON_API(plRendererI);
+    PL_ADD_PYTHON_API(plRendererEcsI);
 
     return ptModule;
 }

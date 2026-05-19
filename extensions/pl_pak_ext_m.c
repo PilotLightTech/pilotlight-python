@@ -18,11 +18,6 @@ Index of this file:
 // [SECTION] implementations
 //-----------------------------------------------------------------------------
 
-typedef struct _pyplPakI
-{
-    PyObject_HEAD
-} pyplPakI;
-
 PyObject*
 begin_packing(PyObject* self, PyObject* args)
 {
@@ -81,7 +76,7 @@ end_packing(PyObject* self, PyObject* arg)
     Py_RETURN_NONE;
 }
 
-static PyMethodDef gatplPakICommands[] =
+static PyMethodDef gatCommandsplPakI[] =
 {
     PL_PYTHON_METHOD(begin_packing, METH_VARARGS | METH_STATIC, NULL),
     PL_PYTHON_METHOD(add_from_disk, METH_VARARGS | METH_STATIC, NULL),
@@ -89,15 +84,4 @@ static PyMethodDef gatplPakICommands[] =
     {NULL, NULL, 0, NULL}
 };
 
-static PyType_Slot gatplPakISlots[] = {
-    {Py_tp_methods, (void*)gatplPakICommands},
-    {0, 0}
-};
-
-static PyType_Spec plPakISpec = {
-    "pilotlight.plPakI",
-    sizeof(pyplPakI),
-    0,
-    Py_TPFLAGS_DEFAULT,
-    gatplPakISlots
-};
+PL_NEW_PYTHON_API(plPakI)

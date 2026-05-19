@@ -67,7 +67,7 @@ class App:
         plEcsI.initialize()
         plRendererEcsI.register_system()
         plScriptI.register_ecs_system()
-        plCameraI.register_ecs_system()
+        plCameraEcsI.register_ecs_system()
         plAnimationI.register_ecs_system()
         plMeshI.register_ecs_system()
         plPhysicsI.register_ecs_system()
@@ -75,7 +75,7 @@ class App:
         plEcsI.finalize()
         self.ptComponentLibrary = plEcsI.get_default_library()
 
-        self.tMainCamera = plCameraI.create_perspective(
+        self.tMainCamera = plCameraEcsI.create_perspective(
             self.ptComponentLibrary,
             "main camera",
             [-4.012, 2.984, -1.109],
@@ -86,7 +86,7 @@ class App:
             True
             )
         
-        camera = plEcsI.get_component(self.ptComponentLibrary, plCameraI.get_ecs_type_key(), self.tMainCamera)
+        camera = plEcsI.get_component(self.ptComponentLibrary, plCameraEcsI.get_ecs_type_key(), self.tMainCamera)
         plCameraI.set_fov(camera, 1.04719755)
         plCameraI.update(camera)
 

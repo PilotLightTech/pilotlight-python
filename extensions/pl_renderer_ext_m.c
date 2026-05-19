@@ -19,16 +19,6 @@ Index of this file:
 // [SECTION] implementations
 //-----------------------------------------------------------------------------
 
-typedef struct _pyplRendererI
-{
-    PyObject_HEAD
-} pyplRendererI;
-
-typedef struct _pyplRendererEcsI
-{
-    PyObject_HEAD
-} pyplRendererEcsI;
-
 PyObject*
 renderer_initialize(PyObject* self, PyObject* args, PyObject* kwargs)
 {
@@ -105,42 +95,19 @@ renderer_ecs_create_directional_light(PyObject* self, PyObject* args, PyObject* 
     Py_RETURN_NONE;
 }
 
-static PyMethodDef gatplRendererICommands[] =
+static PyMethodDef gatCommandsplRendererI[] =
 {
     {"initialize", (PyCFunction)renderer_initialize, METH_VARARGS | METH_KEYWORDS | METH_STATIC, NULL},
     {"cleanup", (PyCFunction)renderer_cleanup, METH_NOARGS | METH_STATIC, NULL},
     {NULL, NULL, 0, NULL}
 };
 
-static PyType_Slot gatplRendererISlots[] = {
-    {Py_tp_methods, (void*)gatplRendererICommands},
-    {0, 0}
-};
-
-static PyType_Spec plRendererISpec = {
-    "pilotlight.plRendererI",
-    sizeof(pyplRendererI),
-    0,
-    Py_TPFLAGS_DEFAULT,
-    gatplRendererISlots
-};
-
-static PyMethodDef gatplRendererEcsICommands[] =
+static PyMethodDef gatCommandsplRendererEcsI[] =
 {
     {"create_directional_light", (PyCFunction)renderer_ecs_create_directional_light, METH_VARARGS | METH_KEYWORDS | METH_STATIC, NULL},
     {"register_system", (PyCFunction)renderer_ecs_register_system, METH_NOARGS | METH_STATIC, NULL},
     {NULL, NULL, 0, NULL}
 };
 
-static PyType_Slot gatplRendererEcsISlots[] = {
-    {Py_tp_methods, (void*)gatplRendererEcsICommands},
-    {0, 0}
-};
-
-static PyType_Spec plRendererEcsISpec = {
-    "pilotlight.plRendererEcsI",
-    sizeof(pyplRendererEcsI),
-    0,
-    Py_TPFLAGS_DEFAULT,
-    gatplRendererEcsISlots
-};
+PL_NEW_PYTHON_API(plRendererI)
+PL_NEW_PYTHON_API(plRendererEcsI)

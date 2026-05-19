@@ -1,8 +1,55 @@
+########################################################################################################################
+# Pilot Light Public Interface
+#
+# User API Index
+#
+#    * Sections
+#      - imports
+#      - constants
+#      - custom types
+#      - core api
+#      - io api
+#      - window api
+#      - stats api
+#      - vfs api
+#      - pak api
+#      - graphics api
+#      - shader api
+#      - draw api
+#      - screen log api
+#      - ui api
+#      - ecs api
+#      - starter api
+#      - unstable apis
+#
+########################################################################################################################
+
+########################################################################################################################
+# [SECTION] imports
+########################################################################################################################
+
 from typing import List, Dict, Tuple, overload, NewType
 from enum import IntEnum, IntFlag
 import pilotlight.pilotlight as pl
 from pilotlight.types import *
 from pilotlight.enums import *
+
+########################################################################################################################
+# [SECTION] constants
+########################################################################################################################
+
+PL_COLOR_32_WHITE: int
+PL_COLOR_32_BLACK: int
+PL_COLOR_32_RED: int
+PL_COLOR_32_BLUE: int
+PL_COLOR_32_DARK_BLUE: int
+PL_COLOR_32_GREEN: int
+PL_COLOR_32_YELLOW: int
+PL_COLOR_32_ORANGE: int
+PL_COLOR_32_MAGENTA: int
+PL_COLOR_32_CYAN: int
+PL_COLOR_32_GREY: int
+PL_COLOR_32_LIGHT_GREY: int
 
 ########################################################################################################################
 # [SECTION] custom types
@@ -18,19 +65,66 @@ class plVec2:
     def __init__(self, x: float, y: float) -> None: ...
 
     def __repr__(self) -> str: ...
-
     def __add__(self, other: plVec2) -> plVec2: ...
     def __sub__(self, other: plVec2) -> plVec2: ...
-
-    def __mul__(self, scalar: float) -> plVec2: ...
-    def __rmul__(self, scalar: float) -> plVec2: ...
-
     def __neg__(self) -> plVec2: ...
 
-type plVec2Like = plVec2 | Tuple[float] | List[float]
-type plVec2ListLike = Tuple[plVec2Like] | List[plVec2Like]
+class plVec3:
+    x: float
+    y: float
+    z: float
 
-@dataclass(slots=True)
+    @overload
+    def __init__(self) -> None: ...
+    @overload
+    def __init__(self, x: float, y: float, z: float) -> None: ...
+
+    def __repr__(self) -> str: ...
+    def __add__(self, other: plVec3) -> plVec3: ...
+    def __sub__(self, other: plVec3) -> plVec3: ...
+    def __neg__(self) -> plVec3: ...
+
+class plVec4:
+    x: float
+    y: float
+    z: float
+    w: float
+
+    @overload
+    def __init__(self) -> None: ...
+    @overload
+    def __init__(self, x: float, y: float, z: float, w: float) -> None: ...
+
+    def __repr__(self) -> str: ...
+    def __add__(self, other: plVec4) -> plVec4: ...
+    def __sub__(self, other: plVec4) -> plVec4: ...
+    def __neg__(self) -> plVec4: ...
+
+class plMat4:
+    x11: float
+    x21: float
+    x31: float
+    x41: float
+    x12: float
+    x22: float
+    x32: float
+    x42: float
+    x13: float
+    x23: float
+    x33: float
+    x43: float
+    x14: float
+    x24: float
+    x34: float
+    x44: float
+
+    def __repr__(self) -> str: ...
+    def __mul__(self, right: plMat4) -> plMat4: ...
+
+class plCamera:
+    tProjMat: plMat4
+    tViewMat: plMat4
+
 class plIO:
 
     # configurable
@@ -42,10 +136,23 @@ class plIO:
     fKeyRepeatRate: float
 
     # do not set these
+    fDeltaTime: float
     fFrameRate: float
     dTime: float
     tMainViewportSize: plVec2
     tMainFramebufferScale: plVec2
+
+class plSwapchainInfo:
+    tSampleCount: int
+
+type plVec2Like = plVec2 | Tuple[float] | List[float]
+type plVec2ListLike = Tuple[plVec2Like] | List[plVec2Like]
+
+type plVec3Like = plVec3 | Tuple[float] | List[float]
+type plVec3ListLike = Tuple[plVec3Like] | List[plVec3Like]
+
+type plVec4Like = plVec4 | Tuple[float] | List[float]
+type plVec4ListLike = Tuple[plVec4Like] | List[plVec4Like]
 
 ########################################################################################################################
 # [SECTION] core api
@@ -135,7 +242,7 @@ class plIOI:
         ...
 
     @staticmethod
-    def get_mouse_drag_delta(button: plMouseButton, threshold: float) -> List[float]:
+    def get_mouse_drag_delta(button: plMouseButton, threshold: float) -> plVec2:
         ...
 
     @staticmethod
@@ -197,7 +304,7 @@ class plVfsI:
         ...
 
 ########################################################################################################################
-# [SECTION] pack api
+# [SECTION] pak api
 ########################################################################################################################
 
 class plPakI:
@@ -221,6 +328,10 @@ class plGraphicsI:
 
     @staticmethod
     def flush_device(device: plDevice, **kwargs) -> None:
+        ...
+
+    @staticmethod
+    def get_swapchain_info(swapchain: plSwapchain) -> plSwapchainInfo:
         ...
 
 ########################################################################################################################
@@ -267,6 +378,10 @@ class plDrawI:
     def new_frame():
         ...
 
+    ####################################################################################################################
+    # fonts
+    ####################################################################################################################
+
     @staticmethod
     def create_font_atlas() -> plFontAtlas:
         ...
@@ -300,6 +415,14 @@ class plDrawI:
         ...
 
     @staticmethod
+    def calculate_text_size(text: str, options: plDrawTextOptions) -> plVec2:
+        ...
+
+    ####################################################################################################################
+    # 2D
+    ####################################################################################################################
+
+    @staticmethod
     def submit_2d_drawlist(drawlist: plDrawList2D, encoder: plRenderEncoder, width: float, height: float, sampleCount: int):
         ...
 
@@ -321,10 +444,6 @@ class plDrawI:
 
     @staticmethod
     def submit_2d_layer(layer: plDrawLayer2D):
-        ...
-
-    @staticmethod
-    def calculate_text_size(text: str, options: plDrawTextOptions) -> plVec2:
         ...
 
     @staticmethod
@@ -403,6 +522,125 @@ class plDrawI:
     def add_convex_polygon_filled(layer: plDrawLayer2D, points: plVec2ListLike, options: plDrawLineOptions):
         ...
 
+    ####################################################################################################################
+    # 3D
+    ####################################################################################################################
+
+    @staticmethod
+    def request_3d_drawlist() -> plDrawList3D:
+        ...
+
+    @staticmethod
+    def return_3d_drawlist(drawlist: plDrawList3D):
+        ...
+
+    @staticmethod
+    def submit_3d_drawlist(drawlist: plDrawList3D, encoder: plRenderEncoder, width: float, height: float, mvp, flags, sampleCount: int):
+        ...
+
+    @staticmethod
+    def add_3d_text(drawlist: plDrawList3D, p: plVec3Like, text: str, options: plDrawTextOptions):
+        ...
+
+    @staticmethod
+    def add_3d_triangle_filled(drawlist: plDrawList3D, p0: plVec3, p1: plVec3, p2: plVec3, options: plDrawSolidOptions):
+        ...
+    
+    @staticmethod
+    def add_3d_circle_xz_filled(drawlist: plDrawList3D, center: plVec3, radius: float, segments: int , options: plDrawSolidOptions):
+        ...
+    
+    @staticmethod
+    def add_3d_band_xz_filled(drawlist: plDrawList3D, center: plVec3, innerRadius: float, outerRadius: float, segments: int, options: plDrawSolidOptions):
+        ...
+    
+    @staticmethod
+    def add_3d_band_xy_filled(drawlist: plDrawList3D, center: plVec3, innerRadius: float, outerRadius: float, segments: int, options: plDrawSolidOptions):
+        ...
+    
+    @staticmethod
+    def add_3d_band_yz_filled(drawlist: plDrawList3D, center: plVec3, innerRadius: float, outerRadius: float, segments: int, options: plDrawSolidOptions):
+        ...
+    
+    @staticmethod
+    def add_3d_centered_box_filled(drawlist: plDrawList3D, center: plVec3, width: float, height: float, depth: float, options: plDrawSolidOptions):
+        ...
+    
+    @staticmethod
+    def add_3d_plane_xz_filled(drawlist: plDrawList3D, center: plVec3, width: float, height: float, options: plDrawSolidOptions):
+        ...
+    
+    @staticmethod
+    def add_3d_plane_xy_filled(drawlist: plDrawList3D, center: plVec3, width: float, height: float, options: plDrawSolidOptions):
+        ...
+    
+    @staticmethod
+    def add_3d_plane_yz_filled(drawlist: plDrawList3D, center: plVec3, width: float, height: float, options: plDrawSolidOptions):
+        ...
+    
+    @staticmethod
+    def add_3d_sphere_filled(drawlist: plDrawList3D, sphere: plSphere, latBands: int, longBands: int, options: plDrawSolidOptions):
+        ...
+    
+    @staticmethod
+    def add_3d_cylinder_filled(drawlist: plDrawList3D, cylinder: plCylinder, segments: int, options: plDrawSolidOptions):
+        ...
+    
+    @staticmethod
+    def add_3d_cone_filled(drawlist: plDrawList3D, cone: plCone, segments: int, options: plDrawSolidOptions):
+        ...
+    
+    @staticmethod
+    def add_3d_line(drawlist: plDrawList3D, p0: plVec3, p1: plVec3, options: plDrawLineOptions):
+        ...
+    
+    @staticmethod
+    def add_3d_cross(drawlist: plDrawList3D, p: plVec3, length: float, options: plDrawLineOptions):
+        ...
+    
+    @staticmethod
+    def add_3d_transform(drawlist: plDrawList3D, transform: plMat4, length: float, options: plDrawLineOptions):
+        ...
+    
+    @staticmethod
+    def add_3d_frustum(drawlist: plDrawList3D, transform: plMat4, desc: plDrawFrustumDesc, options: plDrawLineOptions):
+        ...
+    @staticmethod
+    def add_3d_centered_box(drawlist: plDrawList3D, center: plVec3, width: float, height: float, depth: float, options: plDrawLineOptions):
+        ...
+    
+    @staticmethod
+    def add_3d_aabb(drawlist: plDrawList3D, minP: plVec3, maxP: plVec3, options: plDrawLineOptions):
+        ...
+    
+    @staticmethod
+    def add_3d_bezier_quad(drawlist: plDrawList3D, p0: plVec3, p1: plVec3, p2: plVec3, segments: int, options: plDrawLineOptions):
+        ...
+    
+    @staticmethod
+    def add_3d_bezier_cubic(drawlist: plDrawList3D, p0: plVec3, p1: plVec3, p2: plVec3, tP3: plVec3, segments: int, options: plDrawLineOptions):
+        ...
+    
+    @staticmethod
+    def add_3d_circle_xz(drawlist: plDrawList3D, center: plVec3, radius: float, segments: int, options: plDrawLineOptions):
+        ...
+    
+    @staticmethod
+    def add_3d_sphere(drawlist: plDrawList3D, sphere: plSphere, latBands: int, longBands: int, options: plDrawLineOptions):
+        ...
+    
+    @staticmethod
+    def add_3d_capsule(drawlist: plDrawList3D, capsule: plCapsule, latBands: int, longBands: int, options: plDrawLineOptions):
+        ...
+    
+    @staticmethod
+    def add_3d_cylinder(drawlist: plDrawList3D, cylinder: plCylinder, segments: int, options: plDrawLineOptions):
+        ...
+    
+    @staticmethod
+    def add_3d_cone(drawlist: plDrawList3D, cone: plCone, segments: int, options: plDrawLineOptions):
+        ...
+
 ########################################################################################################################
 # [SECTION] screen log api
 ########################################################################################################################
@@ -467,92 +705,6 @@ class plEcsI:
 
     @staticmethod
     def get_component(library: plComponentLibrary, key, entity):
-        ...
-
-########################################################################################################################
-# [SECTION] animation api
-########################################################################################################################
-
-class plAnimationI:
-
-    @staticmethod
-    def register_ecs_system():
-        ...
-
-########################################################################################################################
-# [SECTION] camera api
-########################################################################################################################
-
-class plCameraI:
-
-    @staticmethod
-    def register_ecs_system():
-        ...
-
-    @staticmethod
-    def get_ecs_type_key():
-        ...
-
-    @staticmethod
-    def create_perspective(library: plComponentLibrary, name, pos, yFov, aspect, nearZ, farZ, reverseZ):
-        ...
-
-    @staticmethod
-    def set_fov(camera, yFov):
-        ...
-
-    @staticmethod
-    def update(camera):
-        ...
-
-########################################################################################################################
-# [SECTION] material api
-########################################################################################################################
-
-class plMaterialI:
-
-    @staticmethod
-    def register_ecs_system():
-        ...
-
-########################################################################################################################
-# [SECTION] mesh api
-########################################################################################################################
-
-class plMeshI:
-
-    @staticmethod
-    def register_ecs_system():
-        ...
-
-########################################################################################################################
-# [SECTION] physics api
-########################################################################################################################
-
-class plPhysicsI:
-
-    @staticmethod
-    def register_ecs_system():
-        ...
-
-########################################################################################################################
-# [SECTION] script api
-########################################################################################################################
-
-class plScriptI:
-
-    @staticmethod
-    def register_ecs_system():
-        ...
-
-########################################################################################################################
-# [SECTION] shader variant api
-########################################################################################################################
-
-class plShaderVariantI:
-
-    @staticmethod
-    def initialize(device: plDevice):
         ...
 
 ########################################################################################################################
@@ -638,8 +790,84 @@ class plStarterI:
         ...
 
 ########################################################################################################################
-# [SECTION] renderer api
+# [SECTION] unstable apis
 ########################################################################################################################
+
+class plAnimationI:
+
+    @staticmethod
+    def register_ecs_system():
+        ...
+
+class plCameraI:
+
+    @staticmethod
+    def init_perspective(camera: plCamera, pos, yFov, aspect, nearZ, farZ, reverseZ):
+        ...
+
+    @staticmethod
+    def translate(camera: plCamera, dx: float, dy: float, dz: float):
+        ...
+
+    @staticmethod
+    def rotate(camera: plCamera, pitch: float, yaw: float):
+        ...
+
+    @staticmethod
+    def set_fov(camera: plCamera, yFov: float):
+        ...
+
+    @staticmethod
+    def set_aspect(camera: plCamera, aspect: float):
+        ...
+
+    @staticmethod
+    def update(camera: plCamera):
+        ...
+
+class plCameraEcsI:
+
+    @staticmethod
+    def register_ecs_system():
+        ...
+
+    @staticmethod
+    def get_ecs_type_key():
+        ...
+
+    @staticmethod
+    def create_perspective(library: plComponentLibrary, name, pos, yFov, aspect, nearZ, farZ, reverseZ):
+        ...
+
+class plMaterialI:
+
+    @staticmethod
+    def register_ecs_system():
+        ...
+
+class plMeshI:
+
+    @staticmethod
+    def register_ecs_system():
+        ...
+
+class plPhysicsI:
+
+    @staticmethod
+    def register_ecs_system():
+        ...
+
+class plScriptI:
+
+    @staticmethod
+    def register_ecs_system():
+        ...
+
+class plShaderVariantI:
+
+    @staticmethod
+    def initialize(device: plDevice):
+        ...
 
 class plRendererI:
 
@@ -651,10 +879,6 @@ class plRendererI:
     def cleanup():
         ...
 
-########################################################################################################################
-# [SECTION] renderer ecs api
-########################################################################################################################
-
 class plRendererEcsI:
 
     @staticmethod
@@ -664,20 +888,3 @@ class plRendererEcsI:
     @staticmethod
     def create_directional_light(library: plComponentLibrary, name):
         ...
-
-########################################################################################################################
-# [SECTION] constants
-########################################################################################################################
-
-PL_COLOR_32_WHITE: int
-PL_COLOR_32_BLACK: int
-PL_COLOR_32_RED: int
-PL_COLOR_32_BLUE: int
-PL_COLOR_32_DARK_BLUE: int
-PL_COLOR_32_GREEN: int
-PL_COLOR_32_YELLOW: int
-PL_COLOR_32_ORANGE: int
-PL_COLOR_32_MAGENTA: int
-PL_COLOR_32_CYAN: int
-PL_COLOR_32_GREY: int
-PL_COLOR_32_LIGHT_GREY: int

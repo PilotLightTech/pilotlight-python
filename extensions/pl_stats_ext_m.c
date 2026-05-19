@@ -19,11 +19,6 @@ Index of this file:
 // [SECTION] implementations
 //-----------------------------------------------------------------------------
 
-typedef struct _pyplStatsI
-{
-    PyObject_HEAD
-} pyplStatsI;
-
 PyObject*
 stats_new_frame(PyObject* self)
 {
@@ -39,22 +34,11 @@ stats_get_counter(PyObject* self, PyObject* arg)
     return PyCapsule_New(pdCounter, "plFloatPointer", NULL);
 }
 
-static PyMethodDef gatplStatsICommands[] =
+static PyMethodDef gatCommandsplStatsI[] =
 {
     {"new_frame", (PyCFunction)stats_new_frame, METH_NOARGS | METH_STATIC, NULL},
     {"get_counter", (PyCFunction)stats_get_counter, METH_O | METH_STATIC, NULL},
     {NULL, NULL, 0, NULL}
 };
 
-static PyType_Slot gatplStatsISlots[] = {
-    {Py_tp_methods, (void*)gatplStatsICommands},
-    {0, 0}
-};
-
-static PyType_Spec plStatsISpec = {
-    "pilotlight.plStatsI",
-    sizeof(pyplStatsI),
-    0,
-    Py_TPFLAGS_DEFAULT,
-    gatplStatsISlots
-};
+PL_NEW_PYTHON_API(plStatsI)

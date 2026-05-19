@@ -19,11 +19,6 @@ Index of this file:
 // [SECTION] implementations
 //-----------------------------------------------------------------------------
 
-typedef struct _pyplAnimationI
-{
-    PyObject_HEAD
-} pyplAnimationI;
-
 PyObject*
 animation_register_ecs_system(PyObject* self)
 {
@@ -32,21 +27,10 @@ animation_register_ecs_system(PyObject* self)
     Py_RETURN_NONE;
 }
 
-static PyMethodDef gatplAnimationICommands[] =
+static PyMethodDef gatCommandsplAnimationI[] =
 {
     {"register_ecs_system", (PyCFunction)animation_register_ecs_system, METH_NOARGS | METH_STATIC, NULL},
     {NULL, NULL, 0, NULL}
 };
 
-static PyType_Slot gatplAnimationISlots[] = {
-    {Py_tp_methods, (void*)gatplAnimationICommands},
-    {0, 0}
-};
-
-static PyType_Spec plAnimationISpec = {
-    "pilotlight.plAnimationI",
-    sizeof(pyplAnimationI),
-    0,
-    Py_TPFLAGS_DEFAULT,
-    gatplAnimationISlots
-};
+PL_NEW_PYTHON_API(plAnimationI)

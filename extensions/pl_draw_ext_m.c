@@ -20,11 +20,6 @@ Index of this file:
 // [SECTION] enums
 //-----------------------------------------------------------------------------
 
-typedef struct _pyplDrawI
-{
-    PyObject_HEAD
-} pyplDrawI;
-
 plPythonIntConstantPair gatDrawIntPairs[] = {
 
     // plDrawFlags
@@ -93,6 +88,106 @@ pl__get_draw_line_options(PyObject* ptPythonOptions, plDrawLineOptions* ptOption
     Py_DECREF(ptPythonOptionThickness);
 }
 
+static inline void
+pl__get_sphere_options(PyObject* ptPythonOptions, plSphere* ptOut)
+{
+    {
+        PyObject* ptPythonObject = PyObject_GetAttrString(ptPythonOptions, "fRadius");
+        ptOut->fRadius = (float)PyFloat_AsDouble(ptPythonObject);
+        Py_DECREF(ptPythonObject);
+    }
+    {
+        PyObject* ptPythonObject = PyObject_GetAttrString(ptPythonOptions, "tCenter");
+        pl_vec3_from_py(ptPythonObject, &ptOut->tCenter);
+        Py_DECREF(ptPythonObject);
+    }
+}
+
+static inline void
+pl__get_capsule_options(PyObject* ptPythonOptions, plCapsule* ptOut)
+{
+    {
+        PyObject* ptPythonObject = PyObject_GetAttrString(ptPythonOptions, "fRadius");
+        ptOut->fRadius = (float)PyFloat_AsDouble(ptPythonObject);
+        Py_DECREF(ptPythonObject);
+    }
+    {
+        PyObject* ptPythonObject = PyObject_GetAttrString(ptPythonOptions, "tBasePos");
+        pl_vec3_from_py(ptPythonObject, &ptOut->tBasePos);
+        Py_DECREF(ptPythonObject);
+    }
+    {
+        PyObject* ptPythonObject = PyObject_GetAttrString(ptPythonOptions, "tTipPos");
+        pl_vec3_from_py(ptPythonObject, &ptOut->tTipPos);
+        Py_DECREF(ptPythonObject);
+    }
+}
+
+static inline void
+pl__get_cone_options(PyObject* ptPythonOptions, plCone* ptOut)
+{
+    {
+        PyObject* ptPythonObject = PyObject_GetAttrString(ptPythonOptions, "fRadius");
+        ptOut->fRadius = (float)PyFloat_AsDouble(ptPythonObject);
+        Py_DECREF(ptPythonObject);
+    }
+    {
+        PyObject* ptPythonObject = PyObject_GetAttrString(ptPythonOptions, "tBasePos");
+        pl_vec3_from_py(ptPythonObject, &ptOut->tBasePos);
+        Py_DECREF(ptPythonObject);
+    }
+    {
+        PyObject* ptPythonObject = PyObject_GetAttrString(ptPythonOptions, "tTipPos");
+        pl_vec3_from_py(ptPythonObject, &ptOut->tTipPos);
+        Py_DECREF(ptPythonObject);
+    }
+}
+
+static inline void
+pl__get_cylinder_options(PyObject* ptPythonOptions, plCylinder* ptOut)
+{
+    {
+        PyObject* ptPythonObject = PyObject_GetAttrString(ptPythonOptions, "fRadius");
+        ptOut->fRadius = (float)PyFloat_AsDouble(ptPythonObject);
+        Py_DECREF(ptPythonObject);
+    }
+    {
+        PyObject* ptPythonObject = PyObject_GetAttrString(ptPythonOptions, "tBasePos");
+        pl_vec3_from_py(ptPythonObject, &ptOut->tBasePos);
+        Py_DECREF(ptPythonObject);
+    }
+    {
+        PyObject* ptPythonObject = PyObject_GetAttrString(ptPythonOptions, "tTipPos");
+        pl_vec3_from_py(ptPythonObject, &ptOut->tTipPos);
+        Py_DECREF(ptPythonObject);
+    }
+}
+
+static inline void
+pl__get_frustum_options(PyObject* ptPythonOptions, plDrawFrustumDesc* ptOut)
+{
+    {
+        PyObject* ptPythonObject = PyObject_GetAttrString(ptPythonOptions, "fYFov");
+        ptOut->fYFov = (float)PyFloat_AsDouble(ptPythonObject);
+        Py_DECREF(ptPythonObject);
+    }
+    {
+        PyObject* ptPythonObject = PyObject_GetAttrString(ptPythonOptions, "fAspectRatio");
+        ptOut->fAspectRatio = (float)PyFloat_AsDouble(ptPythonObject);
+        Py_DECREF(ptPythonObject);
+    }
+    {
+        PyObject* ptPythonObject = PyObject_GetAttrString(ptPythonOptions, "fNearZ");
+        ptOut->fNearZ = (float)PyFloat_AsDouble(ptPythonObject);
+        Py_DECREF(ptPythonObject);
+    }
+    {
+        PyObject* ptPythonObject = PyObject_GetAttrString(ptPythonOptions, "fFarZ");
+        ptOut->fFarZ = (float)PyFloat_AsDouble(ptPythonObject);
+        Py_DECREF(ptPythonObject);
+    }
+}
+
 //-----------------------------------------------------------------------------
 // [SECTION] implementations
 //-----------------------------------------------------------------------------
@@ -134,7 +229,6 @@ draw_submit_2d_drawlist(PyObject* self, PyObject* args)
     float fWidth = 0.0f;
     float fHeight = 0.0f;
     int iSampleCount = 1;
-    PyObject* ptPythonFontAtlas = NULL;
 
     static const char* apcKeywords[] = {
         "drawlist",
@@ -152,6 +246,39 @@ draw_submit_2d_drawlist(PyObject* self, PyObject* args)
     plDrawList2D* ptDrawlist = PyCapsule_GetPointer(ptPythonDrawlist, "plDrawList2D");
     plRenderEncoder* ptEncoder = PyCapsule_GetPointer(ptPythonEncoder, "plRenderEncoder");
     gptDraw->submit_2d_drawlist(ptDrawlist, ptEncoder, fWidth, fHeight, (uint32_t)iSampleCount);
+    Py_RETURN_NONE;
+}
+
+PyObject*
+draw_submit_3d_drawlist(PyObject* self, PyObject* args)
+{
+    PyObject* ptPythonDrawlist = NULL;
+    PyObject* ptPythonEncoder = NULL;
+    float fWidth = 0.0f;
+    float fHeight = 0.0f;
+    PyObject* ptPythonMVP = NULL;
+    int iFlags = 0;
+    int iSampleCount = 1;
+
+    static const char* apcKeywords[] = {
+        "drawlist",
+        "encoder",
+        "width",
+        "height",
+        "mvp",
+        "flags",
+        "sampleCount",
+        NULL,
+    };
+
+	if (!pl_parse("OOffOii", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+        &ptPythonDrawlist, &ptPythonEncoder, &fWidth, &fHeight, &ptPythonMVP, &iFlags, &iSampleCount))
+		return NULL;
+
+    plDrawList3D* ptDrawlist = PyCapsule_GetPointer(ptPythonDrawlist, "plDrawList3D");
+    plRenderEncoder* ptEncoder = PyCapsule_GetPointer(ptPythonEncoder, "plRenderEncoder");
+    plPyMat4* m = (plPyMat4*)ptPythonMVP;
+    gptDraw->submit_3d_drawlist(ptDrawlist, ptEncoder, fWidth, fHeight, &m->m, iFlags, (uint32_t)iSampleCount);
     Py_RETURN_NONE;
 }
 
@@ -349,6 +476,20 @@ draw_return_2d_drawlist(PyObject* self, PyObject* arg)
 }
 
 PyObject*
+draw_request_3d_drawlist(PyObject* self)
+{
+    return PyCapsule_New(gptDraw->request_3d_drawlist(), "plDrawList3D", NULL);
+}
+
+PyObject*
+draw_return_3d_drawlist(PyObject* self, PyObject* arg)
+{
+    plDrawList3D* ptDrawList = PyCapsule_GetPointer(arg, "plDrawList3D");
+    gptDraw->return_3d_drawlist(ptDrawList);
+    Py_RETURN_NONE;
+}
+
+PyObject*
 draw_request_2d_layer(PyObject* self, PyObject* arg)
 {
     plDrawList2D* ptDrawList = PyCapsule_GetPointer(arg, "plDrawList2D");
@@ -398,8 +539,6 @@ draw_add_text(PyObject* self, PyObject* args)
     pl__get_draw_text_options(ptPythonOptions, &tOptions);
 
     plVec2 tP0 = {0};
-    plVec2 tP1 = {0};
-    plVec2 tP2 = {0};
 
     pl_vec2_from_py(ptPythonP0, &tP0);
 
@@ -1193,7 +1332,1030 @@ draw_add_polygon(PyObject* self, PyObject* args)
     Py_RETURN_NONE;
 }
 
-static PyMethodDef gatplDrawICommands[] =
+PyObject*
+draw_add_3d_transform(PyObject* self, PyObject* args)
+{
+    PyObject* ptPythonDrawlist = NULL;
+    PyObject* ptPythonMVP = NULL;
+    float fLength = 0.0f;
+    PyObject* ptPythonOptions = NULL;
+
+    static const char* apcKeywords[] = {
+        "drawlist",
+        "transform",
+        "length",
+        "options",
+        NULL,
+    };
+
+	if (!pl_parse("OOfO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+        &ptPythonDrawlist, &ptPythonMVP, &fLength, &ptPythonOptions))
+		return NULL;
+
+    plDrawList3D* ptDrawlist = PyCapsule_GetPointer(ptPythonDrawlist, "plDrawList3D");
+    plPyMat4* m = (plPyMat4*)ptPythonMVP;
+
+    plDrawLineOptions tOptions = {0};
+    pl__get_draw_line_options(ptPythonOptions, &tOptions);
+
+
+    gptDraw->add_3d_transform(ptDrawlist, &m->m, fLength, tOptions);
+    Py_RETURN_NONE;
+}
+
+PyObject*
+draw_add_3d_line(PyObject* self, PyObject* args)
+{
+ 
+    PyObject* ptPythonDrawlist = NULL;
+    PyObject* ptPythonP0 = NULL;
+    PyObject* ptPythonP1 = NULL;
+    PyObject* ptPythonOptions = NULL;
+
+    static const char* apcKeywords[] = {
+        "layer",
+        "p0",
+        "p1",
+        "options",
+        NULL,
+    };
+
+	if (!pl_parse("OOOO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+        &ptPythonDrawlist, &ptPythonP0, &ptPythonP1, &ptPythonOptions))
+		return NULL;
+
+    plDrawList3D* ptDrawlist = PyCapsule_GetPointer(ptPythonDrawlist, "plDrawList3D");
+
+    plDrawLineOptions tOptions = {0};
+    pl__get_draw_line_options(ptPythonOptions, &tOptions);
+
+    plVec3 tP0 = {0};
+    plVec3 tP1 = {0};
+
+    pl_vec3_from_py(ptPythonP0, &tP0);
+    pl_vec3_from_py(ptPythonP1, &tP1);
+
+    gptDraw->add_3d_line(
+        ptDrawlist,
+        tP0,
+        tP1,
+        tOptions);
+
+    Py_RETURN_NONE;
+}
+
+PyObject*
+draw_add_3d_aabb(PyObject* self, PyObject* args)
+{
+ 
+    PyObject* ptPythonDrawlist = NULL;
+    PyObject* ptPythonP0 = NULL;
+    PyObject* ptPythonP1 = NULL;
+    PyObject* ptPythonOptions = NULL;
+
+    static const char* apcKeywords[] = {
+        "layer",
+        "minP",
+        "maxP",
+        "options",
+        NULL,
+    };
+
+	if (!pl_parse("OOOO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+        &ptPythonDrawlist, &ptPythonP0, &ptPythonP1, &ptPythonOptions))
+		return NULL;
+
+    plDrawList3D* ptDrawlist = PyCapsule_GetPointer(ptPythonDrawlist, "plDrawList3D");
+
+    plDrawLineOptions tOptions = {0};
+    pl__get_draw_line_options(ptPythonOptions, &tOptions);
+
+    plVec3 tP0 = {0};
+    plVec3 tP1 = {0};
+
+    pl_vec3_from_py(ptPythonP0, &tP0);
+    pl_vec3_from_py(ptPythonP1, &tP1);
+
+    gptDraw->add_3d_aabb(
+        ptDrawlist,
+        tP0,
+        tP1,
+        tOptions);
+
+    Py_RETURN_NONE;
+}
+
+PyObject*
+draw_add_3d_bezier_quad(PyObject* self, PyObject* args)
+{
+ 
+    PyObject* ptPythonDrawlist = NULL;
+    PyObject* ptPythonP0 = NULL;
+    PyObject* ptPythonP1 = NULL;
+    PyObject* ptPythonP2 = NULL;
+    PyObject* ptPythonOptions = NULL;
+    uint32_t uSegments = 12;
+
+    static const char* apcKeywords[] = {
+        "layer",
+        "p0",
+        "p1",
+        "p2",
+        "segments",
+        "options",
+        NULL,
+    };
+
+	if (!pl_parse("OOOOIO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+        &ptPythonDrawlist, &ptPythonP0, &ptPythonP1, &ptPythonP2, &uSegments, &ptPythonOptions))
+		return NULL;
+
+    plDrawList3D* ptDrawlist = PyCapsule_GetPointer(ptPythonDrawlist, "plDrawList3D");
+
+    plDrawLineOptions tOptions = {0};
+    pl__get_draw_line_options(ptPythonOptions, &tOptions);
+
+    plVec3 tP0 = {0};
+    plVec3 tP1 = {0};
+    plVec3 tP2 = {0};
+
+    pl_vec3_from_py(ptPythonP0, &tP0);
+    pl_vec3_from_py(ptPythonP1, &tP1);
+    pl_vec3_from_py(ptPythonP2, &tP2);
+
+    gptDraw->add_3d_bezier_quad(
+        ptDrawlist,
+        tP0,
+        tP1,
+        tP2,
+        uSegments,
+        tOptions);
+
+    Py_RETURN_NONE;
+}
+
+PyObject*
+draw_add_3d_bezier_cubic(PyObject* self, PyObject* args)
+{
+ 
+    PyObject* ptPythonDrawlist = NULL;
+    PyObject* ptPythonP0 = NULL;
+    PyObject* ptPythonP1 = NULL;
+    PyObject* ptPythonP2 = NULL;
+    PyObject* ptPythonP3 = NULL;
+    PyObject* ptPythonOptions = NULL;
+    uint32_t uSegments = 12;
+
+    static const char* apcKeywords[] = {
+        "layer",
+        "p0",
+        "p1",
+        "p2",
+        "p3",
+        "segments",
+        "options",
+        NULL,
+    };
+
+	if (!pl_parse("OOOOOIO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+        &ptPythonDrawlist, &ptPythonP0, &ptPythonP1, &ptPythonP2, &ptPythonP3, &uSegments, &ptPythonOptions))
+		return NULL;
+
+    plDrawList3D* ptDrawlist = PyCapsule_GetPointer(ptPythonDrawlist, "plDrawList3D");
+
+    plDrawLineOptions tOptions = {0};
+    pl__get_draw_line_options(ptPythonOptions, &tOptions);
+
+    plVec3 tP0 = {0};
+    plVec3 tP1 = {0};
+    plVec3 tP2 = {0};
+    plVec3 tP3 = {0};
+
+    pl_vec3_from_py(ptPythonP0, &tP0);
+    pl_vec3_from_py(ptPythonP1, &tP1);
+    pl_vec3_from_py(ptPythonP2, &tP2);
+    pl_vec3_from_py(ptPythonP3, &tP3);
+
+    gptDraw->add_3d_bezier_cubic(
+        ptDrawlist,
+        tP0,
+        tP1,
+        tP2,
+        tP3,
+        uSegments,
+        tOptions);
+
+    Py_RETURN_NONE;
+}
+
+PyObject*
+draw_add_3d_cross(PyObject* self, PyObject* args)
+{
+ 
+    PyObject* ptPythonDrawlist = NULL;
+    PyObject* ptPythonP0 = NULL;
+    float fLength = 1.0f;
+    PyObject* ptPythonOptions = NULL;
+
+    static const char* apcKeywords[] = {
+        "layer",
+        "p0",
+        "length",
+        "options",
+        NULL,
+    };
+
+	if (!pl_parse("OOfO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+        &ptPythonDrawlist, &ptPythonP0, &fLength, &ptPythonOptions))
+		return NULL;
+
+    plDrawList3D* ptDrawlist = PyCapsule_GetPointer(ptPythonDrawlist, "plDrawList3D");
+
+    plDrawLineOptions tOptions = {0};
+    pl__get_draw_line_options(ptPythonOptions, &tOptions);
+
+    plVec3 tP0 = {0};
+
+    pl_vec3_from_py(ptPythonP0, &tP0);
+
+    gptDraw->add_3d_cross(
+        ptDrawlist,
+        tP0,
+        fLength,
+        tOptions);
+
+    Py_RETURN_NONE;
+}
+
+PyObject*
+draw_add_3d_frustum(PyObject* self, PyObject* args)
+{
+    PyObject* ptPythonDrawlist = NULL;
+    PyObject* ptPythonMVP = NULL;
+    PyObject* ptPythonDesc = NULL;
+    PyObject* ptPythonOptions = NULL;
+
+    static const char* apcKeywords[] = {
+        "drawlist",
+        "mvp",
+        "frustum",
+        "options",
+        NULL,
+    };
+
+	if (!pl_parse("OOOO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+        &ptPythonDrawlist, &ptPythonMVP, &ptPythonDesc, &ptPythonOptions))
+		return NULL;
+
+    plDrawList3D* ptDrawlist = PyCapsule_GetPointer(ptPythonDrawlist, "plDrawList3D");
+    plPyMat4* m = (plPyMat4*)ptPythonMVP;
+
+    plDrawLineOptions tOptions = {0};
+    pl__get_draw_line_options(ptPythonOptions, &tOptions);
+
+    plDrawFrustumDesc tDrawFrustumDesc = {0};
+    pl__get_frustum_options(ptPythonDesc, &tDrawFrustumDesc);
+
+    gptDraw->add_3d_frustum(ptDrawlist, &m->m, tDrawFrustumDesc, tOptions);
+    Py_RETURN_NONE;
+}
+
+PyObject*
+draw_add_3d_sphere(PyObject* self, PyObject* args)
+{
+    PyObject* ptPythonDrawlist = NULL;
+    PyObject* ptPythonDesc = NULL;
+    uint32_t uLatBands = 16;
+    uint32_t uLongBands = 16;
+    PyObject* ptPythonOptions = NULL;
+
+    static const char* apcKeywords[] = {
+        "drawlist",
+        "sphere",
+        "latBands",
+        "longBands",
+        "options",
+        NULL,
+    };
+
+	if (!pl_parse("OOIIO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+        &ptPythonDrawlist, &ptPythonDesc, &uLatBands, &uLongBands, &ptPythonOptions))
+		return NULL;
+
+    plDrawList3D* ptDrawlist = PyCapsule_GetPointer(ptPythonDrawlist, "plDrawList3D");
+
+    plDrawLineOptions tOptions = {0};
+    pl__get_draw_line_options(ptPythonOptions, &tOptions);
+
+    plSphere tDesc = {0};
+    pl__get_sphere_options(ptPythonDesc, &tDesc);
+
+    gptDraw->add_3d_sphere(ptDrawlist, tDesc, uLatBands, uLongBands, tOptions);
+    Py_RETURN_NONE;
+}
+
+PyObject*
+draw_add_3d_capsule(PyObject* self, PyObject* args)
+{
+    PyObject* ptPythonDrawlist = NULL;
+    PyObject* ptPythonDesc = NULL;
+    uint32_t uLatBands = 16;
+    uint32_t uLongBands = 16;
+    PyObject* ptPythonOptions = NULL;
+
+    static const char* apcKeywords[] = {
+        "drawlist",
+        "capsule",
+        "latBands",
+        "longBands",
+        "options",
+        NULL,
+    };
+
+	if (!pl_parse("OOIIO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+        &ptPythonDrawlist, &ptPythonDesc, &uLatBands, &uLongBands, &ptPythonOptions))
+		return NULL;
+
+    plDrawList3D* ptDrawlist = PyCapsule_GetPointer(ptPythonDrawlist, "plDrawList3D");
+
+    plDrawLineOptions tOptions = {0};
+    pl__get_draw_line_options(ptPythonOptions, &tOptions);
+
+    plCapsule tDesc = {0};
+    pl__get_capsule_options(ptPythonDesc, &tDesc);
+
+    gptDraw->add_3d_capsule(ptDrawlist, tDesc, uLatBands, uLongBands, tOptions);
+    Py_RETURN_NONE;
+}
+
+PyObject*
+draw_add_3d_cylinder(PyObject* self, PyObject* args)
+{
+    PyObject* ptPythonDrawlist = NULL;
+    PyObject* ptPythonDesc = NULL;
+    uint32_t uSegments = 16;
+    PyObject* ptPythonOptions = NULL;
+
+    static const char* apcKeywords[] = {
+        "drawlist",
+        "capsule",
+        "segments",
+        "options",
+        NULL,
+    };
+
+	if (!pl_parse("OOIO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+        &ptPythonDrawlist, &ptPythonDesc, &uSegments, &ptPythonOptions))
+		return NULL;
+
+    plDrawList3D* ptDrawlist = PyCapsule_GetPointer(ptPythonDrawlist, "plDrawList3D");
+
+    plDrawLineOptions tOptions = {0};
+    pl__get_draw_line_options(ptPythonOptions, &tOptions);
+
+    plCylinder tDesc = {0};
+    pl__get_cylinder_options(ptPythonDesc, &tDesc);
+
+    gptDraw->add_3d_cylinder(ptDrawlist, tDesc, uSegments, tOptions);
+    Py_RETURN_NONE;
+}
+
+PyObject*
+draw_add_3d_cone(PyObject* self, PyObject* args)
+{
+    PyObject* ptPythonDrawlist = NULL;
+    PyObject* ptPythonDesc = NULL;
+    uint32_t uSegments = 16;
+    PyObject* ptPythonOptions = NULL;
+
+    static const char* apcKeywords[] = {
+        "drawlist",
+        "cone",
+        "segments",
+        "options",
+        NULL,
+    };
+
+	if (!pl_parse("OOIO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+        &ptPythonDrawlist, &ptPythonDesc, &uSegments, &ptPythonOptions))
+		return NULL;
+
+    plDrawList3D* ptDrawlist = PyCapsule_GetPointer(ptPythonDrawlist, "plDrawList3D");
+
+    plDrawLineOptions tOptions = {0};
+    pl__get_draw_line_options(ptPythonOptions, &tOptions);
+
+    plCone tDesc = {0};
+    pl__get_cone_options(ptPythonDesc, &tDesc);
+
+    gptDraw->add_3d_cone(ptDrawlist, tDesc, uSegments, tOptions);
+    Py_RETURN_NONE;
+}
+
+PyObject*
+draw_add_3d_centered_box(PyObject* self, PyObject* args)
+{
+ 
+    PyObject* ptPythonDrawlist = NULL;
+    PyObject* ptPythonCenter = NULL;
+    float fWidth = 0.0f;
+    float fHeight = 0.0f;
+    float fDepth = 0.0f;
+    PyObject* ptPythonOptions = NULL;
+
+    static const char* apcKeywords[] = {
+        "layer",
+        "center",
+        "width",
+        "height",
+        "depth",
+        "options",
+        NULL,
+    };
+
+	if (!pl_parse("OOfffO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+        &ptPythonDrawlist, &ptPythonCenter, &fWidth, &fHeight, &fDepth, &ptPythonOptions))
+		return NULL;
+
+    plDrawList3D* ptDrawlist = PyCapsule_GetPointer(ptPythonDrawlist, "plDrawList3D");
+
+    plDrawLineOptions tOptions = {0};
+    pl__get_draw_line_options(ptPythonOptions, &tOptions);
+
+    plVec3 tCenter = {0};
+    pl_vec3_from_py(ptPythonCenter, &tCenter);
+
+    gptDraw->add_3d_centered_box(
+        ptDrawlist,
+        tCenter,
+        fWidth,
+        fHeight,
+        fDepth,
+        tOptions);
+
+    Py_RETURN_NONE;
+}
+
+PyObject*
+draw_add_3d_circle_xz(PyObject* self, PyObject* args)
+{
+ 
+    PyObject* ptPythonDrawlist = NULL;
+    PyObject* ptPythonCenter = NULL;
+    float fRadius = 0.0f;
+    uint32_t uSegments = 16;
+    PyObject* ptPythonOptions = NULL;
+
+    static const char* apcKeywords[] = {
+        "layer",
+        "center",
+        "radius",
+        "segments",
+        "options",
+        NULL,
+    };
+
+	if (!pl_parse("OOfIO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+        &ptPythonDrawlist, &ptPythonCenter, &fRadius, &uSegments, &ptPythonOptions))
+		return NULL;
+
+    plDrawList3D* ptDrawlist = PyCapsule_GetPointer(ptPythonDrawlist, "plDrawList3D");
+
+    plDrawLineOptions tOptions = {0};
+    pl__get_draw_line_options(ptPythonOptions, &tOptions);
+
+    plVec3 tCenter = {0};
+    pl_vec3_from_py(ptPythonCenter, &tCenter);
+
+    gptDraw->add_3d_circle_xz(
+        ptDrawlist,
+        tCenter,
+        fRadius,
+        uSegments,
+        tOptions);
+
+    Py_RETURN_NONE;
+}
+
+PyObject*
+draw_add_3d_circle_xz_filled(PyObject* self, PyObject* args)
+{
+ 
+    PyObject* ptPythonDrawlist = NULL;
+    PyObject* ptPythonCenter = NULL;
+    float fRadius = 0.0f;
+    uint32_t uSegments = 16;
+    PyObject* ptPythonOptions = NULL;
+
+    static const char* apcKeywords[] = {
+        "layer",
+        "center",
+        "radius",
+        "segments",
+        "options",
+        NULL,
+    };
+
+	if (!pl_parse("OOfIO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+        &ptPythonDrawlist, &ptPythonCenter, &fRadius, &uSegments, &ptPythonOptions))
+		return NULL;
+
+    plDrawList3D* ptDrawlist = PyCapsule_GetPointer(ptPythonDrawlist, "plDrawList3D");
+
+    plDrawSolidOptions tOptions = {0};
+    pl__get_draw_solid_options(ptPythonOptions, &tOptions);
+
+    plVec3 tCenter = {0};
+    pl_vec3_from_py(ptPythonCenter, &tCenter);
+
+    gptDraw->add_3d_circle_xz_filled(
+        ptDrawlist,
+        tCenter,
+        fRadius,
+        uSegments,
+        tOptions);
+
+    Py_RETURN_NONE;
+}
+
+PyObject*
+draw_add_3d_cylinder_filled(PyObject* self, PyObject* args)
+{
+    PyObject* ptPythonDrawlist = NULL;
+    PyObject* ptPythonDesc = NULL;
+    uint32_t uSegments = 16;
+    PyObject* ptPythonOptions = NULL;
+
+    static const char* apcKeywords[] = {
+        "drawlist",
+        "capsule",
+        "segments",
+        "options",
+        NULL,
+    };
+
+	if (!pl_parse("OOIO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+        &ptPythonDrawlist, &ptPythonDesc, &uSegments, &ptPythonOptions))
+		return NULL;
+
+    plDrawList3D* ptDrawlist = PyCapsule_GetPointer(ptPythonDrawlist, "plDrawList3D");
+
+    plDrawSolidOptions tOptions = {0};
+    pl__get_draw_solid_options(ptPythonOptions, &tOptions);
+
+    plCylinder tDesc = {0};
+    pl__get_cylinder_options(ptPythonDesc, &tDesc);
+
+    gptDraw->add_3d_cylinder_filled(ptDrawlist, tDesc, uSegments, tOptions);
+    Py_RETURN_NONE;
+}
+
+PyObject*
+draw_add_3d_cone_filled(PyObject* self, PyObject* args)
+{
+    PyObject* ptPythonDrawlist = NULL;
+    PyObject* ptPythonDesc = NULL;
+    uint32_t uSegments = 16;
+    PyObject* ptPythonOptions = NULL;
+
+    static const char* apcKeywords[] = {
+        "drawlist",
+        "cone",
+        "segments",
+        "options",
+        NULL,
+    };
+
+	if (!pl_parse("OOIO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+        &ptPythonDrawlist, &ptPythonDesc, &uSegments, &ptPythonOptions))
+		return NULL;
+
+    plDrawList3D* ptDrawlist = PyCapsule_GetPointer(ptPythonDrawlist, "plDrawList3D");
+
+    plDrawSolidOptions tOptions = {0};
+    pl__get_draw_solid_options(ptPythonOptions, &tOptions);
+
+    plCone tDesc = {0};
+    pl__get_cone_options(ptPythonDesc, &tDesc);
+
+    gptDraw->add_3d_cone_filled(ptDrawlist, tDesc, uSegments, tOptions);
+    Py_RETURN_NONE;
+}
+
+PyObject*
+draw_add_3d_centered_box_filled(PyObject* self, PyObject* args)
+{
+ 
+    PyObject* ptPythonDrawlist = NULL;
+    PyObject* ptPythonCenter = NULL;
+    float fWidth = 0.0f;
+    float fHeight = 0.0f;
+    float fDepth = 0.0f;
+    PyObject* ptPythonOptions = NULL;
+
+    static const char* apcKeywords[] = {
+        "layer",
+        "center",
+        "width",
+        "height",
+        "depth",
+        "options",
+        NULL,
+    };
+
+	if (!pl_parse("OOfffO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+        &ptPythonDrawlist, &ptPythonCenter, &fWidth, &fHeight, &fDepth, &ptPythonOptions))
+		return NULL;
+
+    plDrawList3D* ptDrawlist = PyCapsule_GetPointer(ptPythonDrawlist, "plDrawList3D");
+
+    plDrawSolidOptions tOptions = {0};
+    pl__get_draw_solid_options(ptPythonOptions, &tOptions);
+
+    plVec3 tCenter = {0};
+    pl_vec3_from_py(ptPythonCenter, &tCenter);
+
+    gptDraw->add_3d_centered_box_filled(
+        ptDrawlist,
+        tCenter,
+        fWidth,
+        fHeight,
+        fDepth,
+        tOptions);
+
+    Py_RETURN_NONE;
+}
+
+PyObject*
+draw_add_3d_sphere_filled(PyObject* self, PyObject* args)
+{
+    PyObject* ptPythonDrawlist = NULL;
+    PyObject* ptPythonDesc = NULL;
+    uint32_t uLatBands = 16;
+    uint32_t uLongBands = 16;
+    PyObject* ptPythonOptions = NULL;
+
+    static const char* apcKeywords[] = {
+        "drawlist",
+        "sphere",
+        "latBands",
+        "longBands",
+        "options",
+        NULL,
+    };
+
+	if (!pl_parse("OOIIO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+        &ptPythonDrawlist, &ptPythonDesc, &uLatBands, &uLongBands, &ptPythonOptions))
+		return NULL;
+
+    plDrawList3D* ptDrawlist = PyCapsule_GetPointer(ptPythonDrawlist, "plDrawList3D");
+
+    plDrawSolidOptions tOptions = {0};
+    pl__get_draw_solid_options(ptPythonOptions, &tOptions);
+
+    plSphere tDesc = {0};
+    pl__get_sphere_options(ptPythonDesc, &tDesc);
+
+    gptDraw->add_3d_sphere_filled(ptDrawlist, tDesc, uLatBands, uLongBands, tOptions);
+    Py_RETURN_NONE;
+}
+
+PyObject*
+draw_add_3d_triangle_filled(PyObject* self, PyObject* args)
+{
+ 
+    PyObject* ptPythonDrawlist = NULL;
+    PyObject* ptPythonP0 = NULL;
+    PyObject* ptPythonP1 = NULL;
+    PyObject* ptPythonP2 = NULL;
+    PyObject* ptPythonOptions = NULL;
+
+    static const char* apcKeywords[] = {
+        "layer",
+        "p0",
+        "p1",
+        "p2",
+        "options",
+        NULL,
+    };
+
+	if (!pl_parse("OOOOO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+        &ptPythonDrawlist, &ptPythonP0, &ptPythonP1, &ptPythonP2, &ptPythonOptions))
+		return NULL;
+
+    plDrawList3D* ptDrawlist = PyCapsule_GetPointer(ptPythonDrawlist, "plDrawList3D");
+
+    plDrawSolidOptions tOptions = {0};
+    pl__get_draw_solid_options(ptPythonOptions, &tOptions);
+
+    plVec3 tP0 = {0};
+    plVec3 tP1 = {0};
+    plVec3 tP2 = {0};
+
+    pl_vec3_from_py(ptPythonP0, &tP0);
+    pl_vec3_from_py(ptPythonP1, &tP1);
+    pl_vec3_from_py(ptPythonP2, &tP2);
+
+    gptDraw->add_3d_triangle_filled(
+        ptDrawlist,
+        tP0,
+        tP1,
+        tP2,
+        tOptions);
+
+    Py_RETURN_NONE;
+}
+
+PyObject*
+draw_add_3d_band_xz_filled(PyObject* self, PyObject* args)
+{
+ 
+    PyObject* ptPythonDrawlist = NULL;
+    PyObject* ptPythonCenter = NULL;
+    float fInnerRadius = 0.0f;
+    float fOuterRadius = 0.0f;
+    uint32_t uSegments = 16;
+    PyObject* ptPythonOptions = NULL;
+
+    static const char* apcKeywords[] = {
+        "layer",
+        "center",
+        "innerRadius",
+        "outerRadius",
+        "uSegments",
+        "options",
+        NULL,
+    };
+
+	if (!pl_parse("OOffIO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+        &ptPythonDrawlist, &ptPythonCenter, &fInnerRadius, &fOuterRadius, &uSegments, &ptPythonOptions))
+		return NULL;
+
+    plDrawList3D* ptDrawlist = PyCapsule_GetPointer(ptPythonDrawlist, "plDrawList3D");
+
+    plDrawSolidOptions tOptions = {0};
+    pl__get_draw_solid_options(ptPythonOptions, &tOptions);
+
+    plVec3 tCenter = {0};
+    pl_vec3_from_py(ptPythonCenter, &tCenter);
+
+    gptDraw->add_3d_band_xz_filled(
+        ptDrawlist,
+        tCenter,
+        fInnerRadius,
+        fOuterRadius,
+        uSegments,
+        tOptions);
+
+    Py_RETURN_NONE;
+}
+
+PyObject*
+draw_add_3d_band_xy_filled(PyObject* self, PyObject* args)
+{
+ 
+    PyObject* ptPythonDrawlist = NULL;
+    PyObject* ptPythonCenter = NULL;
+    float fInnerRadius = 0.0f;
+    float fOuterRadius = 0.0f;
+    uint32_t uSegments = 16;
+    PyObject* ptPythonOptions = NULL;
+
+    static const char* apcKeywords[] = {
+        "layer",
+        "center",
+        "innerRadius",
+        "outerRadius",
+        "uSegments",
+        "options",
+        NULL,
+    };
+
+	if (!pl_parse("OOffIO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+        &ptPythonDrawlist, &ptPythonCenter, &fInnerRadius, &fOuterRadius, &uSegments, &ptPythonOptions))
+		return NULL;
+
+    plDrawList3D* ptDrawlist = PyCapsule_GetPointer(ptPythonDrawlist, "plDrawList3D");
+
+    plDrawSolidOptions tOptions = {0};
+    pl__get_draw_solid_options(ptPythonOptions, &tOptions);
+
+    plVec3 tCenter = {0};
+    pl_vec3_from_py(ptPythonCenter, &tCenter);
+
+    gptDraw->add_3d_band_xy_filled(
+        ptDrawlist,
+        tCenter,
+        fInnerRadius,
+        fOuterRadius,
+        uSegments,
+        tOptions);
+
+    Py_RETURN_NONE;
+}
+
+PyObject*
+draw_add_3d_band_yz_filled(PyObject* self, PyObject* args)
+{
+ 
+    PyObject* ptPythonDrawlist = NULL;
+    PyObject* ptPythonCenter = NULL;
+    float fInnerRadius = 0.0f;
+    float fOuterRadius = 0.0f;
+    uint32_t uSegments = 16;
+    PyObject* ptPythonOptions = NULL;
+
+    static const char* apcKeywords[] = {
+        "layer",
+        "center",
+        "innerRadius",
+        "outerRadius",
+        "uSegments",
+        "options",
+        NULL,
+    };
+
+	if (!pl_parse("OOffIO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+        &ptPythonDrawlist, &ptPythonCenter, &fInnerRadius, &fOuterRadius, &uSegments, &ptPythonOptions))
+		return NULL;
+
+    plDrawList3D* ptDrawlist = PyCapsule_GetPointer(ptPythonDrawlist, "plDrawList3D");
+
+    plDrawSolidOptions tOptions = {0};
+    pl__get_draw_solid_options(ptPythonOptions, &tOptions);
+
+    plVec3 tCenter = {0};
+    pl_vec3_from_py(ptPythonCenter, &tCenter);
+
+    gptDraw->add_3d_band_yz_filled(
+        ptDrawlist,
+        tCenter,
+        fInnerRadius,
+        fOuterRadius,
+        uSegments,
+        tOptions);
+
+    Py_RETURN_NONE;
+}
+
+PyObject*
+draw_add_3d_plane_xz_filled(PyObject* self, PyObject* args)
+{
+ 
+    PyObject* ptPythonDrawlist = NULL;
+    PyObject* ptPythonCenter = NULL;
+    float fWidth = 0.0f;
+    float fHeight = 0.0f;
+    PyObject* ptPythonOptions = NULL;
+
+    static const char* apcKeywords[] = {
+        "layer",
+        "center",
+        "width",
+        "height",
+        "options",
+        NULL,
+    };
+
+	if (!pl_parse("OOffO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+        &ptPythonDrawlist, &ptPythonCenter, &fWidth, &fHeight, &ptPythonOptions))
+		return NULL;
+
+    plDrawList3D* ptDrawlist = PyCapsule_GetPointer(ptPythonDrawlist, "plDrawList3D");
+
+    plDrawSolidOptions tOptions = {0};
+    pl__get_draw_solid_options(ptPythonOptions, &tOptions);
+
+    plVec3 tCenter = {0};
+    pl_vec3_from_py(ptPythonCenter, &tCenter);
+
+    gptDraw->add_3d_plane_xz_filled(
+        ptDrawlist,
+        tCenter,
+        fWidth,
+        fHeight,
+        tOptions);
+
+    Py_RETURN_NONE;
+}
+
+PyObject*
+draw_add_3d_plane_xy_filled(PyObject* self, PyObject* args)
+{
+ 
+    PyObject* ptPythonDrawlist = NULL;
+    PyObject* ptPythonCenter = NULL;
+    float fWidth = 0.0f;
+    float fHeight = 0.0f;
+    PyObject* ptPythonOptions = NULL;
+
+    static const char* apcKeywords[] = {
+        "layer",
+        "center",
+        "width",
+        "height",
+        "options",
+        NULL,
+    };
+
+	if (!pl_parse("OOffO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+        &ptPythonDrawlist, &ptPythonCenter, &fWidth, &fHeight, &ptPythonOptions))
+		return NULL;
+
+    plDrawList3D* ptDrawlist = PyCapsule_GetPointer(ptPythonDrawlist, "plDrawList3D");
+
+    plDrawSolidOptions tOptions = {0};
+    pl__get_draw_solid_options(ptPythonOptions, &tOptions);
+
+    plVec3 tCenter = {0};
+    pl_vec3_from_py(ptPythonCenter, &tCenter);
+
+    gptDraw->add_3d_plane_xy_filled(
+        ptDrawlist,
+        tCenter,
+        fWidth,
+        fHeight,
+        tOptions);
+
+    Py_RETURN_NONE;
+}
+
+PyObject*
+draw_add_3d_plane_yz_filled(PyObject* self, PyObject* args)
+{
+ 
+    PyObject* ptPythonDrawlist = NULL;
+    PyObject* ptPythonCenter = NULL;
+    float fWidth = 0.0f;
+    float fHeight = 0.0f;
+    PyObject* ptPythonOptions = NULL;
+
+    static const char* apcKeywords[] = {
+        "layer",
+        "center",
+        "width",
+        "height",
+        "options",
+        NULL,
+    };
+
+	if (!pl_parse("OOffO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+        &ptPythonDrawlist, &ptPythonCenter, &fWidth, &fHeight, &ptPythonOptions))
+		return NULL;
+
+    plDrawList3D* ptDrawlist = PyCapsule_GetPointer(ptPythonDrawlist, "plDrawList3D");
+
+    plDrawSolidOptions tOptions = {0};
+    pl__get_draw_solid_options(ptPythonOptions, &tOptions);
+
+    plVec3 tCenter = {0};
+    pl_vec3_from_py(ptPythonCenter, &tCenter);
+
+    gptDraw->add_3d_plane_yz_filled(
+        ptDrawlist,
+        tCenter,
+        fWidth,
+        fHeight,
+        tOptions);
+
+    Py_RETURN_NONE;
+}
+
+PyObject*
+draw_add_3d_text(PyObject* self, PyObject* args)
+{
+ 
+    PyObject* ptPythonDrawlist = NULL;
+    PyObject* ptPythonP0 = NULL;
+    const char* pcText = NULL;
+    PyObject* ptPythonOptions = NULL;
+
+    static const char* apcKeywords[] = {
+        "drawlist",
+        "p",
+        "text",
+        "options",
+        NULL,
+    };
+
+	if (!pl_parse("OOsO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+        &ptPythonDrawlist, &ptPythonP0, &pcText, &ptPythonOptions))
+		return NULL;
+
+    plDrawList3D* ptDrawList = PyCapsule_GetPointer(ptPythonDrawlist, "plDrawList3D");
+
+    plDrawTextOptions tOptions = {0};
+    pl__get_draw_text_options(ptPythonOptions, &tOptions);
+
+    plVec3 tP0 = {0};
+
+    pl_vec3_from_py(ptPythonP0, &tP0);
+
+    gptDraw->add_3d_text(ptDrawList, tP0, pcText, tOptions);
+    Py_RETURN_NONE;
+}
+
+static PyMethodDef gatCommandsplDrawI[] =
 {
     {"new_frame", (PyCFunction)draw_new_frame, METH_NOARGS | METH_STATIC, NULL},
     {"cleanup", (PyCFunction)draw_cleanup, METH_NOARGS | METH_STATIC, NULL},
@@ -1209,7 +2371,10 @@ static PyMethodDef gatplDrawICommands[] =
     {"calculate_text_size", (PyCFunction)draw_calculate_text_size, METH_VARARGS | METH_STATIC, NULL},
     {"request_2d_drawlist", (PyCFunction)draw_request_2d_drawlist, METH_NOARGS | METH_STATIC, NULL},
     {"return_2d_drawlist", (PyCFunction)draw_return_2d_drawlist, METH_O | METH_STATIC, NULL},
+    {"request_3d_drawlist", (PyCFunction)draw_request_3d_drawlist, METH_NOARGS | METH_STATIC, NULL},
+    {"return_3d_drawlist", (PyCFunction)draw_return_3d_drawlist, METH_O | METH_STATIC, NULL},
     {"submit_2d_drawlist", (PyCFunction)draw_submit_2d_drawlist, METH_VARARGS | METH_STATIC, NULL},
+    {"submit_3d_drawlist", (PyCFunction)draw_submit_3d_drawlist, METH_VARARGS | METH_STATIC, NULL},
     {"request_2d_layer", (PyCFunction)draw_request_2d_layer, METH_O | METH_STATIC, NULL},
     {"return_2d_layer", (PyCFunction)draw_return_2d_layer, METH_O | METH_STATIC, NULL},
     {"submit_2d_layer", (PyCFunction)draw_submit_2d_layer, METH_O | METH_STATIC, NULL},
@@ -1232,18 +2397,33 @@ static PyMethodDef gatplDrawICommands[] =
     {"add_quad_filled", (PyCFunction)draw_add_quad_filled, METH_VARARGS | METH_STATIC, NULL},
     {"add_circle_filled", (PyCFunction)draw_add_circle_filled, METH_VARARGS | METH_STATIC, NULL},
     {"add_convex_polygon_filled", (PyCFunction)draw_add_convex_polygon_filled, METH_VARARGS | METH_STATIC, NULL},
+    {"add_3d_transform", (PyCFunction)draw_add_3d_transform, METH_VARARGS | METH_STATIC, NULL},
+    {"add_3d_line", (PyCFunction)draw_add_3d_line, METH_VARARGS | METH_STATIC, NULL},
+    {"add_3d_aabb", (PyCFunction)draw_add_3d_aabb, METH_VARARGS | METH_STATIC, NULL},
+    {"add_3d_bezier_quad", (PyCFunction)draw_add_3d_bezier_quad, METH_VARARGS | METH_STATIC, NULL},
+    {"add_3d_bezier_cubic", (PyCFunction)draw_add_3d_bezier_cubic, METH_VARARGS | METH_STATIC, NULL},
+    {"add_3d_cross", (PyCFunction)draw_add_3d_cross, METH_VARARGS | METH_STATIC, NULL},
+    {"add_3d_frustum", (PyCFunction)draw_add_3d_frustum, METH_VARARGS | METH_STATIC, NULL},
+    {"add_3d_sphere", (PyCFunction)draw_add_3d_sphere, METH_VARARGS | METH_STATIC, NULL},
+    {"add_3d_capsule", (PyCFunction)draw_add_3d_capsule, METH_VARARGS | METH_STATIC, NULL},
+    {"add_3d_cylinder", (PyCFunction)draw_add_3d_cylinder, METH_VARARGS | METH_STATIC, NULL},
+    {"add_3d_cone", (PyCFunction)draw_add_3d_cone, METH_VARARGS | METH_STATIC, NULL},
+    {"add_3d_centered_box", (PyCFunction)draw_add_3d_centered_box, METH_VARARGS | METH_STATIC, NULL},
+    {"add_3d_circle_xz", (PyCFunction)draw_add_3d_circle_xz, METH_VARARGS | METH_STATIC, NULL},
+    {"add_3d_circle_xz_filled", (PyCFunction)draw_add_3d_circle_xz_filled, METH_VARARGS | METH_STATIC, NULL},
+    {"add_3d_cylinder_filled", (PyCFunction)draw_add_3d_cylinder_filled, METH_VARARGS | METH_STATIC, NULL},
+    {"add_3d_cone_filled", (PyCFunction)draw_add_3d_cone_filled, METH_VARARGS | METH_STATIC, NULL},
+    {"add_3d_centered_box_filled", (PyCFunction)draw_add_3d_centered_box_filled, METH_VARARGS | METH_STATIC, NULL},
+    {"add_3d_sphere_filled", (PyCFunction)draw_add_3d_sphere_filled, METH_VARARGS | METH_STATIC, NULL},
+    {"add_3d_triangle_filled", (PyCFunction)draw_add_3d_triangle_filled, METH_VARARGS | METH_STATIC, NULL},
+    {"add_3d_band_xz_filled", (PyCFunction)draw_add_3d_band_xz_filled, METH_VARARGS | METH_STATIC, NULL},
+    {"add_3d_band_xy_filled", (PyCFunction)draw_add_3d_band_xy_filled, METH_VARARGS | METH_STATIC, NULL},
+    {"add_3d_band_yz_filled", (PyCFunction)draw_add_3d_band_yz_filled, METH_VARARGS | METH_STATIC, NULL},
+    {"add_3d_plane_xz_filled", (PyCFunction)draw_add_3d_plane_xz_filled, METH_VARARGS | METH_STATIC, NULL},
+    {"add_3d_plane_xy_filled", (PyCFunction)draw_add_3d_plane_xy_filled, METH_VARARGS | METH_STATIC, NULL},
+    {"add_3d_plane_yz_filled", (PyCFunction)draw_add_3d_plane_yz_filled, METH_VARARGS | METH_STATIC, NULL},
+    {"add_3d_text", (PyCFunction)draw_add_3d_text, METH_VARARGS | METH_STATIC, NULL},
     {NULL, NULL, 0, NULL}
 };
 
-static PyType_Slot gatplDrawISlots[] = {
-    {Py_tp_methods, (void*)gatplDrawICommands},
-    {0, 0}
-};
-
-static PyType_Spec plDrawISpec = {
-    "pilotlight.plDrawI",
-    sizeof(pyplDrawI),
-    0,
-    Py_TPFLAGS_DEFAULT,
-    gatplDrawISlots
-};
+PL_NEW_PYTHON_API(plDrawI)

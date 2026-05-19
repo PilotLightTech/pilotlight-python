@@ -18,11 +18,6 @@ Index of this file:
 // [SECTION] implementations
 //-----------------------------------------------------------------------------
 
-typedef struct _pyplShaderI
-{
-    PyObject_HEAD
-} pyplShaderI;
-
 PyObject*
 shader_initialize(PyObject* self, PyObject* args)
 {
@@ -227,7 +222,7 @@ plPythonIntConstantPair gatShaderIntPairs[] = {
     PL_ADD_INT_CONSTANT(PL_SHADER_OPTIMIZATION_PERFORMANCE),
 };
 
-static PyMethodDef gatplShaderICommands[] =
+static PyMethodDef gatCommandsplShaderI[] =
 {
     {"initialize", (PyCFunction)shader_initialize, METH_O | METH_STATIC, NULL},
     {"cleanup", (PyCFunction)shader_cleanup, METH_NOARGS | METH_STATIC, NULL},
@@ -238,15 +233,4 @@ static PyMethodDef gatplShaderICommands[] =
     {NULL, NULL, 0, NULL}
 };
 
-static PyType_Slot gatplShaderISlots[] = {
-    {Py_tp_methods, (void*)gatplShaderICommands},
-    {0, 0}
-};
-
-static PyType_Spec plShaderISpec = {
-    "pilotlight.plShaderI",
-    sizeof(pyplShaderI),
-    0,
-    Py_TPFLAGS_DEFAULT,
-    gatplShaderISlots
-};
+PL_NEW_PYTHON_API(plShaderI)

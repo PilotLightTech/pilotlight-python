@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from typing import List, Dict, Tuple, overload, NewType
+from pilotlight.pilotlight import plVec2, plVec3, plVec4, plMat4
 
 ########################################################################################################################
 # [SECTION] opaque types
@@ -9,6 +10,7 @@ plFont = NewType("plFont", object)
 plCommandBuffer = NewType("plCommandBuffer", object)
 plFontAtlas = NewType("plFontAtlas", object)
 plDrawList2D = NewType("plDrawList2D", object)
+plDrawList3D = NewType("plDrawList3D", object)
 plDrawLayer2D = NewType("plDrawLayer2D", object)
 plWindow = NewType("plWindow", object)
 plDevice = NewType("plDevice", object)
@@ -79,3 +81,33 @@ class plWindowDesc:
     uHeight: int = 500
     iXPos: int = 200
     iYPos: int = 200
+
+@dataclass(slots=True)
+class plSphere:
+    fRadius: float
+    tCenter: plVec3
+
+@dataclass(slots=True)
+class plCapsule:
+    tBasePos: plVec3
+    tTipPos: plVec3
+    fRadius: float
+
+@dataclass(slots=True)
+class plCylinder:
+    tBasePos: plVec3
+    tTipPos: plVec3
+    fRadius: float
+
+@dataclass(slots=True)
+class plCone:
+    tBasePos: plVec3
+    tTipPos: plVec3
+    fRadius: float
+
+@dataclass(slots=True)
+class plDrawFrustumDesc:
+    fYFov: float
+    fAspectRatio: float
+    fNearZ: float
+    fFarZ: float

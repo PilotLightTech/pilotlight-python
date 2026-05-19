@@ -25,16 +25,6 @@ const plWindowI* ptWindows2;
 // [SECTION] implementations
 //-----------------------------------------------------------------------------
 
-typedef struct _pyplIOI
-{
-    PyObject_HEAD
-} pyplIOI;
-
-typedef struct _pyplWindowI
-{
-    PyObject_HEAD
-} pyplWindowI;
-
 PyObject*
 create_bool_pointer(PyObject* self, PyObject* args)
 {
@@ -418,7 +408,7 @@ io_get_mouse_drag_delta(PyObject* self, PyObject* args)
 		return NULL;
 
     plVec2 tResult = gptIOI->get_mouse_drag_delta(iButton, fThreshold);
-    return Py_BuildValue("[ff]", tResult.x, tResult.y);
+    return pl_vec2_to_py(tResult);
 }
 
 PyObject*
@@ -594,7 +584,7 @@ window_destroy(PyObject* self, PyObject* args)
     Py_RETURN_NONE;
 }
 
-static PyMethodDef gatplIOICommands[] =
+static PyMethodDef gatCommandsplIOI[] =
 {
     {"get_version_string", (PyCFunction)io_get_version_string, METH_NOARGS | METH_STATIC, NULL},
     {"get_io", (PyCFunction)io_get_io, METH_NOARGS | METH_STATIC, NULL},
@@ -618,20 +608,7 @@ static PyMethodDef gatplIOICommands[] =
     {NULL, NULL, 0, NULL}
 };
 
-static PyType_Slot gatplIOISlots[] = {
-    {Py_tp_methods, (void*)gatplIOICommands},
-    {0, 0}
-};
-
-static PyType_Spec plIOISpec = {
-    "pilotlight.plIOI",
-    sizeof(pyplIOI),
-    0,
-    Py_TPFLAGS_DEFAULT,
-    gatplIOISlots
-};
-
-static PyMethodDef gatplWindowICommands[] =
+static PyMethodDef gatCommandsplWindowI[] =
 {
     {"create", (PyCFunction)window_create, METH_VARARGS | METH_KEYWORDS | METH_STATIC, NULL},
     {"show", (PyCFunction)window_show, METH_O | METH_STATIC, NULL},
@@ -639,18 +616,8 @@ static PyMethodDef gatplWindowICommands[] =
     {NULL, NULL, 0, NULL}
 };
 
-static PyType_Slot gatplWindowISlots[] = {
-    {Py_tp_methods, (void*)gatplWindowICommands},
-    {0, 0}
-};
-
-static PyType_Spec plWindowISpec = {
-    "pilotlight.plWindowI",
-    sizeof(pyplWindowI),
-    0,
-    Py_TPFLAGS_DEFAULT,
-    gatplWindowISlots
-};
+PL_NEW_PYTHON_API(plWindowI)
+PL_NEW_PYTHON_API(plIOI)
 
 plPythonIntConstantPair gatCoreIntPairs[] = {
     PL_ADD_INT_CONSTANT(PL_KEY_NONE),

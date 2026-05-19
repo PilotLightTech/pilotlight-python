@@ -19,11 +19,6 @@ Index of this file:
 // [SECTION] implementations
 //-----------------------------------------------------------------------------
 
-typedef struct _pyplEcsI
-{
-    PyObject_HEAD
-} pyplEcsI;
-
 PyObject*
 ecs_initialize(PyObject* self)
 {
@@ -73,13 +68,13 @@ ecs_get_component(PyObject* self, PyObject* args, PyObject* kwargs)
 		return NULL;
 
     plComponentLibrary* ptCompLibrary = PyCapsule_GetPointer(ptPyLibrary, "plComponentLibrary");
-
     plPythonEntity tPyEntity = pl_get_entity_from_python(ptPyEntity);
+
     void* pComponent = gptECS->get_component(ptCompLibrary, uEcsKey, tPyEntity.tEntity);
     return PyCapsule_New(pComponent, "plEntityComponent", NULL);
 }
 
-static PyMethodDef gatplEcsICommands[] =
+static PyMethodDef gatCommandsplEcsI[] =
 {
     {"initialize", (PyCFunction)ecs_initialize, METH_NOARGS | METH_STATIC, NULL},
     {"finalize", (PyCFunction)ecs_finalize, METH_NOARGS | METH_STATIC, NULL},
@@ -89,15 +84,4 @@ static PyMethodDef gatplEcsICommands[] =
     {NULL, NULL, 0, NULL}
 };
 
-static PyType_Slot gatplEcsISlots[] = {
-    {Py_tp_methods, (void*)gatplEcsICommands},
-    {0, 0}
-};
-
-static PyType_Spec plEcsISpec = {
-    "pilotlight.plEcsI",
-    sizeof(pyplEcsI),
-    0,
-    Py_TPFLAGS_DEFAULT,
-    gatplEcsISlots
-};
+PL_NEW_PYTHON_API(plEcsI)

@@ -19,11 +19,6 @@ Index of this file:
 // [SECTION] implementations
 //-----------------------------------------------------------------------------
 
-typedef struct _pyplUiI
-{
-    PyObject_HEAD
-} pyplUiI;
-
 PyObject*
 begin_window(PyObject* self, PyObject* args, PyObject* kwargs)
 {
@@ -119,7 +114,7 @@ input_text(PyObject* self, PyObject* args, PyObject* kwargs)
     return Py_BuildValue("p", bResult);
 }
 
-static PyMethodDef gatplUiICommands[] =
+static PyMethodDef gatCommandsplUiI[] =
 {
     PL_PYTHON_METHOD(begin_window, METH_VARARGS | METH_KEYWORDS | METH_STATIC, NULL),
     PL_PYTHON_METHOD(end_window, METH_VARARGS | METH_KEYWORDS | METH_STATIC, NULL),
@@ -129,16 +124,4 @@ static PyMethodDef gatplUiICommands[] =
     {NULL, NULL, 0, NULL}
 };
 
-static PyType_Slot gatplUiISlots[] = {
-    // {Py_tp_init, (void*)pl_io_init},
-    {Py_tp_methods, (void*)gatplUiICommands},
-    {0, 0}
-};
-
-static PyType_Spec plUiISpec = {
-    "pilotlight.plUiI",
-    sizeof(pyplUiI),
-    0,
-    Py_TPFLAGS_DEFAULT,
-    gatplUiISlots
-};
+PL_NEW_PYTHON_API(plUiI)
