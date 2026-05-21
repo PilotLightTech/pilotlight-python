@@ -6,6 +6,14 @@ import pilotlight.imgui as imgui
 # [SECTION] enums
 ########################################################################################################################
 
+class plCameraProjectionType(IntEnum):
+    PL_CAMERA_PROJECTION_TYPE_PERSPECTIVE=pl.PL_CAMERA_PROJECTION_TYPE_PERSPECTIVE
+    PL_CAMERA_PROJECTION_TYPE_ORTHOGRAPHIC=pl.PL_CAMERA_PROJECTION_TYPE_ORTHOGRAPHIC
+
+class plCameraDepthMode(IntEnum):
+    PL_CAMERA_DEPTH_MODE_STANDARD=pl.PL_CAMERA_DEPTH_MODE_STANDARD
+    PL_CAMERA_DEPTH_MODE_REVERSE_Z=pl.PL_CAMERA_DEPTH_MODE_REVERSE_Z
+
 class plShaderFlags(IntFlag):
     PL_SHADER_FLAGS_NONE=pl.PL_SHADER_FLAGS_NONE
     PL_SHADER_FLAGS_INCLUDE_DEBUG=pl.PL_SHADER_FLAGS_INCLUDE_DEBUG

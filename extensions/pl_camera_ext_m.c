@@ -19,16 +19,82 @@ Index of this file:
 // [SECTION] implementations
 //-----------------------------------------------------------------------------
 
-// typedef struct _pyplCameraEcsI
-// {
-//     PyObject_HEAD
-// } pyplCameraEcsI;
+plPythonIntConstantPair gatCameraIntPairs[] = {
+
+    // plCameraProjectionType
+    PL_ADD_INT_CONSTANT(PL_CAMERA_PROJECTION_TYPE_PERSPECTIVE),
+    PL_ADD_INT_CONSTANT(PL_CAMERA_PROJECTION_TYPE_ORTHOGRAPHIC),
+
+    // plCameraDepthMode
+    PL_ADD_INT_CONSTANT(PL_CAMERA_DEPTH_MODE_STANDARD),
+    PL_ADD_INT_CONSTANT(PL_CAMERA_DEPTH_MODE_REVERSE_Z)
+};
 
 typedef struct _plPyCamera
 {
     PyObject_HEAD
     plCamera tCamera;
 } plPyCamera;
+
+static inline void
+pl__get_camera_perspective_desc(PyObject* ptPythonDesc, plCameraPerspectiveDesc* ptDescOut)
+{
+    {
+        PyObject* ptPythonOption = PyObject_GetAttrString(ptPythonDesc, "eDepthMode");
+        ptDescOut->eDepthMode = PyLong_AsLong(ptPythonOption);
+        Py_DECREF(ptPythonOption);
+    }
+    {
+        PyObject* ptPythonOption = PyObject_GetAttrString(ptPythonDesc, "fYFov");
+        ptDescOut->fYFov = (float)PyFloat_AsDouble(ptPythonOption);
+        Py_DECREF(ptPythonOption);
+    }
+    {
+        PyObject* ptPythonOption = PyObject_GetAttrString(ptPythonDesc, "fAspectRatio");
+        ptDescOut->fAspectRatio = (float)PyFloat_AsDouble(ptPythonOption);
+        Py_DECREF(ptPythonOption);
+    }
+    {
+        PyObject* ptPythonOption = PyObject_GetAttrString(ptPythonDesc, "fNearZ");
+        ptDescOut->fNearZ = (float)PyFloat_AsDouble(ptPythonOption);
+        Py_DECREF(ptPythonOption);
+    }
+    {
+        PyObject* ptPythonOption = PyObject_GetAttrString(ptPythonDesc, "fFarZ");
+        ptDescOut->fFarZ = (float)PyFloat_AsDouble(ptPythonOption);
+        Py_DECREF(ptPythonOption);
+    }
+}
+
+static inline void
+pl__get_camera_ortho_desc(PyObject* ptPythonDesc, plCameraOrthographicDesc* ptDescOut)
+{
+    {
+        PyObject* ptPythonOption = PyObject_GetAttrString(ptPythonDesc, "eDepthMode");
+        ptDescOut->eDepthMode = PyLong_AsLong(ptPythonOption);
+        Py_DECREF(ptPythonOption);
+    }
+    {
+        PyObject* ptPythonOption = PyObject_GetAttrString(ptPythonDesc, "fWidth");
+        ptDescOut->fWidth = (float)PyFloat_AsDouble(ptPythonOption);
+        Py_DECREF(ptPythonOption);
+    }
+    {
+        PyObject* ptPythonOption = PyObject_GetAttrString(ptPythonDesc, "fHeight");
+        ptDescOut->fHeight = (float)PyFloat_AsDouble(ptPythonOption);
+        Py_DECREF(ptPythonOption);
+    }
+    {
+        PyObject* ptPythonOption = PyObject_GetAttrString(ptPythonDesc, "fNearZ");
+        ptDescOut->fNearZ = (float)PyFloat_AsDouble(ptPythonOption);
+        Py_DECREF(ptPythonOption);
+    }
+    {
+        PyObject* ptPythonOption = PyObject_GetAttrString(ptPythonDesc, "fFarZ");
+        ptDescOut->fFarZ = (float)PyFloat_AsDouble(ptPythonOption);
+        Py_DECREF(ptPythonOption);
+    }
+}
 
 PyObject*
 camera_register_ecs_system(PyObject* self)
@@ -51,65 +117,45 @@ camera_ecs_create_perspective(PyObject* self, PyObject* args, PyObject* kwargs)
 {
  
     PyObject* ptPyLibrary = NULL;
-    PyObject* ptPyPos = NULL;
+    PyObject* ptPyDesc = NULL;
 
     static const char* apcKeywords[] = {
         "library",
         "name",
-        "pos",
-        "yfov",
-        "aspect",
-        "nearZ",
-        "farZ",
-        "reverseZ",
+        "desc",
         NULL,
     };
 
     const char* pcName = NULL;
-    float fYFov = 0.0f;
-    float fAspect = 1.0f;
-    float fNearZ = 0.0f;
-    float fFarZ = 0.0f;
-    int bReverseZ = false;
-	if (!pl_parse("OsOffffp", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
-        &ptPyLibrary, &pcName, &ptPyPos, &fYFov, &fAspect, &fNearZ, &fFarZ, &bReverseZ))
+	if (!pl_parse("OsO", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+        &ptPyLibrary, &pcName, &ptPyDesc))
 		return NULL;
 
     plComponentLibrary* ptCompLibrary = PyCapsule_GetPointer(ptPyLibrary, "plComponentLibrary");
 
-    plEntity tCamera = gptCameraEcs->create_perspective(
-        ptCompLibrary,
-        pcName,
-        pl_get_dvec3_from_python(ptPyPos),
-        fYFov,
-        fAspect,
-        fNearZ,
-        fFarZ,
-        bReverseZ,
-        NULL);
+    plCameraPerspectiveDesc tDesc = {0};
+    pl__get_camera_perspective_desc(ptPyDesc, &tDesc);
+
+    plEntity tCamera = gptCameraEcs->create_perspective(ptCompLibrary, pcName, &tDesc, NULL);
 
     return Py_BuildValue("(III)", gptCameraEcs->get_ecs_type_key(), tCamera.uIndex, tCamera.uGeneration);
 }
 
 PyObject*
-camera_translate(PyObject* self, PyObject* args, PyObject* kwargs)
+camera_set_position(PyObject* self, PyObject* args, PyObject* kwargs)
 {
  
     PyObject* ptPyCamera = NULL;
+    PyObject* ptPyDelta = NULL;
 
     static const char* apcKeywords[] = {
         "camera",
-        "dX",
-        "dY",
-        "dZ",
+        "position",
         NULL,
     };
 
-    double dX = 0.0;
-    double dY = 0.0;
-    double dZ = 0.0;
-	if (!pl_parse("Oddd", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
-        &ptPyCamera, &dX, &dY, &dZ))
+	if (!pl_parse("OO", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+        &ptPyCamera, &ptPyDelta))
 		return NULL;
 
     plCamera* ptCamera = NULL;
@@ -122,12 +168,205 @@ camera_translate(PyObject* self, PyObject* args, PyObject* kwargs)
     {
         ptCamera = PyCapsule_GetPointer(ptPyCamera, "plEntityComponent");
     }
-    gptCamera->translate(ptCamera, dX, dY, dZ);
+
+    plVec3 tDelta = {0};
+    pl_vec3_from_py(ptPyDelta, &tDelta);
+    gptCamera->set_position(ptCamera, (plVec3d){(double)tDelta.x, (double)tDelta.y, (double)tDelta.z});
     Py_RETURN_NONE;
 }
 
 PyObject*
-camera_rotate(PyObject* self, PyObject* args, PyObject* kwargs)
+camera_set_rotation(PyObject* self, PyObject* args, PyObject* kwargs)
+{
+ 
+    PyObject* ptPyCamera = NULL;
+    PyObject* ptPyRotation = NULL;
+
+    static const char* apcKeywords[] = {
+        "camera",
+        "rotation",
+        NULL,
+    };
+
+	if (!pl_parse("OO", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+        &ptPyCamera, &ptPyRotation))
+		return NULL;
+
+    plCamera* ptCamera = NULL;
+    if(PyObject_TypeCheck(ptPyCamera, (PyTypeObject*)gptCameraType))
+    {
+        plPyCamera* ptPyTypeCamera = (plPyCamera*)ptPyCamera;
+        ptCamera = &ptPyTypeCamera->tCamera;
+    }   
+    else
+    {
+        ptCamera = PyCapsule_GetPointer(ptPyCamera, "plEntityComponent");
+    }
+
+    plVec4 tRotation = {0};
+    pl_vec4_from_py(ptPyRotation, &tRotation);
+    gptCamera->set_rotation(ptCamera, tRotation);
+    Py_RETURN_NONE;
+}
+
+PyObject*
+camera_set_transform(PyObject* self, PyObject* args, PyObject* kwargs)
+{
+ 
+    PyObject* ptPyCamera = NULL;
+    PyObject* ptPyPosition = NULL;
+    PyObject* ptPyRotation = NULL;
+
+    static const char* apcKeywords[] = {
+        "camera",
+        "position",
+        "rotation",
+        NULL,
+    };
+
+	if (!pl_parse("OOO", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+        &ptPyCamera, &ptPyPosition, &ptPyRotation))
+		return NULL;
+
+    plCamera* ptCamera = NULL;
+    if(PyObject_TypeCheck(ptPyCamera, (PyTypeObject*)gptCameraType))
+    {
+        plPyCamera* ptPyTypeCamera = (plPyCamera*)ptPyCamera;
+        ptCamera = &ptPyTypeCamera->tCamera;
+    }   
+    else
+    {
+        ptCamera = PyCapsule_GetPointer(ptPyCamera, "plEntityComponent");
+    }
+
+    plVec4 tRotation = {0};
+    pl_vec4_from_py(ptPyRotation, &tRotation);
+
+    plVec3 tPosition = {0};
+    pl_vec3_from_py(ptPyPosition, &tPosition);
+    gptCamera->set_transform(ptCamera, (plVec3d){(double)tPosition.x, (double)tPosition.y, (double)tPosition.z}, tRotation);
+    Py_RETURN_NONE;
+}
+
+PyObject*
+camera_look_at(PyObject* self, PyObject* args, PyObject* kwargs)
+{
+ 
+    PyObject* ptPyCamera = NULL;
+    PyObject* ptPyEye = NULL;
+    PyObject* ptPyTarget = NULL;
+    PyObject* ptPyUp = NULL;
+
+    static const char* apcKeywords[] = {
+        "camera",
+        "eye",
+        "target",
+        "up",
+        NULL,
+    };
+
+	if (!pl_parse("OOOO", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+        &ptPyCamera, &ptPyEye, &ptPyTarget, &ptPyUp))
+		return NULL;
+
+    plCamera* ptCamera = NULL;
+    if(PyObject_TypeCheck(ptPyCamera, (PyTypeObject*)gptCameraType))
+    {
+        plPyCamera* ptPyTypeCamera = (plPyCamera*)ptPyCamera;
+        ptCamera = &ptPyTypeCamera->tCamera;
+    }   
+    else
+    {
+        ptCamera = PyCapsule_GetPointer(ptPyCamera, "plEntityComponent");
+    }
+
+    plVec3 tEye = {0};
+    pl_vec3_from_py(ptPyEye, &tEye);
+
+    plVec3 tTarget = {0};
+    pl_vec3_from_py(ptPyTarget, &tTarget);
+
+    plVec3 tUp = {0};
+    pl_vec3_from_py(ptPyUp, &tUp);
+
+
+    gptCamera->look_at(ptCamera,
+        (plVec3d){(double)tEye.x, (double)tEye.y, (double)tEye.z},
+        (plVec3d){(double)tTarget.x, (double)tTarget.y, (double)tTarget.z},
+        tUp);
+    Py_RETURN_NONE;
+}
+
+PyObject*
+camera_translate(PyObject* self, PyObject* args, PyObject* kwargs)
+{
+ 
+    PyObject* ptPyCamera = NULL;
+    PyObject* ptPyDelta = NULL;
+
+    static const char* apcKeywords[] = {
+        "camera",
+        "delta",
+        NULL,
+    };
+
+	if (!pl_parse("OO", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+        &ptPyCamera, &ptPyDelta))
+		return NULL;
+
+    plCamera* ptCamera = NULL;
+    if(PyObject_TypeCheck(ptPyCamera, (PyTypeObject*)gptCameraType))
+    {
+        plPyCamera* ptPyTypeCamera = (plPyCamera*)ptPyCamera;
+        ptCamera = &ptPyTypeCamera->tCamera;
+    }   
+    else
+    {
+        ptCamera = PyCapsule_GetPointer(ptPyCamera, "plEntityComponent");
+    }
+
+    plVec3 tDelta = {0};
+    pl_vec3_from_py(ptPyDelta, &tDelta);
+    gptCamera->translate(ptCamera, (plVec3d){(double)tDelta.x, (double)tDelta.y, (double)tDelta.z});
+    Py_RETURN_NONE;
+}
+
+PyObject*
+camera_translate_local(PyObject* self, PyObject* args, PyObject* kwargs)
+{
+ 
+    PyObject* ptPyCamera = NULL;
+    PyObject* ptPyDelta = NULL;
+
+    static const char* apcKeywords[] = {
+        "camera",
+        "delta",
+        NULL,
+    };
+
+	if (!pl_parse("OO", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+        &ptPyCamera, &ptPyDelta))
+		return NULL;
+
+    plCamera* ptCamera = NULL;
+    if(PyObject_TypeCheck(ptPyCamera, (PyTypeObject*)gptCameraType))
+    {
+        plPyCamera* ptPyTypeCamera = (plPyCamera*)ptPyCamera;
+        ptCamera = &ptPyTypeCamera->tCamera;
+    }   
+    else
+    {
+        ptCamera = PyCapsule_GetPointer(ptPyCamera, "plEntityComponent");
+    }
+
+    plVec3 tDelta = {0};
+    pl_vec3_from_py(ptPyDelta, &tDelta);
+    gptCamera->translate_local(ptCamera, (plVec3d){(double)tDelta.x, (double)tDelta.y, (double)tDelta.z});
+    Py_RETURN_NONE;
+}
+
+PyObject*
+camera_rotate_euler(PyObject* self, PyObject* args, PyObject* kwargs)
 {
  
     PyObject* ptPyCamera = NULL;
@@ -136,13 +375,15 @@ camera_rotate(PyObject* self, PyObject* args, PyObject* kwargs)
         "camera",
         "fPitch",
         "fYaw",
+        "fRoll",
         NULL,
     };
 
     float fPitch = 0.0f;
     float fYaw = 0.0f;
-	if (!pl_parse("Off", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
-        &ptPyCamera, &fPitch, &fYaw))
+    float fRoll = 0.0f;
+	if (!pl_parse("Offf", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+        &ptPyCamera, &fPitch, &fYaw, &fRoll))
 		return NULL;
 
     plCamera* ptCamera = NULL;
@@ -155,12 +396,82 @@ camera_rotate(PyObject* self, PyObject* args, PyObject* kwargs)
     {
         ptCamera = PyCapsule_GetPointer(ptPyCamera, "plEntityComponent");
     }
-    gptCamera->rotate(ptCamera, fPitch, fYaw);
+    gptCamera->rotate_euler(ptCamera, fPitch, fYaw, fRoll);
     Py_RETURN_NONE;
 }
 
 PyObject*
-camera_set_fov(PyObject* self, PyObject* args, PyObject* kwargs)
+camera_rotate_euler_local(PyObject* self, PyObject* args, PyObject* kwargs)
+{
+ 
+    PyObject* ptPyCamera = NULL;
+
+    static const char* apcKeywords[] = {
+        "camera",
+        "fPitch",
+        "fYaw",
+        "fRoll",
+        NULL,
+    };
+
+    float fPitch = 0.0f;
+    float fYaw = 0.0f;
+    float fRoll = 0.0f;
+	if (!pl_parse("Offf", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+        &ptPyCamera, &fPitch, &fYaw, &fRoll))
+		return NULL;
+
+    plCamera* ptCamera = NULL;
+    if(PyObject_TypeCheck(ptPyCamera, (PyTypeObject*)gptCameraType))
+    {
+        plPyCamera* ptPyTypeCamera = (plPyCamera*)ptPyCamera;
+        ptCamera = &ptPyTypeCamera->tCamera;
+    }   
+    else
+    {
+        ptCamera = PyCapsule_GetPointer(ptPyCamera, "plEntityComponent");
+    }
+    gptCamera->rotate_euler_local(ptCamera, fPitch, fYaw, fRoll);
+    Py_RETURN_NONE;
+}
+
+PyObject*
+camera_set_euler(PyObject* self, PyObject* args, PyObject* kwargs)
+{
+ 
+    PyObject* ptPyCamera = NULL;
+
+    static const char* apcKeywords[] = {
+        "camera",
+        "fPitch",
+        "fYaw",
+        "fRoll",
+        NULL,
+    };
+
+    float fPitch = 0.0f;
+    float fYaw = 0.0f;
+    float fRoll = 0.0f;
+	if (!pl_parse("Offf", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+        &ptPyCamera, &fPitch, &fYaw, &fRoll))
+		return NULL;
+
+    plCamera* ptCamera = NULL;
+    if(PyObject_TypeCheck(ptPyCamera, (PyTypeObject*)gptCameraType))
+    {
+        plPyCamera* ptPyTypeCamera = (plPyCamera*)ptPyCamera;
+        ptCamera = &ptPyTypeCamera->tCamera;
+    }   
+    else
+    {
+        ptCamera = PyCapsule_GetPointer(ptPyCamera, "plEntityComponent");
+    }
+    gptCamera->set_euler(ptCamera, fPitch, fYaw, fRoll);
+    Py_RETURN_NONE;
+}
+
+PyObject*
+camera_set_y_fov(PyObject* self, PyObject* args, PyObject* kwargs)
 {
  
     PyObject* ptPyCamera = NULL;
@@ -186,25 +497,27 @@ camera_set_fov(PyObject* self, PyObject* args, PyObject* kwargs)
     {
         ptCamera = PyCapsule_GetPointer(ptPyCamera, "plEntityComponent");
     }
-    gptCamera->set_fov(ptCamera, fYFov);
+    gptCamera->set_y_fov(ptCamera, fYFov);
     Py_RETURN_NONE;
 }
 
 PyObject*
-camera_set_aspect(PyObject* self, PyObject* args, PyObject* kwargs)
+camera_set_viewport(PyObject* self, PyObject* args, PyObject* kwargs)
 {
  
     PyObject* ptPyCamera = NULL;
 
     static const char* apcKeywords[] = {
         "camera",
-        "aspect",
+        "width",
+        "height",
         NULL,
     };
 
-    float fAspect = 0.0f;
-	if (!pl_parse("Of", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
-        &ptPyCamera, &fAspect))
+    float fWidth = 0.0f;
+    float fHeight = 0.0f;
+	if (!pl_parse("Off", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+        &ptPyCamera, &fWidth, &fHeight))
 		return NULL;
 
     plCamera* ptCamera = NULL;
@@ -217,7 +530,71 @@ camera_set_aspect(PyObject* self, PyObject* args, PyObject* kwargs)
     {
         ptCamera = PyCapsule_GetPointer(ptPyCamera, "plEntityComponent");
     }
-    gptCamera->set_aspect(ptCamera, fAspect);
+    gptCamera->set_viewport(ptCamera, fWidth, fHeight);
+    Py_RETURN_NONE;
+}
+
+PyObject*
+camera_set_clip_planes(PyObject* self, PyObject* args, PyObject* kwargs)
+{
+ 
+    PyObject* ptPyCamera = NULL;
+
+    static const char* apcKeywords[] = {
+        "camera",
+        "nearZ",
+        "farZ",
+        NULL,
+    };
+
+    float fNearZ = 0.0f;
+    float fFarZ = 0.0f;
+	if (!pl_parse("Off", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+        &ptPyCamera, &fNearZ, &fFarZ))
+		return NULL;
+
+    plCamera* ptCamera = NULL;
+    if(PyObject_TypeCheck(ptPyCamera, (PyTypeObject*)gptCameraType))
+    {
+        plPyCamera* ptPyTypeCamera = (plPyCamera*)ptPyCamera;
+        ptCamera = &ptPyTypeCamera->tCamera;
+    }   
+    else
+    {
+        ptCamera = PyCapsule_GetPointer(ptPyCamera, "plEntityComponent");
+    }
+    gptCamera->set_clip_planes(ptCamera, fNearZ, fFarZ);
+    Py_RETURN_NONE;
+}
+
+PyObject*
+camera_set_depth_mode(PyObject* self, PyObject* args, PyObject* kwargs)
+{
+ 
+    PyObject* ptPyCamera = NULL;
+
+    static const char* apcKeywords[] = {
+        "camera",
+        "mode",
+        NULL,
+    };
+
+    plCameraDepthMode tMode = 0;
+	if (!pl_parse("Oi", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+        &ptPyCamera, &tMode))
+		return NULL;
+
+    plCamera* ptCamera = NULL;
+    if(PyObject_TypeCheck(ptPyCamera, (PyTypeObject*)gptCameraType))
+    {
+        plPyCamera* ptPyTypeCamera = (plPyCamera*)ptPyCamera;
+        ptCamera = &ptPyTypeCamera->tCamera;
+    }   
+    else
+    {
+        ptCamera = PyCapsule_GetPointer(ptPyCamera, "plEntityComponent");
+    }
+    gptCamera->set_depth_mode(ptCamera, tMode);
     Py_RETURN_NONE;
 }
 
@@ -251,30 +628,20 @@ camera_update(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
-camera_init_perspective(PyObject* self, PyObject* args, PyObject* kwargs)
+camera_set_perspective(PyObject* self, PyObject* args, PyObject* kwargs)
 {
  
     PyObject* ptPyCamera = NULL;
-    PyObject* ptPyPos = NULL;
+    PyObject* ptPyDesc = NULL;
 
     static const char* apcKeywords[] = {
         "camera",
-        "pos",
-        "yfov",
-        "aspect",
-        "nearZ",
-        "farZ",
-        "reverseZ",
+        "desc",
         NULL,
     };
 
-    float fYFov = 0.0f;
-    float fAspect = 1.0f;
-    float fNearZ = 0.0f;
-    float fFarZ = 0.0f;
-    int bReverseZ = false;
-	if (!pl_parse("OOffffp", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
-        &ptPyCamera, &ptPyPos, &fYFov, &fAspect, &fNearZ, &fFarZ, &bReverseZ))
+	if (!pl_parse("OO", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+        &ptPyCamera, &ptPyDesc))
 		return NULL;
 
     plCamera* ptCamera = NULL;
@@ -288,26 +655,99 @@ camera_init_perspective(PyObject* self, PyObject* args, PyObject* kwargs)
         ptCamera = PyCapsule_GetPointer(ptPyCamera, "plEntityComponent");
     }
 
-    gptCamera->init_perspective(
-        ptCamera,
-        pl_get_dvec3_from_python(ptPyPos),
-        fYFov,
-        fAspect,
-        fNearZ,
-        fFarZ,
-        bReverseZ);
+    plCameraPerspectiveDesc tDesc = {0};
+    pl__get_camera_perspective_desc(ptPyDesc, &tDesc);
 
+    gptCamera->set_perspective(ptCamera, &tDesc);
+
+    Py_RETURN_NONE;
+}
+
+PyObject*
+camera_set_orthographic(PyObject* self, PyObject* args, PyObject* kwargs)
+{
+ 
+    PyObject* ptPyCamera = NULL;
+    PyObject* ptPyDesc = NULL;
+
+    static const char* apcKeywords[] = {
+        "camera",
+        "desc",
+        NULL,
+    };
+
+	if (!pl_parse("OO", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+        &ptPyCamera, &ptPyDesc))
+		return NULL;
+
+    plCamera* ptCamera = NULL;
+    if(PyObject_TypeCheck(ptPyCamera, (PyTypeObject*)gptCameraType))
+    {
+        plPyCamera* ptPyTypeCamera = (plPyCamera*)ptPyCamera;
+        ptCamera = &ptPyTypeCamera->tCamera;
+    }   
+    else
+    {
+        ptCamera = PyCapsule_GetPointer(ptPyCamera, "plEntityComponent");
+    }
+
+    plCameraOrthographicDesc tDesc = {0};
+    pl__get_camera_ortho_desc(ptPyDesc, &tDesc);
+
+    gptCamera->set_orthographic(ptCamera, &tDesc);
+
+    Py_RETURN_NONE;
+}
+
+PyObject*
+camera_init(PyObject* self, PyObject* args, PyObject* kwargs)
+{
+ 
+    PyObject* ptPyCamera = NULL;
+
+    static const char* apcKeywords[] = {
+        "camera",
+        NULL,
+    };
+
+	if (!pl_parse("O", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+        &ptPyCamera))
+		return NULL;
+
+    plCamera* ptCamera = NULL;
+    if(PyObject_TypeCheck(ptPyCamera, (PyTypeObject*)gptCameraType))
+    {
+        plPyCamera* ptPyTypeCamera = (plPyCamera*)ptPyCamera;
+        ptCamera = &ptPyTypeCamera->tCamera;
+    }   
+    else
+    {
+        ptCamera = PyCapsule_GetPointer(ptPyCamera, "plEntityComponent");
+    }
+
+    gptCamera->init(ptCamera);
     Py_RETURN_NONE;
 }
 
 static PyMethodDef gatCommandsplCameraI[] =
 {
+    {"init", (PyCFunction)camera_init, METH_VARARGS | METH_KEYWORDS | METH_STATIC, NULL},
+    {"look_at", (PyCFunction)camera_look_at, METH_VARARGS | METH_KEYWORDS | METH_STATIC, NULL},
+    {"set_depth_mode", (PyCFunction)camera_set_depth_mode, METH_VARARGS | METH_KEYWORDS | METH_STATIC, NULL},
+    {"set_position", (PyCFunction)camera_set_position, METH_VARARGS | METH_KEYWORDS | METH_STATIC, NULL},
+    {"set_rotation", (PyCFunction)camera_set_rotation, METH_VARARGS | METH_KEYWORDS | METH_STATIC, NULL},
+    {"set_transform", (PyCFunction)camera_set_transform, METH_VARARGS | METH_KEYWORDS | METH_STATIC, NULL},
     {"translate", (PyCFunction)camera_translate, METH_VARARGS | METH_KEYWORDS | METH_STATIC, NULL},
-    {"rotate", (PyCFunction)camera_rotate, METH_VARARGS | METH_KEYWORDS | METH_STATIC, NULL},
-    {"set_fov", (PyCFunction)camera_set_fov, METH_VARARGS | METH_KEYWORDS | METH_STATIC, NULL},
-    {"set_aspect", (PyCFunction)camera_set_aspect, METH_VARARGS | METH_KEYWORDS | METH_STATIC, NULL},
+    {"translate_local", (PyCFunction)camera_translate_local, METH_VARARGS | METH_KEYWORDS | METH_STATIC, NULL},
+    {"rotate_euler", (PyCFunction)camera_rotate_euler, METH_VARARGS | METH_KEYWORDS | METH_STATIC, NULL},
+    {"rotate_euler_local", (PyCFunction)camera_rotate_euler_local, METH_VARARGS | METH_KEYWORDS | METH_STATIC, NULL},
+    {"set_set_euler", (PyCFunction)camera_set_euler, METH_VARARGS | METH_KEYWORDS | METH_STATIC, NULL},
+    {"set_y_fov", (PyCFunction)camera_set_y_fov, METH_VARARGS | METH_KEYWORDS | METH_STATIC, NULL},
+    {"set_viewport", (PyCFunction)camera_set_viewport, METH_VARARGS | METH_KEYWORDS | METH_STATIC, NULL},
+    {"set_clip_planes", (PyCFunction)camera_set_clip_planes, METH_VARARGS | METH_KEYWORDS | METH_STATIC, NULL},
     {"update", (PyCFunction)camera_update, METH_VARARGS | METH_KEYWORDS | METH_STATIC, NULL},
-    {"init_perspective", (PyCFunction)camera_init_perspective, METH_VARARGS | METH_KEYWORDS | METH_STATIC, NULL},
+    {"set_perspective", (PyCFunction)camera_set_perspective, METH_VARARGS | METH_KEYWORDS | METH_STATIC, NULL},
+    {"set_orthographic", (PyCFunction)camera_set_orthographic, METH_VARARGS | METH_KEYWORDS | METH_STATIC, NULL},
     {NULL, NULL, 0, NULL}
 };
 

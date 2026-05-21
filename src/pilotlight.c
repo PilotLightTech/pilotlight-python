@@ -402,22 +402,58 @@ static PyType_Spec pl_io_spec = {
     pl_io_slots
 };
 
-static PyObject*
-pl_camera_tProjMat(plPyCamera* self, void* closure)
-{ 
-    return pl_mat4_new(self->tCamera.tProjMat);
-}
+static PyObject* pl_camera_tProjMat(plPyCamera* self, void* closure){ return pl_mat4_new(self->tCamera.tProjMat);}
+static PyObject* pl_camera_tViewMat(plPyCamera* self, void* closure){ return pl_mat4_new(self->tCamera.tViewMat);}
+static PyObject* pl_camera_tViewProjMat(plPyCamera* self, void* closure){ return pl_mat4_new(self->tCamera.tViewProjMat);}
+static PyObject* pl_camera_tInvViewMat(plPyCamera* self, void* closure){ return pl_mat4_new(self->tCamera.tInvViewMat);}
+static PyObject* pl_camera_tInvProjMat(plPyCamera* self, void* closure){ return pl_mat4_new(self->tCamera.tInvProjMat);}
+static PyObject* pl_camera_tInvViewProjMat(plPyCamera* self, void* closure){ return pl_mat4_new(self->tCamera.tInvViewProjMat);}
+static PyObject* pl_camera_tViewMatNoTranslation(plPyCamera* self, void* closure){ return pl_mat4_new(self->tCamera.tViewMatNoTranslation);}
+static PyObject* pl_camera_tInvViewMatNoTranslation(plPyCamera* self, void* closure){ return pl_mat4_new(self->tCamera.tInvViewMatNoTranslation);}
 
-static PyObject*
-pl_camera_tViewMat(plPyCamera* self, void* closure)
-{ 
-    return pl_mat4_new(self->tCamera.tViewMat);
-}
+static PyObject* pl_camera_tPosition(plPyCamera* self, void* closure){ return pl_vec3_new(self->tCamera.tPositionF);}
+static PyObject* pl_camera_tRotation(plPyCamera* self, void* closure){ return pl_vec4_new(self->tCamera.tRotation);}
+static PyObject* pl_camera_tUpVec(plPyCamera* self, void* closure){ return pl_vec3_new(self->tCamera.tUpVec);}
+static PyObject* pl_camera_tForwardVec(plPyCamera* self, void* closure){ return pl_vec3_new(self->tCamera.tForwardVec);}
+static PyObject* pl_camera_tRightVec(plPyCamera* self, void* closure){ return pl_vec3_new(self->tCamera.tRightVec);}
+static PyObject* pl_camera_fPitch(plPyCamera* self, void* closure){ return PyFloat_FromDouble((double)self->tCamera.fPitch);}
+static PyObject* pl_camera_fYaw(plPyCamera* self, void* closure){ return PyFloat_FromDouble((double)self->tCamera.fYaw);}
+static PyObject* pl_camera_fRoll(plPyCamera* self, void* closure){ return PyFloat_FromDouble((double)self->tCamera.fRoll);}
+static PyObject* pl_camera_fNearZ(plPyCamera* self, void* closure){ return PyFloat_FromDouble((double)self->tCamera.fNearZ);}
+static PyObject* pl_camera_fFarZ(plPyCamera* self, void* closure){ return PyFloat_FromDouble((double)self->tCamera.fFarZ);}
+static PyObject* pl_camera_fYFov(plPyCamera* self, void* closure){ return PyFloat_FromDouble((double)self->tCamera.fYFov);}
+static PyObject* pl_camera_fAspectRatio(plPyCamera* self, void* closure){ return PyFloat_FromDouble((double)self->tCamera.fAspectRatio);}
+static PyObject* pl_camera_fWidth(plPyCamera* self, void* closure){ return PyFloat_FromDouble((double)self->tCamera.fWidth);}
+static PyObject* pl_camera_fHeight(plPyCamera* self, void* closure){ return PyFloat_FromDouble((double)self->tCamera.fHeight);}
+static PyObject* pl_camera_eProjectionType(plPyCamera* self, void* closure){ return PyLong_FromLong(self->tCamera.eProjectionType);}
+static PyObject* pl_camera_eDepthMode(plPyCamera* self, void* closure){ return PyLong_FromLong(self->tCamera.eDepthMode);}
 
 static PyGetSetDef gatCameraProps[] =
 {
     {"tProjMat", (getter)pl_camera_tProjMat, (setter)NULL, "Property: tProjMat"},
     {"tViewMat", (getter)pl_camera_tViewMat, (setter)NULL, "Property: tViewMat"},
+    {"tViewProjMat", (getter)pl_camera_tViewProjMat, (setter)NULL, "Property: tViewProjMat"},
+    {"tInvViewMat", (getter)pl_camera_tInvViewMat, (setter)NULL, "Property: tInvViewMat"},
+    {"tInvProjMat", (getter)pl_camera_tInvProjMat, (setter)NULL, "Property: tInvProjMat"},
+    {"tInvViewProjMat", (getter)pl_camera_tInvViewProjMat, (setter)NULL, "Property: tInvViewProjMat"},
+    {"tViewMatNoTranslation", (getter)pl_camera_tViewMatNoTranslation, (setter)NULL, "Property: tViewMatNoTranslation"},
+    {"tInvViewMatNoTranslation", (getter)pl_camera_tInvViewMatNoTranslation, (setter)NULL, "Property: tInvViewMatNoTranslation"},
+    {"tPosition", (getter)pl_camera_tPosition, (setter)NULL, "Property: tPosition"},
+    {"tRotation", (getter)pl_camera_tRotation, (setter)NULL, "Property: tRotation"},
+    {"tUpVec", (getter)pl_camera_tUpVec, (setter)NULL, "Property: tUpVec"},
+    {"tForwardVec", (getter)pl_camera_tForwardVec, (setter)NULL, "Property: tForwardVec"},
+    {"tRightVec", (getter)pl_camera_tRightVec, (setter)NULL, "Property: tRightVec"},
+    {"fPitch", (getter)pl_camera_fPitch, (setter)NULL, "Property: fPitch"},
+    {"fYaw", (getter)pl_camera_fYaw, (setter)NULL, "Property: fYaw"},
+    {"fRoll", (getter)pl_camera_fRoll, (setter)NULL, "Property: fRoll"},
+    {"fNearZ", (getter)pl_camera_fNearZ, (setter)NULL, "Property: fNearZ"},
+    {"fFarZ", (getter)pl_camera_fFarZ, (setter)NULL, "Property: fFarZ"},
+    {"fYFov", (getter)pl_camera_fYFov, (setter)NULL, "Property: fYFov"},
+    {"fAspectRatio", (getter)pl_camera_fAspectRatio, (setter)NULL, "Property: fAspectRatio"},
+    {"fWidth", (getter)pl_camera_fWidth, (setter)NULL, "Property: fWidth"},
+    {"fHeight", (getter)pl_camera_fHeight, (setter)NULL, "Property: fHeight"},
+    {"eProjectionType", (getter)pl_camera_eProjectionType, (setter)NULL, "Property: eProjectionType"},
+    {"eDepthMode", (getter)pl_camera_eDepthMode, (setter)NULL, "Property: eDepthMode"},
     {NULL, NULL, 0, NULL}
 };
 
@@ -503,6 +539,9 @@ PyInit_pilotlight(void)
 
     for(uint32_t i = 0; i < PL_ARRAYSIZE(gatDrawIntPairs); i++)
         PyModule_AddIntConstant(ptModule, gatDrawIntPairs[i].pcName, gatDrawIntPairs[i].iValue);
+
+    for(uint32_t i = 0; i < PL_ARRAYSIZE(gatCameraIntPairs); i++)
+        PyModule_AddIntConstant(ptModule, gatCameraIntPairs[i].pcName, gatCameraIntPairs[i].iValue);
         
     const plApiRegistryI* ptApiRegistry = pl__python_load();
 

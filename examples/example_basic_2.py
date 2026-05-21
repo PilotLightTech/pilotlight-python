@@ -106,16 +106,15 @@ class App:
 
         # Camera.
         self.camera = plCamera()
-        plCameraI.init_perspective(
-            self.camera,
-            [-10.0, 4.0, -10.0],
-            math.radians(60.0),
-            1280.0 / 720.0,
-            0.1,
-            100.0,
-            False
-        )
-        plCameraI.rotate(self.camera, -0.295, 0.7)
+        tCameraDesc = plCameraPerspectiveDesc()
+        tCameraDesc.eDepthMode = plCameraDepthMode.PL_CAMERA_DEPTH_MODE_STANDARD
+        tCameraDesc.fAspectRatio = 1280.0 / 720.0
+        tCameraDesc.fNearZ = 0.1
+        tCameraDesc.fFarZ = 100.0
+        tCameraDesc.fYFov = math.radians(60.0)
+        plCameraI.set_perspective(self.camera, tCameraDesc)
+        plCameraI.set_position(self.camera, [-10.0, 4.0, -10.0])
+        plCameraI.rotate_euler(self.camera, -0.295, 0.7, 0.0)
         plCameraI.update(self.camera)
 
     def pl_app_shutdown(self):
@@ -132,7 +131,7 @@ class App:
         plStarterI.resize()
 
         tIO = plIOI.get_io()
-        plCameraI.set_aspect(self.camera, tIO.tMainViewportSize.x / tIO.tMainViewportSize.y)
+        plCameraI.set_viewport(self.camera, tIO.tMainViewportSize.x, tIO.tMainViewportSize.y)
 
     def draw_scene(self):
         """
@@ -451,26 +450,26 @@ class App:
         dt = ptIO.fDeltaTime
 
         if plIOI.is_key_down(plKey.PL_KEY_W):
-            plCameraI.translate(self.camera, 0.0, 0.0, camera_travel_speed * dt)
+            plCameraI.translate_local(self.camera, [0.0, 0.0, camera_travel_speed * dt])
 
         if plIOI.is_key_down(plKey.PL_KEY_S):
-            plCameraI.translate(self.camera, 0.0, 0.0, -camera_travel_speed * dt)
+            plCameraI.translate_local(self.camera, [0.0, 0.0, -camera_travel_speed * dt])
 
         if plIOI.is_key_down(plKey.PL_KEY_A):
-            plCameraI.translate(self.camera, -camera_travel_speed * dt, 0.0, 0.0)
+            plCameraI.translate_local(self.camera, [-camera_travel_speed * dt, 0.0, 0.0])
 
         if plIOI.is_key_down(plKey.PL_KEY_D):
-            plCameraI.translate(self.camera, camera_travel_speed * dt, 0.0, 0.0)
+            plCameraI.translate_local(self.camera, [camera_travel_speed * dt, 0.0, 0.0])
 
         if plIOI.is_key_down(plKey.PL_KEY_R):
-            plCameraI.translate(self.camera, 0.0, camera_travel_speed * dt, 0.0)
+            plCameraI.translate(self.camera, [0.0, camera_travel_speed * dt, 0.0])
 
         if plIOI.is_key_down(plKey.PL_KEY_F):
-            plCameraI.translate(self.camera, 0.0, -camera_travel_speed * dt, 0.0)
+            plCameraI.translate(self.camera, [0.0, -camera_travel_speed * dt, 0.0])
 
         if plIOI.is_mouse_dragging(plMouseButton.PL_MOUSE_BUTTON_LEFT, 1.0):
             tMouseDelta = plIOI.get_mouse_drag_delta(plMouseButton.PL_MOUSE_BUTTON_LEFT, 1.0)
-            plCameraI.rotate(self.camera, -tMouseDelta.y * camera_rotation_speed, -tMouseDelta.x * camera_rotation_speed)
+            plCameraI.rotate_euler(self.camera, -tMouseDelta.y * camera_rotation_speed, -tMouseDelta.x * camera_rotation_speed, 0.0)
             plIOI.reset_mouse_drag_delta(plMouseButton.PL_MOUSE_BUTTON_LEFT)
 
         plCameraI.update(self.camera)

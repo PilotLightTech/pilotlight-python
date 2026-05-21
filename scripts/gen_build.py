@@ -266,7 +266,7 @@ with pl.project("pilotlight_python"):
     # [SECTION] backend main
     #-----------------------------------------------------------------------------
     
-    with pl.target("pilotlight_main", pl.TargetType.STATIC_LIBRARY, False):
+    with pl.target("pilotlight_main", pl.TargetType.STATIC_LIBRARY, False, False):
 
         pl.add_source_files("pl_main.cpp")
         

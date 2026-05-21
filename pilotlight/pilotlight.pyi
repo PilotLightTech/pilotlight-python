@@ -20,6 +20,7 @@
 #      - ui api
 #      - ecs api
 #      - starter api
+#      - camera api
 #      - unstable apis
 #
 ########################################################################################################################
@@ -122,8 +123,44 @@ class plMat4:
     def __mul__(self, right: plMat4) -> plMat4: ...
 
 class plCamera:
-    tProjMat: plMat4
-    tViewMat: plMat4
+    
+    # projection
+    eProjectionType: plCameraProjectionType
+    eDepthMode: plCameraDepthMode
+    fNearZ: float
+    fFarZ: float
+
+    # perspective
+    fYFov: float
+    fAspectRatio: float # width/height
+
+    # orthographic
+    fWidth: float
+    fHeight: float
+
+    # pose
+    tPosition: plVec3
+    tRotation: plQuat
+    
+    # cached matrices
+    tViewMat: plMat4                 # world to camera/view
+    tProjMat: plMat4                 # view to clip
+    tViewProjMat: plMat4             # world to clip
+    tInvViewMat: plMat4              # camera/view to world
+    tInvProjMat: plMat4              # clip to view
+    tInvViewProjMat: plMat4          # clip to world
+    tViewMatNoTranslation: plMat4    # view matrix using camera-relative origin
+    tInvViewMatNoTranslation: plMat4 # inverse view matrix using camera-relative origin
+
+    # convenience rotations
+    fPitch: float # rotation about right vector
+    fYaw: float   # rotation about up vector
+    fRoll: float  # rotation about forward vector
+
+    # cached orientation vectors
+    tUpVec: plVec3
+    tForwardVec: plVec3
+    tRightVec: plVec3
 
 class plIO:
 
@@ -790,6 +827,80 @@ class plStarterI:
         ...
 
 ########################################################################################################################
+# [SECTION] camera api
+########################################################################################################################
+
+class plCameraI:
+
+    @staticmethod
+    def init(camera: plCamera):
+        ...
+
+    @staticmethod
+    def set_perspective(camera: plCamera, desc: plCameraPerspectiveDesc):
+        ...
+
+    @staticmethod
+    def set_orthographic(camera: plCamera, desc: plCameraOrthographicDesc):
+        ...
+
+    @staticmethod
+    def set_viewport(camera: plCamera, width: float, height: float):
+        ...
+
+    @staticmethod
+    def set_y_fov(camera: plCamera, fov: float):
+        ...
+
+    @staticmethod
+    def set_clip_planes(camera: plCamera, nearZ: float, farZ: float):
+        ...
+
+    @staticmethod
+    def set_depth_mode(camera: plCamera, mode: plCameraDepthMode):
+        ...
+
+    @staticmethod
+    def set_position(camera: plCamera, position: plVec3Like):
+        ...
+
+    @staticmethod
+    def set_rotation(camera: plCamera, rotation: plQuat):
+        ...
+
+    @staticmethod
+    def set_transform(camera: plCamera, position: plVec3Like, rotation: plQuat):
+        ...
+
+    @staticmethod
+    def translate(camera: plCamera, delta: plVec3Like):
+        ...
+
+    @staticmethod
+    def translate_local(camera: plCamera, delta: plVec3Like):
+        ...
+
+    @staticmethod
+    def look_at(camera: plCamera, eye: plVec3Like, target: plVec3Like, up: plVec3Like):
+        ...
+
+    @staticmethod
+    def rotate_euler_local(camera: plCamera, pitch: float, yaw: float, roll: float):
+        ...
+
+    @staticmethod
+    def rotate_euler(camera: plCamera, pitch: float, yaw: float, roll: float):
+        ...
+
+    @staticmethod
+    def set_euler(camera: plCamera, pitch: float, yaw: float, roll: float):
+        ...
+
+    @staticmethod
+    def update(camera: plCamera):
+        ...
+
+########################################################################################################################
 # [SECTION] unstable apis
 ########################################################################################################################
 
@@ -797,32 +908,6 @@ class plAnimationI:
 
     @staticmethod
     def register_ecs_system():
-        ...
-
-class plCameraI:
-
-    @staticmethod
-    def init_perspective(camera: plCamera, pos, yFov, aspect, nearZ, farZ, reverseZ):
-        ...
-
-    @staticmethod
-    def translate(camera: plCamera, dx: float, dy: float, dz: float):
-        ...
-
-    @staticmethod
-    def rotate(camera: plCamera, pitch: float, yaw: float):
-        ...
-
-    @staticmethod
-    def set_fov(camera: plCamera, yFov: float):
-        ...
-
-    @staticmethod
-    def set_aspect(camera: plCamera, aspect: float):
-        ...
-
-    @staticmethod
-    def update(camera: plCamera):
         ...
 
 class plCameraEcsI:
@@ -836,7 +921,7 @@ class plCameraEcsI:
         ...
 
     @staticmethod
-    def create_perspective(library: plComponentLibrary, name, pos, yFov, aspect, nearZ, farZ, reverseZ):
+    def create_perspective(library: plComponentLibrary, name: str, desc: plCameraPerspectiveDesc):
         ...
 
 class plMaterialI:

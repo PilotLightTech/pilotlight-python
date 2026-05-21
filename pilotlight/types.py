@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from typing import List, Dict, Tuple, overload, NewType
 from pilotlight.pilotlight import plVec2, plVec3, plVec4, plMat4
+from pilotlight.enums import *
 
 ########################################################################################################################
 # [SECTION] opaque types
@@ -24,6 +25,7 @@ plFloatPointer = NewType("plFloatPointer", object)
 plDoublePointer = NewType("plDoublePointer", object)
 
 type plPointer = plBoolPointer | plIntPointer | plFloatPointer | plDoublePointer
+type plQuat = plVec4
 
 class plShaderMacroDefinition:
     def __init__(self):
@@ -109,5 +111,21 @@ class plCone:
 class plDrawFrustumDesc:
     fYFov: float
     fAspectRatio: float
+    fNearZ: float
+    fFarZ: float
+
+# @dataclass(slots=True)
+class plCameraPerspectiveDesc:
+    eDepthMode: plCameraDepthMode
+    fYFov: float
+    fAspectRatio: float
+    fNearZ: float
+    fFarZ: float
+
+@dataclass(slots=True)
+class plCameraOrthographicDesc:
+    eDepthMode: plCameraDepthMode
+    fWidth: float
+    fHeight: float
     fNearZ: float
     fFarZ: float

@@ -75,19 +75,16 @@ class App:
         plEcsI.finalize()
         self.ptComponentLibrary = plEcsI.get_default_library()
 
-        self.tMainCamera = plCameraEcsI.create_perspective(
-            self.ptComponentLibrary,
-            "main camera",
-            [-4.012, 2.984, -1.109],
-            1.04719755,
-            500 / 500,
-            0.1,
-            30.0,
-            True
-            )
-        
+        tCameraDesc = plCameraPerspectiveDesc()
+        tCameraDesc.eDepthMode = plCameraDepthMode.PL_CAMERA_DEPTH_MODE_REVERSE_Z
+        tCameraDesc.fAspectRatio = 1.0
+        tCameraDesc.fNearZ = 0.1
+        tCameraDesc.fFarZ = 30.0
+        tCameraDesc.fYFov = 1.04719755
+        self.tMainCamera = plCameraEcsI.create_perspective(self.ptComponentLibrary, "main camera", tCameraDesc)
         camera = plEcsI.get_component(self.ptComponentLibrary, plCameraEcsI.get_ecs_type_key(), self.tMainCamera)
-        plCameraI.set_fov(camera, 1.04719755)
+        plCameraI.set_y_fov(camera, 1.04719755)
+        plCameraI.set_position(camera, [-4.012, 2.984, -1.109])
         plCameraI.update(camera)
 
         plRendererEcsI.create_directional_light(self.ptComponentLibrary, "direction light")
