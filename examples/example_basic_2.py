@@ -1,5 +1,6 @@
 import os
 import math
+from pathlib import Path
 
 # core
 import pilotlight.pilotlight as pl
@@ -7,6 +8,7 @@ from pilotlight.pilotlight import *
 from pilotlight.imgui import *
 from pilotlight.enums import *
 from pilotlight.types import *
+from pilotlight.pl_script_camera import pl_script_run
 
 class App:
 
@@ -30,10 +32,10 @@ class App:
         # Mount directories used by the shader/font systems.
         package_dir = os.path.dirname(os.path.abspath(pl.__file__))
 
-        plVfsI.mount_directory("/data", package_dir + "/../data")
-        plVfsI.mount_directory("/cache", "cache")
-        plVfsI.mount_directory("/shaders", package_dir + "/shaders")
-        plVfsI.mount_directory("/shader-temp", "shader-temp")
+        plVfsI.mount_directory("/cache", str(Path.cwd()) + "/../cache")
+        plVfsI.mount_directory("/shaders", os.path.dirname(os.path.abspath(pl.__file__)) + "/shaders")
+        plVfsI.mount_directory("/shader-temp", str(Path.cwd()) + "/../shader-temp")
+        plVfsI.mount_directory("/assets", str(Path.cwd()) + "/../../pilotlight/assets")
 
         # Create window.
         window_desc = plWindowDesc()
@@ -77,7 +79,7 @@ class App:
         self.ptFont = plDrawI.add_font_from_file_ttf(
             self.ptFontAtlas,
             tFontConfig,
-            "/data/Cousine-Regular.ttf"
+            "/assets/core/fonts/Cousine-Regular.ttf"
         )
 
         # Persistent 3D drawlist.
@@ -444,35 +446,7 @@ class App:
 
         ptIO = plIOI.get_io()
 
-        camera_travel_speed = 5.0
-        camera_rotation_speed = 0.005
-
-        dt = ptIO.fDeltaTime
-
-        if plIOI.is_key_down(plKey.PL_KEY_W):
-            plCameraI.translate_local(self.camera, [0.0, 0.0, camera_travel_speed * dt])
-
-        if plIOI.is_key_down(plKey.PL_KEY_S):
-            plCameraI.translate_local(self.camera, [0.0, 0.0, -camera_travel_speed * dt])
-
-        if plIOI.is_key_down(plKey.PL_KEY_A):
-            plCameraI.translate_local(self.camera, [-camera_travel_speed * dt, 0.0, 0.0])
-
-        if plIOI.is_key_down(plKey.PL_KEY_D):
-            plCameraI.translate_local(self.camera, [camera_travel_speed * dt, 0.0, 0.0])
-
-        if plIOI.is_key_down(plKey.PL_KEY_R):
-            plCameraI.translate(self.camera, [0.0, camera_travel_speed * dt, 0.0])
-
-        if plIOI.is_key_down(plKey.PL_KEY_F):
-            plCameraI.translate(self.camera, [0.0, -camera_travel_speed * dt, 0.0])
-
-        if plIOI.is_mouse_dragging(plMouseButton.PL_MOUSE_BUTTON_LEFT, 1.0):
-            tMouseDelta = plIOI.get_mouse_drag_delta(plMouseButton.PL_MOUSE_BUTTON_LEFT, 1.0)
-            plCameraI.rotate_euler(self.camera, -tMouseDelta.y * camera_rotation_speed, -tMouseDelta.x * camera_rotation_speed, 0.0)
-            plIOI.reset_mouse_drag_delta(plMouseButton.PL_MOUSE_BUTTON_LEFT)
-
-        plCameraI.update(self.camera)
+        pl_script_run(self.camera)
 
         # Start a new draw frame. This clears/refreshes internal draw state.
         plDrawI.new_frame()
@@ -482,7 +456,7 @@ class App:
 
         overlay = (
             "3D plDrawI Python Example\n"
-            "W/S/A/D: move | R/F: up/down | LMB drag: look\n"
+            "Unreal Camera Controls\n"
             f"FPS: {ptIO.fFrameRate:.1f}"
         )
 

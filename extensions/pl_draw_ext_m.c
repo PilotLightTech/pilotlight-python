@@ -589,6 +589,168 @@ draw_add_text_clipped(PyObject* self, PyObject* args)
 }
 
 PyObject*
+draw_use_linear_sampler(PyObject* self, PyObject* args)
+{
+ 
+    PyObject* ptPythonLayer = NULL;
+
+    static const char* apcKeywords[] = {
+        "layer",
+        NULL,
+    };
+
+	if (!pl_parse("O", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+        &ptPythonLayer))
+		return NULL;
+
+    plDrawLayer2D* ptLayer = PyCapsule_GetPointer(ptPythonLayer, "plDrawLayer2D");
+    gptDraw->use_linear_sampler(ptLayer);
+    Py_RETURN_NONE;
+}
+
+PyObject*
+draw_use_nearest_sampler(PyObject* self, PyObject* args)
+{
+ 
+    PyObject* ptPythonLayer = NULL;
+
+    static const char* apcKeywords[] = {
+        "layer",
+        NULL,
+    };
+
+	if (!pl_parse("O", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+        &ptPythonLayer))
+		return NULL;
+
+    plDrawLayer2D* ptLayer = PyCapsule_GetPointer(ptPythonLayer, "plDrawLayer2D");
+    gptDraw->use_nearest_sampler(ptLayer);
+    Py_RETURN_NONE;
+}
+
+PyObject*
+draw_add_image(PyObject* self, PyObject* args)
+{
+ 
+    PyObject* ptPythonLayer = NULL;
+    uint32_t uTextureId = 0;
+    PyObject* ptPythonminP = NULL;
+    PyObject* ptPythonmaxP = NULL;
+    PyObject* ptPythonminUV = NULL;
+    PyObject* ptPythonmaxUV = NULL;
+    uint32_t uColor = PL_COLOR_32_WHITE;
+
+    static const char* apcKeywords[] = {
+        "layer",
+        "textureID",
+        "minP",
+        "maxP",
+        "minUV",
+        "maxUV",
+        "color",
+        NULL,
+    };
+
+	if (!pl_parse("OIOO|OOI", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+        &ptPythonLayer, &uTextureId, &ptPythonminP, &ptPythonmaxP, &ptPythonminUV, &ptPythonmaxUV, &uColor))
+		return NULL;
+
+    plDrawLayer2D* ptLayer = PyCapsule_GetPointer(ptPythonLayer, "plDrawLayer2D");
+    plVec2 tMinP = {0};
+    plVec2 tMaxP = {0};
+    plVec2 tMinUV = {0};
+    plVec2 tMaxUV = {1.0f, 1.0f};
+
+    pl_vec2_from_py(ptPythonminP, &tMinP);
+    pl_vec2_from_py(ptPythonmaxP, &tMaxP);
+    if(ptPythonminUV)
+        pl_vec2_from_py(ptPythonminUV, &tMinUV);
+    if(ptPythonmaxUV)
+        pl_vec2_from_py(ptPythonmaxUV, &tMaxUV);
+
+    gptDraw->add_image_ex(ptLayer,
+        uTextureId,
+        tMinP,
+        tMaxP,
+        tMinUV,
+        tMaxUV,
+        uColor);
+
+    Py_RETURN_NONE;
+}
+
+PyObject*
+draw_add_image_quad(PyObject* self, PyObject* args)
+{
+ 
+    PyObject* ptPythonLayer = NULL;
+    uint32_t uTextureId = 0;
+    PyObject* ptPythonP0 = NULL;
+    PyObject* ptPythonP1 = NULL;
+    PyObject* ptPythonP2 = NULL;
+    PyObject* ptPythonP3 = NULL;
+    PyObject* ptPythonP0UV = NULL;
+    PyObject* ptPythonP1UV = NULL;
+    PyObject* ptPythonP2UV = NULL;
+    PyObject* ptPythonP3UV = NULL;
+    uint32_t uColor = PL_COLOR_32_WHITE;
+
+    static const char* apcKeywords[] = {
+        "layer",
+        "textureID",
+        "p0",
+        "p1",
+        "p2",
+        "p3",
+        "p0UV",
+        "p1UV",
+        "p2UV",
+        "p3UV",
+        "color",
+        NULL,
+    };
+
+	if (!pl_parse("OIOOOO|OOOOI", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+        &ptPythonLayer, &uTextureId, &ptPythonP0, &ptPythonP1, &ptPythonP2, &ptPythonP3,
+        &ptPythonP0UV, &ptPythonP1UV, &ptPythonP2UV, &ptPythonP3UV,
+        &uColor))
+		return NULL;
+
+    plDrawLayer2D* ptLayer = PyCapsule_GetPointer(ptPythonLayer, "plDrawLayer2D");
+    plVec2 tP0 = {0};
+    plVec2 tP1 = {0};
+    plVec2 tP2 = {0};
+    plVec2 tP3 = {0};
+    plVec2 tP0UV = {0};
+    plVec2 tP1UV = {0};
+    plVec2 tP2UV = {0};
+    plVec2 tP3UV = {0};
+    
+    pl_vec2_from_py(ptPythonP0, &tP0);
+    pl_vec2_from_py(ptPythonP1, &tP1);
+    pl_vec2_from_py(ptPythonP2, &tP2);
+    pl_vec2_from_py(ptPythonP3, &tP3);
+    if(ptPythonP0UV) pl_vec2_from_py(ptPythonP0UV, &tP0UV);
+    if(ptPythonP1UV) pl_vec2_from_py(ptPythonP1UV, &tP1UV);
+    if(ptPythonP2UV) pl_vec2_from_py(ptPythonP2UV, &tP2UV);
+    if(ptPythonP3UV) pl_vec2_from_py(ptPythonP3UV, &tP3UV);
+
+    gptDraw->add_image_quad_ex(ptLayer,
+        uTextureId,
+        tP0,
+        tP1,
+        tP2,
+        tP3,
+        tP0UV,
+        tP1UV,
+        tP2UV,
+        tP3UV,
+        uColor);
+
+    Py_RETURN_NONE;
+}
+
+PyObject*
 draw_add_triangle_filled(PyObject* self, PyObject* args)
 {
  
@@ -2355,6 +2517,24 @@ draw_add_3d_text(PyObject* self, PyObject* args)
     Py_RETURN_NONE;
 }
 
+PyObject*
+draw_create_bind_group_for_texture(PyObject* self, PyObject* args)
+{
+ 
+    plTextureHandle tHandle = {0};
+
+    static const char* apcKeywords[] = {
+        "handle",
+        NULL,
+    };
+
+	if (!pl_parse("I", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+        &tHandle.uData))
+		return NULL;
+    plBindGroupHandle tBGHandle = gptDraw->create_bind_group_for_texture(tHandle);
+    return PyLong_FromUInt32(tBGHandle.uData);
+}
+
 static PyMethodDef gatCommandsplDrawI[] =
 {
     {"new_frame", (PyCFunction)draw_new_frame, METH_NOARGS | METH_STATIC, NULL},
@@ -2362,6 +2542,7 @@ static PyMethodDef gatCommandsplDrawI[] =
     {"initialize", (PyCFunction)draw_initialize, METH_O | METH_STATIC, NULL},
     {"create_font_atlas", (PyCFunction)draw_create_font_atlas, METH_NOARGS | METH_STATIC, NULL},
     {"build_font_atlas", (PyCFunction)draw_build_font_atlas, METH_VARARGS | METH_STATIC, NULL},
+    {"create_bind_group_for_texture", (PyCFunction)draw_create_bind_group_for_texture, METH_VARARGS | METH_STATIC, NULL},
     {"get_current_font_atlas", (PyCFunction)draw_get_current_font_atlas, METH_NOARGS | METH_STATIC, NULL},
     {"get_first_font", (PyCFunction)draw_get_first_font, METH_O | METH_STATIC, NULL},
     {"add_default_font", (PyCFunction)draw_add_default_font, METH_O | METH_STATIC, NULL},
@@ -2382,6 +2563,8 @@ static PyMethodDef gatCommandsplDrawI[] =
     {"add_text_clipped", (PyCFunction)draw_add_text_clipped, METH_VARARGS | METH_STATIC, NULL},
     {"add_triangle", (PyCFunction)draw_add_triangle, METH_VARARGS | METH_STATIC, NULL},
     {"add_line", (PyCFunction)draw_add_line, METH_VARARGS | METH_STATIC, NULL},
+    {"add_image", (PyCFunction)draw_add_image, METH_VARARGS | METH_STATIC, NULL},
+    {"add_image_quad", (PyCFunction)draw_add_image_quad, METH_VARARGS | METH_STATIC, NULL},
     {"add_lines", (PyCFunction)draw_add_lines, METH_VARARGS | METH_STATIC, NULL},
     {"add_rect", (PyCFunction)draw_add_rect, METH_VARARGS | METH_STATIC, NULL},
     {"add_rect_rounded", (PyCFunction)draw_add_rect_rounded, METH_VARARGS | METH_STATIC, NULL},
@@ -2423,6 +2606,8 @@ static PyMethodDef gatCommandsplDrawI[] =
     {"add_3d_plane_xy_filled", (PyCFunction)draw_add_3d_plane_xy_filled, METH_VARARGS | METH_STATIC, NULL},
     {"add_3d_plane_yz_filled", (PyCFunction)draw_add_3d_plane_yz_filled, METH_VARARGS | METH_STATIC, NULL},
     {"add_3d_text", (PyCFunction)draw_add_3d_text, METH_VARARGS | METH_STATIC, NULL},
+    {"use_linear_sampler", (PyCFunction)draw_use_linear_sampler, METH_VARARGS | METH_STATIC, NULL},
+    {"use_nearest_sampler", (PyCFunction)draw_use_nearest_sampler, METH_VARARGS | METH_STATIC, NULL},
     {NULL, NULL, 0, NULL}
 };
 

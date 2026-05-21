@@ -23,6 +23,8 @@ plBoolPointer = NewType("plBoolPointer", object)
 plIntPointer = NewType("plIntPointer", object)
 plFloatPointer = NewType("plFloatPointer", object)
 plDoublePointer = NewType("plDoublePointer", object)
+plScene = NewType("plScene", object)
+plView = NewType("plView", object)
 
 type plPointer = plBoolPointer | plIntPointer | plFloatPointer | plDoublePointer
 type plQuat = plVec4
@@ -74,6 +76,11 @@ class plFontConfig:
     ptMergeFont: plFont | None = None
     uVOverSampling: int = 0 # BITMAP ONLY
     uHOverSampling: int = 0 # BITMAP ONLY
+
+class plResourceManagerInit:
+    ptDevice: plDevice
+    uMaxTextureResolution: int = 1024
+    pcCacheDirectory: str = "../cache"
 
 @dataclass(slots=True)
 class plWindowDesc:

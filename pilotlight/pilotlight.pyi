@@ -559,6 +559,28 @@ class plDrawI:
     def add_convex_polygon_filled(layer: plDrawLayer2D, points: plVec2ListLike, options: plDrawLineOptions):
         ...
 
+    @staticmethod
+    def create_bind_group_for_texture(handle: int) -> int:
+        ...
+
+    @staticmethod
+    def add_image(layer: plDrawLayer2D, textureID, minP: plVec2Like, maxP: plVec2Like, minUV: plVec2Like = [0.0, 0.0], maxUV: plVec2Like = [1.0, 1.0], color: int = PL_COLOR_32_WHITE):
+        ...
+
+    @staticmethod
+    def add_image_quad(layer: plDrawLayer2D, textureID, p0: plVec2Like, p1: plVec2Like, p2: plVec2Like, p3: plVec2Like,
+                       p0UV: plVec2Like = [0.0, 0.0], p1UV: plVec2Like = [0.0, 1.0], p2UV: plVec2Like = [1.0, 1.0],
+                       p3UV: plVec2Like = [1.0, 0.0], color: int = PL_COLOR_32_WHITE):
+        ...
+
+    @staticmethod
+    def use_nearest_sampler(layer: plDrawLayer2D):
+        ...
+
+    @staticmethod
+    def use_linear_sampler(layer: plDrawLayer2D):
+        ...
+
     ####################################################################################################################
     # 3D
     ####################################################################################################################
@@ -707,7 +729,7 @@ class plUiI:
         ...
 
     @staticmethod
-    def button(name : str, **kwargs):
+    def button(name : str, **kwargs) -> bool:
         ...
 
     @staticmethod
@@ -716,6 +738,14 @@ class plUiI:
 
     @staticmethod
     def input_text(name, value, **kwargs):
+        ...
+
+    @staticmethod
+    def wants_keyboard_capture() -> bool:
+        ...
+
+    @staticmethod
+    def wants_mouse_capture() -> bool:
         ...
 
 ########################################################################################################################
@@ -741,7 +771,15 @@ class plEcsI:
         ...
 
     @staticmethod
-    def get_component(library: plComponentLibrary, key, entity):
+    def get_component(library: plComponentLibrary, key, entity) -> plCamera:
+        ...
+
+    @staticmethod
+    def run_transform_update_system(library: plComponentLibrary):
+        ...
+
+    @staticmethod
+    def run_hierarchy_update_system(library: plComponentLibrary):
         ...
 
 ########################################################################################################################
@@ -910,6 +948,14 @@ class plAnimationI:
     def register_ecs_system():
         ...
 
+    @staticmethod
+    def run_animation_update_system(library: plComponentLibrary, deltaTime: float):
+        ...
+
+    @staticmethod
+    def run_inverse_kinematics_update_system(library: plComponentLibrary):
+        ...
+
 class plCameraEcsI:
 
     @staticmethod
@@ -924,6 +970,10 @@ class plCameraEcsI:
     def create_perspective(library: plComponentLibrary, name: str, desc: plCameraPerspectiveDesc):
         ...
 
+    @staticmethod
+    def run_ecs(library: plComponentLibrary):
+        ...
+
 class plMaterialI:
 
     @staticmethod
@@ -936,10 +986,20 @@ class plMeshI:
     def register_ecs_system():
         ...
 
+class plJobI:
+
+    @staticmethod
+    def initialize():
+        ...
+
 class plPhysicsI:
 
     @staticmethod
     def register_ecs_system():
+        ...
+
+    @staticmethod
+    def update(deltaTime: float, library: plComponentLibrary):
         ...
 
 class plScriptI:
@@ -964,6 +1024,26 @@ class plRendererI:
     def cleanup():
         ...
 
+    @staticmethod
+    def begin_frame():
+        ...
+
+    @staticmethod
+    def prepare_scene(scene: plScene):
+        ...
+
+    @staticmethod
+    def prepare_view(view: plView, camera):
+        ...
+
+    @staticmethod
+    def render_view(view: plView, camera):
+        ...
+
+    @staticmethod
+    def resize_view(view: plView, dims: plVec2Like):
+        ...
+
 class plRendererEcsI:
 
     @staticmethod
@@ -971,5 +1051,43 @@ class plRendererEcsI:
         ...
 
     @staticmethod
-    def create_directional_light(library: plComponentLibrary, name):
+    def run_light_update_system(library: plComponentLibrary):
+        ...
+
+    @staticmethod
+    def run_skin_update_system(library: plComponentLibrary):
+        ...
+
+    @staticmethod
+    def run_object_update_system(library: plComponentLibrary):
+        ...
+
+    @staticmethod
+    def run_environment_probe_update_system(library: plComponentLibrary):
+        ...
+
+class plResourceI:
+
+    @staticmethod
+    def initialize(init: plResourceManagerInit):
+        ...
+
+    @staticmethod
+    def cleanup():
+        ...
+
+    @staticmethod
+    def clear():
+        ...
+
+    @staticmethod
+    def new_frame():
+        ...
+
+    @staticmethod
+    def load(file: str, flags: int) -> int:
+        ...
+
+    @staticmethod
+    def get_texture(handle: int) -> int:
         ...

@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 
 # core
 import pilotlight.pilotlight as pl
@@ -35,13 +36,10 @@ class App:
         # Mount directories used by the shader system.
         # /shaders points at the Python package shader folder.
         # /shader-temp is where compiled/intermediate shader output can go.
-        plVfsI.mount_directory("/data", os.path.dirname(os.path.abspath(pl.__file__)) + "/../data")
-        plVfsI.mount_directory("/cache", "cache")
-        plVfsI.mount_directory(
-            "/shaders",
-            os.path.dirname(os.path.abspath(pl.__file__)) + "/shaders"
-        )
-        plVfsI.mount_directory("/shader-temp", "shader-temp")
+        plVfsI.mount_directory("/cache", str(Path.cwd()) + "/../cache")
+        plVfsI.mount_directory("/shaders", os.path.dirname(os.path.abspath(pl.__file__)) + "/shaders")
+        plVfsI.mount_directory("/shader-temp", str(Path.cwd()) + "/../shader-temp")
+        plVfsI.mount_directory("/assets", str(Path.cwd()) + "/../../pilotlight/assets")
 
         # Create and show the OS window.
         window_desc = plWindowDesc()
@@ -77,7 +75,7 @@ class App:
         tFontConfig.uHOverSampling = 1
         tFontConfig.uVOverSampling = 1
         tFontConfig.ptRanges = [tFontRange]
-        self.ptFont = plDrawI.add_font_from_file_ttf(self.ptFontAtlas, tFontConfig, "/data/Cousine-Regular.ttf");
+        self.ptFont = plDrawI.add_font_from_file_ttf(self.ptFontAtlas, tFontConfig, "/assets/core/fonts/Cousine-Regular.ttf");
 
         self.drawlist = plDrawI.request_2d_drawlist()
         self.ptFGLayer = plDrawI.request_2d_layer(self.drawlist)

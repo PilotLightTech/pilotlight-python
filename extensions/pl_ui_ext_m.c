@@ -44,6 +44,18 @@ end_window(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
+wants_keyboard_capture(PyObject* self)
+{
+    return PyBool_FromLong(gptUI->wants_keyboard_capture());
+}
+
+PyObject*
+wants_mouse_capture(PyObject* self)
+{
+    return PyBool_FromLong(gptUI->wants_mouse_capture());
+}
+
+PyObject*
 button(PyObject* self, PyObject* args, PyObject* kwargs)
 {
  
@@ -121,6 +133,8 @@ static PyMethodDef gatCommandsplUiI[] =
     PL_PYTHON_METHOD(button, METH_VARARGS | METH_KEYWORDS | METH_STATIC, NULL),
     PL_PYTHON_METHOD(checkbox, METH_VARARGS | METH_KEYWORDS | METH_STATIC, NULL),
     PL_PYTHON_METHOD(input_text, METH_VARARGS | METH_KEYWORDS | METH_STATIC, NULL),
+    PL_PYTHON_METHOD(wants_keyboard_capture, METH_NOARGS | METH_STATIC, NULL),
+    PL_PYTHON_METHOD(wants_mouse_capture, METH_NOARGS | METH_STATIC, NULL),
     {NULL, NULL, 0, NULL}
 };
 

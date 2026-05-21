@@ -1,4 +1,6 @@
 import os
+import math
+from pathlib import Path
 
 # core
 import pilotlight.pilotlight as pl
@@ -6,16 +8,18 @@ from pilotlight.pilotlight import *
 from pilotlight.enums import *
 from pilotlight.imgui import *
 from pilotlight.types import *
+from pilotlight.pl_script_camera import pl_script_run
+
 
 class App:
 
     def __init__(self):
         self.ptWindow = None
+        self.bResize = False
         self.counter = None
         self.show_imgui_demo = None
         self.show_implot_demo = None
         self.tMainCamera = None
-        self.ptComponentLibrary = None
         self.some_string_array = bytearray("pizza", 'utf-8')
         self.some_string_array.resize(256)
 
@@ -24,10 +28,14 @@ class App:
         self.show_imgui_demo = pl_create_bool_pointer()
         self.show_implot_demo = pl_create_bool_pointer()
 
-        plVfsI.mount_directory("/cache", "cache")
+        plVfsI.mount_directory("/cache", str(Path.cwd()) + "/../cache")
         plVfsI.mount_directory("/shaders", os.path.dirname(os.path.abspath(pl.__file__)) + "/shaders")
-        plVfsI.mount_directory("/shader-temp", "shader-temp")
+        plVfsI.mount_directory("/shader-temp", str(Path.cwd()) + "/../shader-temp")
+        plVfsI.mount_directory("/assets", str(Path.cwd()) + "/../../pilotlight/assets")
+        plVfsI.mount_directory("/environments", str(Path.cwd()) + "/../../pilotlight/assets/development/environments")
+        plVfsI.mount_directory("/gltf-samples", str(Path.cwd()) + "/../../pilotlight/assets/gltf-samples/Models")
 
+        plJobI.initialize()
 
         window_desc = plWindowDesc()
         window_desc.pcTitle = "Python Example"
@@ -35,7 +43,7 @@ class App:
         plWindowI.show(self.ptWindow)
 
         starter_flags = plStarterFlag.PL_STARTER_FLAGS_ALL_EXTENSIONS
-        starter_flags |= plStarterFlag.PL_STARTER_FLAGS_MSAA
+        # starter_flags |= plStarterFlag.PL_STARTER_FLAGS_MSAA
         starter_flags &= ~plStarterFlag.PL_STARTER_FLAGS_SHADER_EXT
         plStarterI.initialize(self.ptWindow, starter_flags)
 
@@ -51,13 +59,6 @@ class App:
         plDearImGuiI.initialize(plStarterI.get_device(), plStarterI.get_swapchain(), plStarterI.get_render_pass())
 
         self.counter = plStatsI.get_counter("python counter")
-
-        # mod = plShaderI.load_glsl("draw_3d.frag", "main")
-        # plShaderI.write_to_disk("C:/dev/pilotlight-python/sandbox/blah.spv", mod)
-
-        # (result, pakFile) = pl_pak_begin_packing("C:/dev/pilotlight-python/sandbox/shaders.pak", 2)
-        # result = pl_pak_add_from_disk(pakFile, "shaders.pak", "C:/dev/pilotlight-python/sandbox/blah.spv", False)
-        # pl_pak_end_packing(pakFile)
 
         plShaderVariantI.initialize(plStarterI.get_device())
 
@@ -75,22 +76,13 @@ class App:
         plEcsI.finalize()
         self.ptComponentLibrary = plEcsI.get_default_library()
 
-        tCameraDesc = plCameraPerspectiveDesc()
-        tCameraDesc.eDepthMode = plCameraDepthMode.PL_CAMERA_DEPTH_MODE_REVERSE_Z
-        tCameraDesc.fAspectRatio = 1.0
-        tCameraDesc.fNearZ = 0.1
-        tCameraDesc.fFarZ = 30.0
-        tCameraDesc.fYFov = 1.04719755
-        self.tMainCamera = plCameraEcsI.create_perspective(self.ptComponentLibrary, "main camera", tCameraDesc)
-        camera = plEcsI.get_component(self.ptComponentLibrary, plCameraEcsI.get_ecs_type_key(), self.tMainCamera)
-        plCameraI.set_y_fov(camera, 1.04719755)
-        plCameraI.set_position(camera, [-4.012, 2.984, -1.109])
-        plCameraI.update(camera)
+        result, self.tMainCamera, self.ptScene, self.ptView = plRendererI.load_test_world("/assets/core/scenes/scene-humanoid.json", self.ptComponentLibrary)
 
-        plRendererEcsI.create_directional_light(self.ptComponentLibrary, "direction light")
+
+        self.drawlist = plDrawI.request_2d_drawlist()
+        self.ptFGLayer = plDrawI.request_2d_layer(self.drawlist)
 
         ImGui.StyleColorsDark()
-
 
     def pl_app_shutdown(self):
         plGraphicsI.flush_device(plStarterI.get_device())
@@ -102,15 +94,27 @@ class App:
 
     def pl_app_resize(self):
 
-        print("resizing")
+        io = plIOI.get_io()
+        camera = plEcsI.get_component(self.ptComponentLibrary, plCameraEcsI.get_ecs_type_key(), self.tMainCamera)
+        plCameraI.set_viewport(camera, io.tMainViewportSize.x, io.tMainViewportSize.y)
+        plCameraI.update(camera)
         plStarterI.resize()
+        self.bResize = True
 
     def pl_app_update(self):
 
-        
+        io = plIOI.get_io()
+
         if not plStarterI.begin_frame():
             return
         
+        plResourceI.new_frame()
+        plRendererI.begin_frame()
+
+        if self.bResize:
+            plRendererI.resize_view(self.ptView, io.tMainViewportSize)
+            self.bResize = False
+
         plDearImGuiI.new_frame(plStarterI.get_device(), plStarterI.get_render_pass())
 
         if pl_get_pointer_value(self.show_imgui_demo):
@@ -118,7 +122,21 @@ class App:
         
         if pl_get_pointer_value(self.show_implot_demo):
             ImPlot.ShowDemoWindow(self.show_implot_demo)
-     
+
+        # script here
+        ptCamera = plEcsI.get_component(self.ptComponentLibrary, plCameraEcsI.get_ecs_type_key(), self.tMainCamera)
+        pl_script_run(ptCamera)
+        plAnimationI.run_animation_update_system(self.ptComponentLibrary, io.fDeltaTime)
+        plPhysicsI.update(io.fDeltaTime, self.ptComponentLibrary)
+        plEcsI.run_transform_update_system(self.ptComponentLibrary)
+        plEcsI.run_hierarchy_update_system(self.ptComponentLibrary)
+        plRendererEcsI.run_light_update_system(self.ptComponentLibrary)
+        plCameraEcsI.run_ecs(self.ptComponentLibrary)
+        plAnimationI.run_inverse_kinematics_update_system(self.ptComponentLibrary)
+        plRendererEcsI.run_skin_update_system(self.ptComponentLibrary)
+        plRendererEcsI.run_object_update_system(self.ptComponentLibrary)
+        plRendererEcsI.run_environment_probe_update_system(self.ptComponentLibrary)
+
         # drawing API
         fgLayer = plStarterI.get_foreground_layer()
         plDrawI.add_triangle_filled(fgLayer, [50.0, 100.0], [200.0, 0.0], [100.0, 200.0], plDrawSolidOptions(PL_COLOR_32_GREEN))
@@ -171,9 +189,23 @@ class App:
                 print("Pressed Imgui Button")
         ImGui.End()
 
-        render_encoder = plStarterI.begin_main_pass()
+        camera = plEcsI.get_component(self.ptComponentLibrary, plCameraEcsI.get_ecs_type_key(), self.tMainCamera)
+        plRendererI.prepare_scene(self.ptScene)
+        plRendererI.prepare_view(self.ptView, camera)
+        plRendererI.render_view(self.ptView, camera)
 
+        tUV = plVec2()
+        
+        uTexture, tUV.x, tUV.y = plRendererI.get_view_color_bind_group(self.ptView)
+        plDrawI.add_image(self.ptFGLayer, uTexture, plVec2(), io.tMainViewportSize, plVec2(), tUV, PL_COLOR_32_WHITE)
+        plDrawI.submit_2d_layer(self.ptFGLayer)
+
+        render_encoder = plStarterI.begin_main_pass()
+        
+        plDrawI.submit_2d_drawlist(self.drawlist, render_encoder, io.tMainViewportSize.x, io.tMainViewportSize.y, plGraphicsI.get_swapchain_info(plStarterI.get_swapchain()).tSampleCount)
         plDearImGuiI.render(render_encoder)
+
+        
 
         plStarterI.end_main_pass()
 

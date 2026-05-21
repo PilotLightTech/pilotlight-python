@@ -38,6 +38,7 @@ class App:
         plVfsI.mount_directory("/cache", str(Path.cwd()) + "/../cache")
         plVfsI.mount_directory("/shaders", os.path.dirname(os.path.abspath(pl.__file__)) + "/shaders")
         plVfsI.mount_directory("/shader-temp", str(Path.cwd()) + "/../shader-temp")
+        plVfsI.mount_directory("/assets", str(Path.cwd()) + "/../../pilotlight/assets")
 
         # Create and show the OS window.
         window_desc = plWindowDesc()
@@ -79,6 +80,15 @@ class App:
         ptFontAtlas = plDrawI.get_current_font_atlas()
         self.ptFont = plDrawI.get_first_font(ptFontAtlas)
 
+        self.ptDevice = plStarterI.get_device()
+        resourceManagerInit = plResourceManagerInit()
+        resourceManagerInit.ptDevice = self.ptDevice
+        plResourceI.initialize(resourceManagerInit)
+
+        self.texture_resource = plResourceI.load("/assets/core/textures/sprite_map.png", 0)
+        self.texture_handle = plResourceI.get_texture(self.texture_resource)
+        self.texture_bg = plDrawI.create_bind_group_for_texture(self.texture_handle)
+
     def pl_app_shutdown(self):
         """
         Called once when the app exits.
@@ -86,7 +96,9 @@ class App:
         """
 
         plGraphicsI.flush_device(plStarterI.get_device())
+        plResourceI.cleanup()
         plStarterI.cleanup()
+        
         plWindowI.destroy(self.ptWindow)
 
     def pl_app_resize(self):
@@ -109,93 +121,12 @@ class App:
         # Begin the frame. If it returns False, skip rendering this frame.
         if not plStarterI.begin_frame():
             return
+        
+        plResourceI.new_frame()
 
         # Foreground fgLayer is a convenient draw list for 2D overlay-style
         # rendering.
         fgLayer = plStarterI.get_foreground_layer()
-
-        # Outer frame
-        plDrawI.add_rect(
-            fgLayer,
-            [40.0, 40.0],
-            [1240.0, 680.0],
-            plDrawLineOptions(PL_COLOR_32_YELLOW, 2.0)
-        )
-
-        # Diagonal guide line
-        plDrawI.add_line(
-            fgLayer,
-            [40.0, 40.0],
-            [1240.0, 680.0],
-            plDrawLineOptions(PL_COLOR_32_GREEN, 2.0)
-        )
-
-        # Rounded panel region
-        plDrawI.add_rect_rounded(
-            fgLayer,
-            [70.0, 70.0],
-            [500.0, 300.0],
-            16.0,                   # rounding radius
-            0,                      # segment count (0 = automatic/default)
-            plDrawRectFlag.PL_DRAW_RECT_FLAG_NONE,
-            plDrawLineOptions(PL_COLOR_32_CYAN, 2.0)
-        )
-
-        # Triangle outline
-        plDrawI.add_triangle(
-            fgLayer,
-            [120.0, 240.0],
-            [240.0, 120.0],
-            [320.0, 260.0],
-            plDrawLineOptions(PL_COLOR_32_WHITE)
-        )
-
-        # Arbitrary quad outline
-        plDrawI.add_quad(
-            fgLayer,
-            [580.0, 100.0],
-            [760.0, 120.0],
-            [720.0, 260.0],
-            [540.0, 220.0],
-            plDrawLineOptions(PL_COLOR_32_ORANGE)
-        )
-
-        # Circle outline
-        plDrawI.add_circle(
-            fgLayer,
-            [930.0, 180.0],
-            70.0,
-            0,  # segment count (0 = automatic/default)
-            plDrawLineOptions(PL_COLOR_32_BLUE)
-        )
-
-        # Lines
-        plDrawI.add_lines(
-            fgLayer,
-            [
-                [1040.0, 110.0],
-                [1180.0, 250.0],
-                [1140.0, 90.0]
-            ],
-            plDrawLineOptions(PL_COLOR_32_GREEN)
-        )
-
-        # text
-        plDrawI.add_text(fgLayer, [300, 300], "Hello Python", plDrawTextOptions(self.ptFont, 25.0, PL_COLOR_32_CYAN))
-
-        # Polygon outline
-        plDrawI.add_polygon(
-            fgLayer,
-            [
-                [1040.0, 110.0],
-                [1140.0, 90.0],
-                [1200.0, 150.0],
-                [1180.0, 250.0],
-                [1070.0, 260.0],
-                [1010.0, 180.0],
-            ],
-            plDrawLineOptions(PL_COLOR_32_RED)
-        )
 
         plDrawI.add_bezier_quad(
             fgLayer,
@@ -217,37 +148,7 @@ class App:
             plDrawLineOptions(PL_COLOR_32_RED, 3.0)
         )
 
-        # Filled triangle
-        plDrawI.add_triangle_filled(
-            fgLayer,
-            [640.0, 420.0],
-            [820.0, 360.0],
-            [760.0, 560.0],
-            plDrawSolidOptions(PL_COLOR_32_WHITE)
-        )
-
-        # Filled-looking composition using multiple primitives
-        plDrawI.add_line(
-            fgLayer,
-            [900.0, 360.0],
-            [1180.0, 360.0],
-            plDrawLineOptions(PL_COLOR_32_WHITE, 4.0)
-        )
-
-        plDrawI.add_rect(
-            fgLayer,
-            [920.0, 390.0],
-            [1160.0, 560.0],
-            plDrawLineOptions(PL_COLOR_32_WHITE, 3.0)
-        )
-
-        plDrawI.add_circle(
-            fgLayer,
-            [1040.0, 475.0],
-            50.0,
-            0,
-            plDrawLineOptions(PL_COLOR_32_GREEN)
-        )
+        plDrawI.add_image(fgLayer, self.texture_bg, [0, 0], [500, 500])
 
         # Submit/present the frame.
         plStarterI.end_frame()

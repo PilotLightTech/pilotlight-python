@@ -45,6 +45,12 @@ typedef struct _pyplSwapchainInfo
     plSwapchainInfo tInfo;
 } pyplSwapchainInfo;
 
+typedef struct _plPyCamera
+{
+    PyObject_HEAD
+    plCamera* ptCamera;
+} plPyCamera;
+
 // custom types
 static PyObject* gptIOType = NULL;
 static PyObject* gptSwapchainInfoType = NULL;

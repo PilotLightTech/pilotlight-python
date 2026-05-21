@@ -33,7 +33,7 @@ with pl.project("pilotlight_python"):
     # project wide settings
     pl.set_output_directory("../out")
     pl.add_link_directories("../out")
-    pl.add_definitions("_USE_MATH_DEFINES")
+    pl.add_definitions("_USE_MATH_DEFINES", "PL_LANGUAGE_PYTHON")
 
     pl.add_include_directories(
         "../src",

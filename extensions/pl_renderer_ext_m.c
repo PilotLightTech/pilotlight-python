@@ -63,49 +63,246 @@ renderer_ecs_register_system(PyObject* self)
 }
 
 PyObject*
-renderer_ecs_create_directional_light(PyObject* self, PyObject* args, PyObject* kwargs)
+renderer_prepare_scene(PyObject* self, PyObject* args)
 {
-
-    PyObject* ptPyLibrary = NULL;
-
     static const char* apcKeywords[] = {
-        "library",
-        "name",
+        "scene",
         NULL,
     };
 
-    const char* pcName = NULL;
-	if (!pl_parse("Os", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
-        &ptPyLibrary, &pcName))
+    PyObject* ptPyScene = NULL;
+	if (!pl_parse("O", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+        &ptPyScene))
 		return NULL;
- 
+
+    plScene* ptScene = PyCapsule_GetPointer(ptPyScene, "plScene");
+
+    gptRenderer->prepare_scene(ptScene);
+    Py_RETURN_NONE;
+}
+
+PyObject*
+renderer_resize_view(PyObject* self, PyObject* args)
+{
+    static const char* apcKeywords[] = {
+        "view",
+        "dims",
+        NULL,
+    };
+
+    PyObject* ptPyView = NULL;
+    PyObject* ptPyDims = NULL;
+	if (!pl_parse("OO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+        &ptPyView, &ptPyDims))
+		return NULL;
+
+    plView* ptView = PyCapsule_GetPointer(ptPyView, "plView");
+
+    plVec2 tDims = {0};
+    pl_vec2_from_py(ptPyDims, &tDims);
+
+    gptRenderer->resize_view(ptView, tDims);
+    Py_RETURN_NONE;
+}
+
+PyObject*
+renderer_prepare_view(PyObject* self, PyObject* args)
+{
+    static const char* apcKeywords[] = {
+        "view",
+        "camera",
+        NULL,
+    };
+
+    PyObject* ptPyView = NULL;
+    PyObject* ptPyCamera = NULL;
+	if (!pl_parse("OO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+        &ptPyView, &ptPyCamera))
+		return NULL;
+
+    plView* ptView = PyCapsule_GetPointer(ptPyView, "plView");
+    plCamera* ptCamera = ((plPyCamera*)ptPyCamera)->ptCamera;
+
+    gptRenderer->prepare_view(ptView, ptCamera);
+    Py_RETURN_NONE;
+}
+
+PyObject*
+renderer_load_test_world(PyObject* self, PyObject* args, PyObject* kwargs)
+{
+    static const char* apcKeywords[] = {
+        "path",
+        "library",
+        NULL,
+    };
+
+    const char* pcPath = NULL;
+    PyObject* ptPyLibrary = NULL;
+	if (!pl_parse("sO", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+        &pcPath, &ptPyLibrary))
+		return NULL;
+
+    plTestWorldData tTestData = {0};
+    plComponentLibrary* ptLibrary = PyCapsule_GetPointer(ptPyLibrary, "plComponentLibrary");
+
+    bool bResult = gptRenderer->load_test_world(pcPath, ptLibrary, &tTestData);
+
+    PyObject* ptCapsuleScene = PyCapsule_New(tTestData.ptScene, "plScene", NULL);
+    PyObject* ptCapsuleView = PyCapsule_New(tTestData.ptView, "plView", NULL);
+
+    PyObject* ptCameraEntity = Py_BuildValue("(III)", gptCameraEcs->get_ecs_type_key(), tTestData.tMainCamera.uIndex, tTestData.tMainCamera.uGeneration);
+    return Py_BuildValue("(pOOO)", bResult, ptCameraEntity, ptCapsuleScene, ptCapsuleView);
+}
+
+PyObject*
+renderer_render_view(PyObject* self, PyObject* args, PyObject* kwargs)
+{
+    static const char* apcKeywords[] = {
+        "view",
+        "camera",
+        NULL,
+    };
+
+    PyObject* ptPyView = NULL;
+    PyObject* ptPyCamera = NULL;
+	if (!pl_parse("OO", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+        &ptPyView, &ptPyCamera))
+		return NULL;
+
+    plView* ptView = PyCapsule_GetPointer(ptPyView, "plView");
+    plCamera* ptCamera = ((plPyCamera*)ptPyCamera)->ptCamera;
+
+    plRenderViewDesc tViewDesc0 = {
+        .ptCamera = ptCamera,
+        .ptCullCamera = ptCamera
+    };
+    gptRenderer->render_view(ptView, &tViewDesc0);
+    Py_RETURN_NONE;
+}
+
+PyObject*
+renderer_get_view_color_bind_group(PyObject* self, PyObject* args, PyObject* kwargs)
+{
+    static const char* apcKeywords[] = {
+        "view",
+        NULL,
+    };
+
+    PyObject* ptPyView = NULL;
+	if (!pl_parse("O", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+        &ptPyView))
+		return NULL;
+
+    plView* ptView = PyCapsule_GetPointer(ptPyView, "plView");
+    plVec2 tUV = {0};
+    plBindGroupHandle tHandle = gptRenderer->get_view_color_bind_group(ptView, &tUV);
+    return Py_BuildValue("(iff)", tHandle.uData, tUV.x, tUV.y);
+}
+
+PyObject*
+renderer_begin_frame(PyObject* self, PyObject* args)
+{
+    bool bResult = gptRenderer->begin_frame();
+    Py_RETURN_NONE;
+}
+
+PyObject*
+renderer_ecs_run_light_update_system(PyObject* self, PyObject* args)
+{
+    static const char* apcKeywords[] = {
+        "library",
+        NULL,
+    };
+
+    PyObject* ptPyLibrary = NULL;
+	if (!pl_parse("O", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+        &ptPyLibrary))
+		return NULL;
+
     plComponentLibrary* ptCompLibrary = PyCapsule_GetPointer(ptPyLibrary, "plComponentLibrary");
 
-    plLightComponent* ptLight = NULL;
-    gptRendererEcs->create_directional_light(ptCompLibrary, pcName, pl_create_vec3(0.425f, -1.0f, -0.384f), &ptLight);
-    ptLight->uCascadeCount = 4;
-    ptLight->fIntensity = 20.0f;
-    ptLight->uShadowResolution = 1024 * 2;
-    ptLight->afCascadeSplits[0] = 0.05f;
-    ptLight->afCascadeSplits[1] = 0.15f;
-    ptLight->afCascadeSplits[2] = 0.25f;
-    ptLight->afCascadeSplits[3] = 1.00f;
-    ptLight->tFlags |= PL_LIGHT_FLAG_CAST_SHADOW | PL_LIGHT_FLAG_VISUALIZER;
+    gptRendererEcs->run_light_update_system(ptCompLibrary);
+    Py_RETURN_NONE;
+}
 
+PyObject*
+renderer_ecs_run_skin_update_system(PyObject* self, PyObject* args)
+{
+    static const char* apcKeywords[] = {
+        "library",
+        NULL,
+    };
+
+    PyObject* ptPyLibrary = NULL;
+	if (!pl_parse("O", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+        &ptPyLibrary))
+		return NULL;
+
+    plComponentLibrary* ptCompLibrary = PyCapsule_GetPointer(ptPyLibrary, "plComponentLibrary");
+
+    gptRendererEcs->run_skin_update_system(ptCompLibrary);
+    Py_RETURN_NONE;
+}
+
+PyObject*
+renderer_ecs_run_object_update_system(PyObject* self, PyObject* args)
+{
+    static const char* apcKeywords[] = {
+        "library",
+        NULL,
+    };
+
+    PyObject* ptPyLibrary = NULL;
+	if (!pl_parse("O", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+        &ptPyLibrary))
+		return NULL;
+
+    plComponentLibrary* ptCompLibrary = PyCapsule_GetPointer(ptPyLibrary, "plComponentLibrary");
+
+    gptRendererEcs->run_object_update_system(ptCompLibrary);
+    Py_RETURN_NONE;
+}
+
+PyObject*
+renderer_ecs_run_environment_probe_update_system(PyObject* self, PyObject* args)
+{
+    static const char* apcKeywords[] = {
+        "library",
+        NULL,
+    };
+
+    PyObject* ptPyLibrary = NULL;
+	if (!pl_parse("O", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+        &ptPyLibrary))
+		return NULL;
+
+    plComponentLibrary* ptCompLibrary = PyCapsule_GetPointer(ptPyLibrary, "plComponentLibrary");
+
+    gptRendererEcs->run_environment_probe_update_system(ptCompLibrary);
     Py_RETURN_NONE;
 }
 
 static PyMethodDef gatCommandsplRendererI[] =
 {
     {"initialize", (PyCFunction)renderer_initialize, METH_VARARGS | METH_KEYWORDS | METH_STATIC, NULL},
+    {"load_test_world", (PyCFunction)renderer_load_test_world, METH_VARARGS | METH_KEYWORDS | METH_STATIC, NULL},
+    {"resize_view", (PyCFunction)renderer_resize_view, METH_VARARGS | METH_STATIC, NULL},
+    {"prepare_scene", (PyCFunction)renderer_prepare_scene, METH_VARARGS | METH_STATIC, NULL},
+    {"get_view_color_bind_group", (PyCFunction)renderer_get_view_color_bind_group, METH_VARARGS | METH_STATIC, NULL},
+    {"prepare_view", (PyCFunction)renderer_prepare_view, METH_VARARGS | METH_STATIC, NULL},
+    {"render_view", (PyCFunction)renderer_render_view, METH_VARARGS | METH_STATIC, NULL},
+    {"begin_frame", (PyCFunction)renderer_begin_frame, METH_NOARGS | METH_STATIC, NULL},
     {"cleanup", (PyCFunction)renderer_cleanup, METH_NOARGS | METH_STATIC, NULL},
     {NULL, NULL, 0, NULL}
 };
 
 static PyMethodDef gatCommandsplRendererEcsI[] =
 {
-    {"create_directional_light", (PyCFunction)renderer_ecs_create_directional_light, METH_VARARGS | METH_KEYWORDS | METH_STATIC, NULL},
     {"register_system", (PyCFunction)renderer_ecs_register_system, METH_NOARGS | METH_STATIC, NULL},
+    {"run_light_update_system", (PyCFunction)renderer_ecs_run_light_update_system, METH_VARARGS | METH_STATIC, NULL},
+    {"run_skin_update_system", (PyCFunction)renderer_ecs_run_skin_update_system, METH_VARARGS | METH_STATIC, NULL},
+    {"run_object_update_system", (PyCFunction)renderer_ecs_run_object_update_system, METH_VARARGS | METH_STATIC, NULL},
+    {"run_environment_probe_update_system", (PyCFunction)renderer_ecs_run_environment_probe_update_system, METH_VARARGS | METH_STATIC, NULL},
     {NULL, NULL, 0, NULL}
 };
 

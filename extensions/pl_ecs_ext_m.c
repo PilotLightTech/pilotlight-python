@@ -71,7 +71,52 @@ ecs_get_component(PyObject* self, PyObject* args, PyObject* kwargs)
     plPythonEntity tPyEntity = pl_get_entity_from_python(ptPyEntity);
 
     void* pComponent = gptECS->get_component(ptCompLibrary, uEcsKey, tPyEntity.tEntity);
-    return PyCapsule_New(pComponent, "plEntityComponent", NULL);
+    if(uEcsKey == gptCameraEcs->get_ecs_type_key())
+    {
+        plPyCamera* obj = (plPyCamera*)PyObject_CallObject(gptCameraType, NULL);
+        PL_FREE(obj->ptCamera);
+        obj->ptCamera = pComponent;
+        return (PyObject*)obj;
+    }
+    Py_RETURN_NONE;
+}
+
+PyObject*
+ecs_run_transform_update_system(PyObject* self, PyObject* args)
+{
+    static const char* apcKeywords[] = {
+        "library",
+        NULL,
+    };
+
+    PyObject* ptPyLibrary = NULL;
+	if (!pl_parse("O", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+        &ptPyLibrary))
+		return NULL;
+
+    plComponentLibrary* ptCompLibrary = PyCapsule_GetPointer(ptPyLibrary, "plComponentLibrary");
+
+    gptECS->run_transform_update_system(ptCompLibrary);
+    Py_RETURN_NONE;
+}
+
+PyObject*
+ecs_run_hierarchy_update_system(PyObject* self, PyObject* args)
+{
+    static const char* apcKeywords[] = {
+        "library",
+        NULL,
+    };
+
+    PyObject* ptPyLibrary = NULL;
+	if (!pl_parse("O", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+        &ptPyLibrary))
+		return NULL;
+
+    plComponentLibrary* ptCompLibrary = PyCapsule_GetPointer(ptPyLibrary, "plComponentLibrary");
+
+    gptECS->run_hierarchy_update_system(ptCompLibrary);
+    Py_RETURN_NONE;
 }
 
 static PyMethodDef gatCommandsplEcsI[] =
@@ -81,6 +126,8 @@ static PyMethodDef gatCommandsplEcsI[] =
     {"cleanup", (PyCFunction)ecs_cleanup, METH_NOARGS | METH_STATIC, NULL},
     {"get_default_library", (PyCFunction)ecs_get_default_library, METH_NOARGS | METH_STATIC, NULL},
     {"get_component", (PyCFunction)ecs_get_component, METH_VARARGS | METH_KEYWORDS | METH_STATIC, NULL},
+    {"run_transform_update_system", (PyCFunction)ecs_run_transform_update_system, METH_VARARGS | METH_STATIC, NULL},
+    {"run_hierarchy_update_system", (PyCFunction)ecs_run_hierarchy_update_system, METH_VARARGS | METH_STATIC, NULL},
     {NULL, NULL, 0, NULL}
 };
 
