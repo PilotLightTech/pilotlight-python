@@ -117,6 +117,7 @@ pl_init_python()
 
 
     #elif defined(__APPLE__)
+        "../dependencies/cpython/build/debug/build/lib.macosx-26.3-arm64-3.14/",
     #else // linux
         // "../dependencies/cpython/build/debug/build/lib.linux-x86_64-3.14/",
     #endif
