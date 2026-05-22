@@ -35,7 +35,7 @@ renderer_initialize(PyObject* self, PyObject* args, PyObject* kwargs)
 
     PyObject* ptPyDevice = NULL;
     PyObject* ptPySwapchain = NULL;
-	if (!pl_parse("OO|$I", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+	if (!pl_parse_args("OO|$I", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
         &ptPyDevice, &ptPySwapchain, &tRenderSettings.uMaxTextureResolution))
 		return NULL;
 
@@ -71,7 +71,7 @@ renderer_prepare_scene(PyObject* self, PyObject* args)
     };
 
     PyObject* ptPyScene = NULL;
-	if (!pl_parse("O", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+	if (!pl_parse_args("O", (const char**)apcKeywords, args, NULL, __FUNCTION__,
         &ptPyScene))
 		return NULL;
 
@@ -92,7 +92,7 @@ renderer_resize_view(PyObject* self, PyObject* args)
 
     PyObject* ptPyView = NULL;
     PyObject* ptPyDims = NULL;
-	if (!pl_parse("OO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+	if (!pl_parse_args("OO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
         &ptPyView, &ptPyDims))
 		return NULL;
 
@@ -116,12 +116,12 @@ renderer_prepare_view(PyObject* self, PyObject* args)
 
     PyObject* ptPyView = NULL;
     PyObject* ptPyCamera = NULL;
-	if (!pl_parse("OO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+	if (!pl_parse_args("OO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
         &ptPyView, &ptPyCamera))
 		return NULL;
 
     plView* ptView = PyCapsule_GetPointer(ptPyView, "plView");
-    plCamera* ptCamera = ((plPyCamera*)ptPyCamera)->ptCamera;
+    plCamera* ptCamera = ((pyplCamera*)ptPyCamera)->ptCamera;
 
     gptRenderer->prepare_view(ptView, ptCamera);
     Py_RETURN_NONE;
@@ -138,7 +138,7 @@ renderer_load_test_world(PyObject* self, PyObject* args, PyObject* kwargs)
 
     const char* pcPath = NULL;
     PyObject* ptPyLibrary = NULL;
-	if (!pl_parse("sO", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+	if (!pl_parse_args("sO", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
         &pcPath, &ptPyLibrary))
 		return NULL;
 
@@ -150,7 +150,7 @@ renderer_load_test_world(PyObject* self, PyObject* args, PyObject* kwargs)
     PyObject* ptCapsuleScene = PyCapsule_New(tTestData.ptScene, "plScene", NULL);
     PyObject* ptCapsuleView = PyCapsule_New(tTestData.ptView, "plView", NULL);
 
-    PyObject* ptCameraEntity = Py_BuildValue("(III)", gptCameraEcs->get_ecs_type_key(), tTestData.tMainCamera.uIndex, tTestData.tMainCamera.uGeneration);
+    PyObject* ptCameraEntity = pl_entity_to_py(gptCameraEcs->get_ecs_type_key(), tTestData.tMainCamera);
     return Py_BuildValue("(pOOO)", bResult, ptCameraEntity, ptCapsuleScene, ptCapsuleView);
 }
 
@@ -165,12 +165,12 @@ renderer_render_view(PyObject* self, PyObject* args, PyObject* kwargs)
 
     PyObject* ptPyView = NULL;
     PyObject* ptPyCamera = NULL;
-	if (!pl_parse("OO", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+	if (!pl_parse_args("OO", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
         &ptPyView, &ptPyCamera))
 		return NULL;
 
     plView* ptView = PyCapsule_GetPointer(ptPyView, "plView");
-    plCamera* ptCamera = ((plPyCamera*)ptPyCamera)->ptCamera;
+    plCamera* ptCamera = ((pyplCamera*)ptPyCamera)->ptCamera;
 
     plRenderViewDesc tViewDesc0 = {
         .ptCamera = ptCamera,
@@ -189,7 +189,7 @@ renderer_get_view_color_bind_group(PyObject* self, PyObject* args, PyObject* kwa
     };
 
     PyObject* ptPyView = NULL;
-	if (!pl_parse("O", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+	if (!pl_parse_args("O", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
         &ptPyView))
 		return NULL;
 
@@ -215,7 +215,7 @@ renderer_ecs_run_light_update_system(PyObject* self, PyObject* args)
     };
 
     PyObject* ptPyLibrary = NULL;
-	if (!pl_parse("O", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+	if (!pl_parse_args("O", (const char**)apcKeywords, args, NULL, __FUNCTION__,
         &ptPyLibrary))
 		return NULL;
 
@@ -234,7 +234,7 @@ renderer_ecs_run_skin_update_system(PyObject* self, PyObject* args)
     };
 
     PyObject* ptPyLibrary = NULL;
-	if (!pl_parse("O", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+	if (!pl_parse_args("O", (const char**)apcKeywords, args, NULL, __FUNCTION__,
         &ptPyLibrary))
 		return NULL;
 
@@ -253,7 +253,7 @@ renderer_ecs_run_object_update_system(PyObject* self, PyObject* args)
     };
 
     PyObject* ptPyLibrary = NULL;
-	if (!pl_parse("O", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+	if (!pl_parse_args("O", (const char**)apcKeywords, args, NULL, __FUNCTION__,
         &ptPyLibrary))
 		return NULL;
 
@@ -272,7 +272,7 @@ renderer_ecs_run_environment_probe_update_system(PyObject* self, PyObject* args)
     };
 
     PyObject* ptPyLibrary = NULL;
-	if (!pl_parse("O", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+	if (!pl_parse_args("O", (const char**)apcKeywords, args, NULL, __FUNCTION__,
         &ptPyLibrary))
 		return NULL;
 

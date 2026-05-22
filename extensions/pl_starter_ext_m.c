@@ -31,7 +31,7 @@ starter_initialize(PyObject* self, PyObject* args, PyObject* kwargs)
     };
 
     int iFlags = 0;
-	if (!pl_parse("Oi", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+	if (!pl_parse_args("Oi", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
         &ptWindow, &iFlags))
 		return NULL;
 

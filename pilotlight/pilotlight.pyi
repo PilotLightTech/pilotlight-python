@@ -191,6 +191,8 @@ type plVec3ListLike = Tuple[plVec3Like] | List[plVec3Like]
 type plVec4Like = plVec4 | Tuple[float] | List[float]
 type plVec4ListLike = Tuple[plVec4Like] | List[plVec4Like]
 
+type plPointer = plDoublePointer
+
 ########################################################################################################################
 # [SECTION] core api
 ########################################################################################################################
@@ -205,15 +207,6 @@ def pl_set_pointer_value(pointer: plPointer | None, value, index: int = 0):
     ...
 
 def pl_destroy_pointer(pointer: plPointer | None):
-    ...
-
-def pl_create_bool_pointer() -> plBoolPointer:
-    ...
-
-def pl_create_int_pointer(count: int = 1) -> plIntPointer:
-    ...
-
-def pl_create_float_pointer(count: int = 1) -> plFloatPointer:
     ...
 
 ########################################################################################################################
@@ -323,11 +316,11 @@ class plWindowI:
 class plStatsI:
 
     @staticmethod
-    def new_frame(name):
+    def new_frame():
         ...
 
     @staticmethod
-    def get_counter(name):
+    def get_counter(name: str) -> plDoublePointer:
         ...
 
 ########################################################################################################################
@@ -733,7 +726,7 @@ class plUiI:
         ...
 
     @staticmethod
-    def checkbox(name, value = None, **kwargs):
+    def checkbox(name, value: bool) ->Tuple[bool, bool]:
         ...
 
     @staticmethod

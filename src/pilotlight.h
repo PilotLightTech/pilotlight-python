@@ -7,7 +7,8 @@
 /*
 Index of this file:
 // [SECTION] header mess
-// [SECTION] forward declarations
+// [SECTION] includes
+// [SECTION] helper macros
 // [SECTION] public api
 */
 
@@ -25,57 +26,17 @@ Index of this file:
 #define PY_SSIZE_T_CLEAN
 #include <Python.h>
 
-#define PL_EXPERIMENTAL
 #define PL_UNITY_BUILD
 #include "pl_unity_ext.c"
 
 //-----------------------------------------------------------------------------
-// [SECTION] custom types
+// [SECTION] helper macros
 //-----------------------------------------------------------------------------
-
-typedef struct _plPyIO
-{
-    PyObject_HEAD
-    plIO* ptIO;
-} plPyIO;
-
-typedef struct _pyplSwapchainInfo
-{
-    PyObject_HEAD
-    plSwapchainInfo tInfo;
-} pyplSwapchainInfo;
-
-typedef struct _plPyCamera
-{
-    PyObject_HEAD
-    plCamera* ptCamera;
-} plPyCamera;
-
-// custom types
-static PyObject* gptIOType = NULL;
-static PyObject* gptSwapchainInfoType = NULL;
-static PyObject* gptCameraType = NULL;
-
-//-----------------------------------------------------------------------------
-// [SECTION] forward declarations
-//-----------------------------------------------------------------------------
-
-typedef struct _plPythonIntConstantPair
-{
-   const char* pcName;
-   int         iValue;
-} plPythonIntConstantPair;
-
-typedef struct _plPythonEntity
-{
-   plEcsTypeKey tKey;
-   plEntity     tEntity;
-} plPythonEntity;
 
 #define PL_ADD_INT_CONSTANT(X_ARG) {#X_ARG, X_ARG}
 #define PL_ADD_UINT_CONSTANT(MODULE, X_ARG) pl_add_u32_constant(MODULE, #X_ARG, X_ARG)
-#define PL_PYTHON_METHOD(ARG, FLAGS, DOCS) {#ARG, (PyCFunction) ARG, FLAGS, DOCS}
 
+// helps with some boilerplate code
 #define PL_NEW_PYTHON_API(ARG) \
 typedef struct _py##ARG \
 { \
@@ -93,13 +54,16 @@ PyModule_AddObject(ptModule, #ARG, gpt##ARG);
 // [SECTION] public api
 //-----------------------------------------------------------------------------
 
-bool pl_parse(char* formatstring, const char** keywords, PyObject* args, PyObject* kwargs, const char* message, ...);
+bool pl_parse_args(char* formatstring, const char** keywords, PyObject* args, PyObject* kwargs, const char* message, ...);
 
-plVec2 pl_get_vec2_from_python(PyObject*);
-plVec3d pl_get_dvec3_from_python(PyObject*);
-plPythonEntity pl_get_entity_from_python(PyObject*);
+//-----------------------------------------------------------------------------
+// [SECTION] structs
+//-----------------------------------------------------------------------------
 
-// temporary
-plVec2* pl_get_vec2_list_from_python(PyObject*, uint32_t*);
+typedef struct _plPythonIntConstantPair
+{
+   const char* pcName;
+   int         iValue;
+} plPythonIntConstantPair;
 
 #endif // PILOTLIGHT_H

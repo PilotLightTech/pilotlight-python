@@ -17,16 +17,14 @@ class App:
         self.ptWindow = None
         self.bResize = False
         self.counter = None
-        self.show_imgui_demo = None
-        self.show_implot_demo = None
+        self.test_bool = True
+        self.show_imgui_demo = False
+        self.show_implot_demo = False
         self.tMainCamera = None
-        self.some_string_array = bytearray("pizza", 'utf-8')
-        self.some_string_array.resize(256)
+        self.some_string_array = "pizza"
+        self.float_array = [1.0, 2.0, 3.0, 4.0]
 
     def pl_app_load(self):
-
-        self.show_imgui_demo = pl_create_bool_pointer()
-        self.show_implot_demo = pl_create_bool_pointer()
 
         plVfsI.mount_directory("/cache", str(Path.cwd()) + "/../cache")
         plVfsI.mount_directory("/shaders", os.path.dirname(os.path.abspath(pl.__file__)) + "/shaders")
@@ -82,6 +80,11 @@ class App:
         self.drawlist = plDrawI.request_2d_drawlist()
         self.ptFGLayer = plDrawI.request_2d_layer(self.drawlist)
 
+        self.texture_resource = plResourceI.load("/assets/core/textures/sprite_map.png", 0)
+        self.texture_handle = plResourceI.get_texture(self.texture_resource)
+        self.texture_bg = plDrawI.create_bind_group_for_texture(self.texture_handle)
+        self.texture_bg2 = plDearImGuiI.get_texture_id_from_bindgroup(plStarterI.get_device(), self.texture_bg)
+
         ImGui.StyleColorsDark()
 
     def pl_app_shutdown(self):
@@ -117,11 +120,11 @@ class App:
 
         plDearImGuiI.new_frame(plStarterI.get_device(), plStarterI.get_render_pass())
 
-        if pl_get_pointer_value(self.show_imgui_demo):
-            ImGui.ShowDemoWindow(self.show_imgui_demo)
+        if self.show_imgui_demo:
+            self.show_imgui_demo = ImGui.ShowDemoWindow(self.show_imgui_demo)
         
-        if pl_get_pointer_value(self.show_implot_demo):
-            ImPlot.ShowDemoWindow(self.show_implot_demo)
+        if self.show_implot_demo:
+            self.show_implot_demo = ImPlot.ShowDemoWindow(self.show_implot_demo)
 
         # script here
         ptCamera = plEcsI.get_component(self.ptComponentLibrary, plCameraEcsI.get_ecs_type_key(), self.tMainCamera)
@@ -149,8 +152,7 @@ class App:
         # ui API
         if plUiI.begin_window("Debug Window"):
 
-            if plUiI.input_text("Input", self.some_string_array):
-                print("String changed")
+            _, self.some_string_array = plUiI.input_text("Input", self.some_string_array)
             if plUiI.button("Press me"):
                 print("Button Pressed")
                 current_value = pl_get_pointer_value(self.counter)
@@ -160,12 +162,8 @@ class App:
             if plUiI.button("Add Message"):
                 plScreenLogI.add_message(1.0, "Logging from python!")
 
-            plUiI.checkbox("Show ImGui Demo", pointer=self.show_imgui_demo)
-
-            bCurrentValue = pl_get_pointer_value(self.show_implot_demo)
-            bChanged, bCurrentValue = plUiI.checkbox("Show ImPlot Demo", bCurrentValue)
-            if bChanged:
-                pl_set_pointer_value(self.show_implot_demo, bCurrentValue)
+            _, self.show_imgui_demo = plUiI.checkbox("Show ImGui Demo", self.show_imgui_demo)
+            _, self.show_implot_demo = plUiI.checkbox("Show ImPlot Demo", self.show_implot_demo)
 
             plUiI.end_window()
 
@@ -176,17 +174,18 @@ class App:
             if ImGui.BeginMenu("Edit", False):
                 ImGui.EndMenu()
             if ImGui.BeginMenu("Tools"):
-                ImGui.MenuItem("Show ImGui Demo", selected_pointer=self.show_imgui_demo)
-                ImGui.MenuItem("Show ImPlot Demo", selected_pointer=self.show_implot_demo)
+                _, self.show_imgui_demo = ImGui.MenuItem("Show ImGui Demo", "", self.show_imgui_demo)
+                _, self.show_implot_demo = ImGui.MenuItem("Show ImPlot Demo", "", self.show_implot_demo)
                 ImGui.EndMenu()
             if ImGui.BeginMenu("Help"):
-                ImGui.MenuItem("Check For Update")
-                ImGui.MenuItem("About", "-a")
+                ImGui.MenuItemSimple("Check For Update")
+                ImGui.MenuItemSimple("About", "-a")
                 ImGui.EndMenu()
             ImGui.EndMainMenuBar()
         if ImGui.Begin("ImGui Window"):
             if ImGui.Button("Press Me"):
                 print("Pressed Imgui Button")
+            ImGui.DragFloat2("DragFloat2", self.float_array)
         ImGui.End()
 
         camera = plEcsI.get_component(self.ptComponentLibrary, plCameraEcsI.get_ecs_type_key(), self.tMainCamera)
@@ -199,6 +198,11 @@ class App:
         uTexture, tUV.x, tUV.y = plRendererI.get_view_color_bind_group(self.ptView)
         plDrawI.add_image(self.ptFGLayer, uTexture, plVec2(), io.tMainViewportSize, plVec2(), tUV, PL_COLOR_32_WHITE)
         plDrawI.submit_2d_layer(self.ptFGLayer)
+
+        if self.test_bool:
+            _, self.test_bool = ImGui.Begin("Testing", open=self.test_bool)
+            ImGui.Image(self.texture_bg2, [500, 500])
+            ImGui.End()
 
         render_encoder = plStarterI.begin_main_pass()
         

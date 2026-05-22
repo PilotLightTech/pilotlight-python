@@ -37,7 +37,7 @@ screen_log_add_message(PyObject* self, PyObject* args)
 
     double dTimeToDisplay = 0.0;
     const char* pcMessage = NULL;
-	if (!pl_parse("ds", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+	if (!pl_parse_args("ds", (const char**)apcKeywords, args, NULL, __FUNCTION__,
         &dTimeToDisplay, &pcMessage))
 		return NULL;
 

@@ -31,7 +31,7 @@ mount_directory(PyObject* self, PyObject* args, PyObject* kwargs)
     const char* pcDirectory = NULL;
     const char* pcPhysicalDirectory = NULL;
 
-	if (!pl_parse("ss|", (const char**)apcKeywords, args, kwargs, __FUNCTION__, &pcDirectory, &pcPhysicalDirectory))
+	if (!pl_parse_args("ss|", (const char**)apcKeywords, args, kwargs, __FUNCTION__, &pcDirectory, &pcPhysicalDirectory))
 		return NULL;
 
     gptVfs->mount_directory(pcDirectory, pcPhysicalDirectory, PL_VFS_MOUNT_FLAGS_NONE);
@@ -40,7 +40,7 @@ mount_directory(PyObject* self, PyObject* args, PyObject* kwargs)
 
 static PyMethodDef gatCommandsplVfsI[] =
 {
-    PL_PYTHON_METHOD(mount_directory, METH_VARARGS | METH_KEYWORDS | METH_STATIC, NULL),
+    {"mount_directory", (PyCFunction)mount_directory, METH_VARARGS | METH_KEYWORDS | METH_STATIC, NULL},
     {NULL, NULL, 0, NULL}
 };
 

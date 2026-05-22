@@ -108,6 +108,7 @@ class App:
 
         # Camera.
         self.camera = plCamera()
+        plCameraI.init(self.camera)
         tCameraDesc = plCameraPerspectiveDesc()
         tCameraDesc.eDepthMode = plCameraDepthMode.PL_CAMERA_DEPTH_MODE_STANDARD
         tCameraDesc.fAspectRatio = 1280.0 / 720.0
@@ -476,6 +477,8 @@ class App:
         tMainViewportSize = ptIO.tMainViewportSize
 
         mvp = self.camera.tProjMat * self.camera.tViewMat
+        # mvp = self.camera.tViewProjMat
+        # mvp = self.camera.tProjMat
 
         plDrawI.submit_3d_drawlist(
             self.drawlist,

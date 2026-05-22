@@ -28,7 +28,7 @@ shader_variant_initialize(PyObject* self, PyObject* args, PyObject* kwargs)
     };
 
     PyObject* ptPyDevice = NULL;
-	if (!pl_parse("O", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+	if (!pl_parse_args("O", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
         &ptPyDevice))
 		return NULL;
 

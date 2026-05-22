@@ -19,14 +19,10 @@ plSwapchain = NewType("plSwapchain", object)
 plComponentLibrary = NewType("plComponentLibrary", object)
 plRenderEncoder = NewType("plRenderEncoder", object)
 plPakFile = NewType("plPakFile", object)
-plBoolPointer = NewType("plBoolPointer", object)
-plIntPointer = NewType("plIntPointer", object)
-plFloatPointer = NewType("plFloatPointer", object)
 plDoublePointer = NewType("plDoublePointer", object)
 plScene = NewType("plScene", object)
 plView = NewType("plView", object)
 
-type plPointer = plBoolPointer | plIntPointer | plFloatPointer | plDoublePointer
 type plQuat = plVec4
 
 class plShaderMacroDefinition:

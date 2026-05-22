@@ -14,7 +14,7 @@ Index of this file:
 //-----------------------------------------------------------------------------
 
 #include "pilotlight.h"
-#include "pl_py_math.h"
+#include "pl_py_types.h"
 
 //-----------------------------------------------------------------------------
 // [SECTION] enums
@@ -239,7 +239,7 @@ draw_submit_2d_drawlist(PyObject* self, PyObject* args)
         NULL,
     };
 
-	if (!pl_parse("OOffi", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+	if (!pl_parse_args("OOffi", (const char**)apcKeywords, args, NULL, __FUNCTION__,
         &ptPythonDrawlist, &ptPythonEncoder, &fWidth, &fHeight, &iSampleCount))
 		return NULL;
 
@@ -271,13 +271,13 @@ draw_submit_3d_drawlist(PyObject* self, PyObject* args)
         NULL,
     };
 
-	if (!pl_parse("OOffOii", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+	if (!pl_parse_args("OOffOii", (const char**)apcKeywords, args, NULL, __FUNCTION__,
         &ptPythonDrawlist, &ptPythonEncoder, &fWidth, &fHeight, &ptPythonMVP, &iFlags, &iSampleCount))
 		return NULL;
 
     plDrawList3D* ptDrawlist = PyCapsule_GetPointer(ptPythonDrawlist, "plDrawList3D");
     plRenderEncoder* ptEncoder = PyCapsule_GetPointer(ptPythonEncoder, "plRenderEncoder");
-    plPyMat4* m = (plPyMat4*)ptPythonMVP;
+    pyplMat4* m = (pyplMat4*)ptPythonMVP;
     gptDraw->submit_3d_drawlist(ptDrawlist, ptEncoder, fWidth, fHeight, &m->m, iFlags, (uint32_t)iSampleCount);
     Py_RETURN_NONE;
 }
@@ -300,7 +300,7 @@ draw_build_font_atlas(PyObject* self, PyObject* args)
         NULL,
     };
 
-	if (!pl_parse("OO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+	if (!pl_parse_args("OO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
         &ptPythonCommandBuffer, &ptPythonFontAtlas))
 		return NULL;
 
@@ -360,7 +360,7 @@ draw_add_font_from_file_ttf(PyObject* self, PyObject* args)
         NULL,
     };
 
-	if (!pl_parse("OOs", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+	if (!pl_parse_args("OOs", (const char**)apcKeywords, args, NULL, __FUNCTION__,
         &ptPythonFontAtlas, &ptPythonConfig, &pcFile))
 		return NULL;
 
@@ -450,7 +450,7 @@ draw_calculate_text_size(PyObject* self, PyObject* args)
         NULL,
     };
 
-	if (!pl_parse("OOsO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+	if (!pl_parse_args("OOsO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
         &pcText, &ptPythonOptions))
 		return NULL;
 
@@ -529,7 +529,7 @@ draw_add_text(PyObject* self, PyObject* args)
         NULL,
     };
 
-	if (!pl_parse("OOsO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+	if (!pl_parse_args("OOsO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
         &ptPythonLayer, &ptPythonP0, &pcText, &ptPythonOptions))
 		return NULL;
 
@@ -567,7 +567,7 @@ draw_add_text_clipped(PyObject* self, PyObject* args)
         NULL,
     };
 
-	if (!pl_parse("OOsO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+	if (!pl_parse_args("OOsO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
         &ptPythonLayer, &ptPythonP0, &pcText, &ptPythonP1, &ptPythonP2, &ptPythonOptions))
 		return NULL;
 
@@ -599,7 +599,7 @@ draw_use_linear_sampler(PyObject* self, PyObject* args)
         NULL,
     };
 
-	if (!pl_parse("O", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+	if (!pl_parse_args("O", (const char**)apcKeywords, args, NULL, __FUNCTION__,
         &ptPythonLayer))
 		return NULL;
 
@@ -619,7 +619,7 @@ draw_use_nearest_sampler(PyObject* self, PyObject* args)
         NULL,
     };
 
-	if (!pl_parse("O", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+	if (!pl_parse_args("O", (const char**)apcKeywords, args, NULL, __FUNCTION__,
         &ptPythonLayer))
 		return NULL;
 
@@ -651,7 +651,7 @@ draw_add_image(PyObject* self, PyObject* args)
         NULL,
     };
 
-	if (!pl_parse("OIOO|OOI", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+	if (!pl_parse_args("OIOO|OOI", (const char**)apcKeywords, args, NULL, __FUNCTION__,
         &ptPythonLayer, &uTextureId, &ptPythonminP, &ptPythonmaxP, &ptPythonminUV, &ptPythonmaxUV, &uColor))
 		return NULL;
 
@@ -710,7 +710,7 @@ draw_add_image_quad(PyObject* self, PyObject* args)
         NULL,
     };
 
-	if (!pl_parse("OIOOOO|OOOOI", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+	if (!pl_parse_args("OIOOOO|OOOOI", (const char**)apcKeywords, args, NULL, __FUNCTION__,
         &ptPythonLayer, &uTextureId, &ptPythonP0, &ptPythonP1, &ptPythonP2, &ptPythonP3,
         &ptPythonP0UV, &ptPythonP1UV, &ptPythonP2UV, &ptPythonP3UV,
         &uColor))
@@ -769,7 +769,7 @@ draw_add_triangle_filled(PyObject* self, PyObject* args)
         NULL,
     };
 
-	if (!pl_parse("OOOOO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+	if (!pl_parse_args("OOOOO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
         &ptPythonLayer, &ptPythonP0, &ptPythonP1, &ptPythonP2, &ptPythonOptions))
 		return NULL;
 
@@ -809,7 +809,7 @@ draw_add_triangles_filled(PyObject* self, PyObject* args)
         NULL,
     };
 
-	if (!pl_parse("OOO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+	if (!pl_parse_args("OOO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
         &ptPythonLayer, &ptPythonPoints, &ptPythonOptions))
 		return NULL;
 
@@ -845,7 +845,7 @@ draw_add_rect_filled(PyObject* self, PyObject* args)
         NULL,
     };
 
-	if (!pl_parse("OOOO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+	if (!pl_parse_args("OOOO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
         &ptPythonLayer, &ptPythonP0, &ptPythonP1, &ptPythonOptions))
 		return NULL;
 
@@ -891,7 +891,7 @@ draw_add_rect_rounded_filled(PyObject* self, PyObject* args)
         NULL,
     };
 
-	if (!pl_parse("OOOfIiO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+	if (!pl_parse_args("OOOfIiO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
         &ptPythonLayer, &ptPythonP0, &ptPythonP1, &fRadius, &uSegments, &iFlags, 
         &ptPythonOptions))
 		return NULL;
@@ -932,7 +932,7 @@ draw_add_quad_filled(PyObject* self, PyObject* args)
         NULL,
     };
 
-	if (!pl_parse("OOOOOO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+	if (!pl_parse_args("OOOOOO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
         &ptPythonLayer, &ptPythonP0, &ptPythonP1, &ptPythonP2, &ptPythonP3,
         &ptPythonOptions))
 		return NULL;
@@ -982,7 +982,7 @@ draw_add_circle_filled(PyObject* self, PyObject* args)
         NULL,
     };
 
-	if (!pl_parse("OOfIO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+	if (!pl_parse_args("OOfIO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
         &ptPythonLayer, &ptPythonP0, &fRadius, &uSegments, 
         &ptPythonOptions))
 		return NULL;
@@ -1018,7 +1018,7 @@ draw_add_convex_polygon_filled(PyObject* self, PyObject* args)
         NULL,
     };
 
-	if (!pl_parse("OOO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+	if (!pl_parse_args("OOO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
         &ptPythonLayer, &ptPythonPoints, &ptPythonOptions))
 		return NULL;
 
@@ -1054,7 +1054,7 @@ draw_add_line(PyObject* self, PyObject* args)
         NULL,
     };
 
-	if (!pl_parse("OOOO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+	if (!pl_parse_args("OOOO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
         &ptPythonLayer, &ptPythonP0, &ptPythonP1, &ptPythonOptions))
 		return NULL;
 
@@ -1092,7 +1092,7 @@ draw_add_lines(PyObject* self, PyObject* args)
         NULL,
     };
 
-	if (!pl_parse("OOO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+	if (!pl_parse_args("OOO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
         &ptPythonLayer, &ptPythonPoints, &ptPythonOptions))
 		return NULL;
 
@@ -1131,7 +1131,7 @@ draw_add_triangle(PyObject* self, PyObject* args)
         NULL,
     };
 
-	if (!pl_parse("OOOOO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+	if (!pl_parse_args("OOOOO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
         &ptPythonLayer, &ptPythonP0, &ptPythonP1, &ptPythonP2, &ptPythonOptions))
 		return NULL;
 
@@ -1174,7 +1174,7 @@ draw_add_rect(PyObject* self, PyObject* args)
         NULL,
     };
 
-	if (!pl_parse("OOOO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+	if (!pl_parse_args("OOOO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
         &ptPythonLayer, &ptPythonP0, &ptPythonP1, &ptPythonOptions))
 		return NULL;
 
@@ -1221,7 +1221,7 @@ draw_add_rect_rounded(PyObject* self, PyObject* args)
         NULL,
     };
 
-	if (!pl_parse("OOOfIiO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+	if (!pl_parse_args("OOOfIiO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
         &ptPythonLayer, &ptPythonP0, &ptPythonP1, &fRadius, &uSegments, &iFlags, 
         &ptPythonOptions))
 		return NULL;
@@ -1266,7 +1266,7 @@ draw_add_quad(PyObject* self, PyObject* args)
         NULL,
     };
 
-	if (!pl_parse("OOOOOO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+	if (!pl_parse_args("OOOOOO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
         &ptPythonLayer, &ptPythonP0, &ptPythonP1, &ptPythonP2, &ptPythonP3,
         &ptPythonOptions))
 		return NULL;
@@ -1316,7 +1316,7 @@ draw_add_circle(PyObject* self, PyObject* args)
         NULL,
     };
 
-	if (!pl_parse("OOfIO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+	if (!pl_parse_args("OOfIO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
         &ptPythonLayer, &ptPythonP0, &fRadius, &uSegments, 
         &ptPythonOptions))
 		return NULL;
@@ -1359,7 +1359,7 @@ draw_add_bezier_quad(PyObject* self, PyObject* args)
         NULL,
     };
 
-	if (!pl_parse("OOOOIO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+	if (!pl_parse_args("OOOOIO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
         &ptPythonLayer, &ptPythonP0, &ptPythonP1, &ptPythonP2, &uSegments, 
         &ptPythonOptions))
 		return NULL;
@@ -1410,7 +1410,7 @@ draw_add_bezier_cubic(PyObject* self, PyObject* args)
         NULL,
     };
 
-	if (!pl_parse("OOOOOIO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+	if (!pl_parse_args("OOOOOIO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
         &ptPythonLayer, &ptPythonP0, &ptPythonP1, &ptPythonP2, &ptPythonP3,
         &uSegments, &ptPythonOptions))
 		return NULL;
@@ -1455,7 +1455,7 @@ draw_add_polygon(PyObject* self, PyObject* args)
         NULL,
     };
 
-	if (!pl_parse("OOO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+	if (!pl_parse_args("OOO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
         &ptPythonLayer, &ptPythonPoints, &ptPythonOptions))
 		return NULL;
 
@@ -1510,12 +1510,12 @@ draw_add_3d_transform(PyObject* self, PyObject* args)
         NULL,
     };
 
-	if (!pl_parse("OOfO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+	if (!pl_parse_args("OOfO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
         &ptPythonDrawlist, &ptPythonMVP, &fLength, &ptPythonOptions))
 		return NULL;
 
     plDrawList3D* ptDrawlist = PyCapsule_GetPointer(ptPythonDrawlist, "plDrawList3D");
-    plPyMat4* m = (plPyMat4*)ptPythonMVP;
+    pyplMat4* m = (pyplMat4*)ptPythonMVP;
 
     plDrawLineOptions tOptions = {0};
     pl__get_draw_line_options(ptPythonOptions, &tOptions);
@@ -1542,7 +1542,7 @@ draw_add_3d_line(PyObject* self, PyObject* args)
         NULL,
     };
 
-	if (!pl_parse("OOOO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+	if (!pl_parse_args("OOOO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
         &ptPythonDrawlist, &ptPythonP0, &ptPythonP1, &ptPythonOptions))
 		return NULL;
 
@@ -1583,7 +1583,7 @@ draw_add_3d_aabb(PyObject* self, PyObject* args)
         NULL,
     };
 
-	if (!pl_parse("OOOO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+	if (!pl_parse_args("OOOO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
         &ptPythonDrawlist, &ptPythonP0, &ptPythonP1, &ptPythonOptions))
 		return NULL;
 
@@ -1628,7 +1628,7 @@ draw_add_3d_bezier_quad(PyObject* self, PyObject* args)
         NULL,
     };
 
-	if (!pl_parse("OOOOIO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+	if (!pl_parse_args("OOOOIO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
         &ptPythonDrawlist, &ptPythonP0, &ptPythonP1, &ptPythonP2, &uSegments, &ptPythonOptions))
 		return NULL;
 
@@ -1679,7 +1679,7 @@ draw_add_3d_bezier_cubic(PyObject* self, PyObject* args)
         NULL,
     };
 
-	if (!pl_parse("OOOOOIO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+	if (!pl_parse_args("OOOOOIO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
         &ptPythonDrawlist, &ptPythonP0, &ptPythonP1, &ptPythonP2, &ptPythonP3, &uSegments, &ptPythonOptions))
 		return NULL;
 
@@ -1727,7 +1727,7 @@ draw_add_3d_cross(PyObject* self, PyObject* args)
         NULL,
     };
 
-	if (!pl_parse("OOfO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+	if (!pl_parse_args("OOfO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
         &ptPythonDrawlist, &ptPythonP0, &fLength, &ptPythonOptions))
 		return NULL;
 
@@ -1765,12 +1765,12 @@ draw_add_3d_frustum(PyObject* self, PyObject* args)
         NULL,
     };
 
-	if (!pl_parse("OOOO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+	if (!pl_parse_args("OOOO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
         &ptPythonDrawlist, &ptPythonMVP, &ptPythonDesc, &ptPythonOptions))
 		return NULL;
 
     plDrawList3D* ptDrawlist = PyCapsule_GetPointer(ptPythonDrawlist, "plDrawList3D");
-    plPyMat4* m = (plPyMat4*)ptPythonMVP;
+    pyplMat4* m = (pyplMat4*)ptPythonMVP;
 
     plDrawLineOptions tOptions = {0};
     pl__get_draw_line_options(ptPythonOptions, &tOptions);
@@ -1800,7 +1800,7 @@ draw_add_3d_sphere(PyObject* self, PyObject* args)
         NULL,
     };
 
-	if (!pl_parse("OOIIO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+	if (!pl_parse_args("OOIIO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
         &ptPythonDrawlist, &ptPythonDesc, &uLatBands, &uLongBands, &ptPythonOptions))
 		return NULL;
 
@@ -1834,7 +1834,7 @@ draw_add_3d_capsule(PyObject* self, PyObject* args)
         NULL,
     };
 
-	if (!pl_parse("OOIIO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+	if (!pl_parse_args("OOIIO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
         &ptPythonDrawlist, &ptPythonDesc, &uLatBands, &uLongBands, &ptPythonOptions))
 		return NULL;
 
@@ -1866,7 +1866,7 @@ draw_add_3d_cylinder(PyObject* self, PyObject* args)
         NULL,
     };
 
-	if (!pl_parse("OOIO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+	if (!pl_parse_args("OOIO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
         &ptPythonDrawlist, &ptPythonDesc, &uSegments, &ptPythonOptions))
 		return NULL;
 
@@ -1898,7 +1898,7 @@ draw_add_3d_cone(PyObject* self, PyObject* args)
         NULL,
     };
 
-	if (!pl_parse("OOIO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+	if (!pl_parse_args("OOIO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
         &ptPythonDrawlist, &ptPythonDesc, &uSegments, &ptPythonOptions))
 		return NULL;
 
@@ -1935,7 +1935,7 @@ draw_add_3d_centered_box(PyObject* self, PyObject* args)
         NULL,
     };
 
-	if (!pl_parse("OOfffO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+	if (!pl_parse_args("OOfffO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
         &ptPythonDrawlist, &ptPythonCenter, &fWidth, &fHeight, &fDepth, &ptPythonOptions))
 		return NULL;
 
@@ -1977,7 +1977,7 @@ draw_add_3d_circle_xz(PyObject* self, PyObject* args)
         NULL,
     };
 
-	if (!pl_parse("OOfIO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+	if (!pl_parse_args("OOfIO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
         &ptPythonDrawlist, &ptPythonCenter, &fRadius, &uSegments, &ptPythonOptions))
 		return NULL;
 
@@ -2018,7 +2018,7 @@ draw_add_3d_circle_xz_filled(PyObject* self, PyObject* args)
         NULL,
     };
 
-	if (!pl_parse("OOfIO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+	if (!pl_parse_args("OOfIO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
         &ptPythonDrawlist, &ptPythonCenter, &fRadius, &uSegments, &ptPythonOptions))
 		return NULL;
 
@@ -2056,7 +2056,7 @@ draw_add_3d_cylinder_filled(PyObject* self, PyObject* args)
         NULL,
     };
 
-	if (!pl_parse("OOIO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+	if (!pl_parse_args("OOIO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
         &ptPythonDrawlist, &ptPythonDesc, &uSegments, &ptPythonOptions))
 		return NULL;
 
@@ -2088,7 +2088,7 @@ draw_add_3d_cone_filled(PyObject* self, PyObject* args)
         NULL,
     };
 
-	if (!pl_parse("OOIO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+	if (!pl_parse_args("OOIO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
         &ptPythonDrawlist, &ptPythonDesc, &uSegments, &ptPythonOptions))
 		return NULL;
 
@@ -2125,7 +2125,7 @@ draw_add_3d_centered_box_filled(PyObject* self, PyObject* args)
         NULL,
     };
 
-	if (!pl_parse("OOfffO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+	if (!pl_parse_args("OOfffO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
         &ptPythonDrawlist, &ptPythonCenter, &fWidth, &fHeight, &fDepth, &ptPythonOptions))
 		return NULL;
 
@@ -2166,7 +2166,7 @@ draw_add_3d_sphere_filled(PyObject* self, PyObject* args)
         NULL,
     };
 
-	if (!pl_parse("OOIIO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+	if (!pl_parse_args("OOIIO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
         &ptPythonDrawlist, &ptPythonDesc, &uLatBands, &uLongBands, &ptPythonOptions))
 		return NULL;
 
@@ -2201,7 +2201,7 @@ draw_add_3d_triangle_filled(PyObject* self, PyObject* args)
         NULL,
     };
 
-	if (!pl_parse("OOOOO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+	if (!pl_parse_args("OOOOO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
         &ptPythonDrawlist, &ptPythonP0, &ptPythonP1, &ptPythonP2, &ptPythonOptions))
 		return NULL;
 
@@ -2249,7 +2249,7 @@ draw_add_3d_band_xz_filled(PyObject* self, PyObject* args)
         NULL,
     };
 
-	if (!pl_parse("OOffIO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+	if (!pl_parse_args("OOffIO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
         &ptPythonDrawlist, &ptPythonCenter, &fInnerRadius, &fOuterRadius, &uSegments, &ptPythonOptions))
 		return NULL;
 
@@ -2293,7 +2293,7 @@ draw_add_3d_band_xy_filled(PyObject* self, PyObject* args)
         NULL,
     };
 
-	if (!pl_parse("OOffIO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+	if (!pl_parse_args("OOffIO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
         &ptPythonDrawlist, &ptPythonCenter, &fInnerRadius, &fOuterRadius, &uSegments, &ptPythonOptions))
 		return NULL;
 
@@ -2337,7 +2337,7 @@ draw_add_3d_band_yz_filled(PyObject* self, PyObject* args)
         NULL,
     };
 
-	if (!pl_parse("OOffIO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+	if (!pl_parse_args("OOffIO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
         &ptPythonDrawlist, &ptPythonCenter, &fInnerRadius, &fOuterRadius, &uSegments, &ptPythonOptions))
 		return NULL;
 
@@ -2379,7 +2379,7 @@ draw_add_3d_plane_xz_filled(PyObject* self, PyObject* args)
         NULL,
     };
 
-	if (!pl_parse("OOffO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+	if (!pl_parse_args("OOffO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
         &ptPythonDrawlist, &ptPythonCenter, &fWidth, &fHeight, &ptPythonOptions))
 		return NULL;
 
@@ -2420,7 +2420,7 @@ draw_add_3d_plane_xy_filled(PyObject* self, PyObject* args)
         NULL,
     };
 
-	if (!pl_parse("OOffO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+	if (!pl_parse_args("OOffO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
         &ptPythonDrawlist, &ptPythonCenter, &fWidth, &fHeight, &ptPythonOptions))
 		return NULL;
 
@@ -2461,7 +2461,7 @@ draw_add_3d_plane_yz_filled(PyObject* self, PyObject* args)
         NULL,
     };
 
-	if (!pl_parse("OOffO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+	if (!pl_parse_args("OOffO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
         &ptPythonDrawlist, &ptPythonCenter, &fWidth, &fHeight, &ptPythonOptions))
 		return NULL;
 
@@ -2500,7 +2500,7 @@ draw_add_3d_text(PyObject* self, PyObject* args)
         NULL,
     };
 
-	if (!pl_parse("OOsO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+	if (!pl_parse_args("OOsO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
         &ptPythonDrawlist, &ptPythonP0, &pcText, &ptPythonOptions))
 		return NULL;
 
@@ -2528,7 +2528,7 @@ draw_create_bind_group_for_texture(PyObject* self, PyObject* args)
         NULL,
     };
 
-	if (!pl_parse("I", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+	if (!pl_parse_args("I", (const char**)apcKeywords, args, NULL, __FUNCTION__,
         &tHandle.uData))
 		return NULL;
     plBindGroupHandle tBGHandle = gptDraw->create_bind_group_for_texture(tHandle);

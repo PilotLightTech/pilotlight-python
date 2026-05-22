@@ -29,7 +29,7 @@ begin_packing(PyObject* self, PyObject* args)
 
     const char* pcFile = NULL;
     uint32_t uContentVersion = 0;
-	if (!pl_parse("sI", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+	if (!pl_parse_args("sI", (const char**)apcKeywords, args, NULL, __FUNCTION__,
         &pcFile, &uContentVersion))
 		return NULL;
 
@@ -57,7 +57,7 @@ add_from_disk(PyObject* self, PyObject* args)
     const char* pcPakPath = NULL;
     const char* pcFilePath = NULL;
     int bCompress = false;
-	if (!pl_parse("Ossp", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+	if (!pl_parse_args("Ossp", (const char**)apcKeywords, args, NULL, __FUNCTION__,
         &ptCapsule, &pcPakPath, &pcFilePath, &bCompress))
 		return NULL;
 
@@ -78,9 +78,9 @@ end_packing(PyObject* self, PyObject* arg)
 
 static PyMethodDef gatCommandsplPakI[] =
 {
-    PL_PYTHON_METHOD(begin_packing, METH_VARARGS | METH_STATIC, NULL),
-    PL_PYTHON_METHOD(add_from_disk, METH_VARARGS | METH_STATIC, NULL),
-    PL_PYTHON_METHOD(end_packing, METH_O | METH_STATIC, NULL),
+    {"begin_packing", begin_packing, METH_VARARGS | METH_STATIC, NULL},
+    {"add_from_disk", add_from_disk, METH_VARARGS | METH_STATIC, NULL},
+    {"end_packing", end_packing, METH_O | METH_STATIC, NULL},
     {NULL, NULL, 0, NULL}
 };
 

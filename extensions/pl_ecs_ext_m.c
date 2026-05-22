@@ -63,7 +63,7 @@ ecs_get_component(PyObject* self, PyObject* args, PyObject* kwargs)
     PyObject* ptPyLibrary = NULL;
     uint32_t uEcsKey = 0;
     PyObject* ptPyEntity = NULL;
-	if (!pl_parse("OIO", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+	if (!pl_parse_args("OIO", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
         &ptPyLibrary, &uEcsKey, &ptPyEntity))
 		return NULL;
 
@@ -73,8 +73,8 @@ ecs_get_component(PyObject* self, PyObject* args, PyObject* kwargs)
     void* pComponent = gptECS->get_component(ptCompLibrary, uEcsKey, tPyEntity.tEntity);
     if(uEcsKey == gptCameraEcs->get_ecs_type_key())
     {
-        plPyCamera* obj = (plPyCamera*)PyObject_CallObject(gptCameraType, NULL);
-        PL_FREE(obj->ptCamera);
+        pyplCamera* obj = (pyplCamera*)PyObject_CallObject(gptCameraType, NULL);
+        free(obj->ptCamera);
         obj->ptCamera = pComponent;
         return (PyObject*)obj;
     }
@@ -90,7 +90,7 @@ ecs_run_transform_update_system(PyObject* self, PyObject* args)
     };
 
     PyObject* ptPyLibrary = NULL;
-	if (!pl_parse("O", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+	if (!pl_parse_args("O", (const char**)apcKeywords, args, NULL, __FUNCTION__,
         &ptPyLibrary))
 		return NULL;
 
@@ -109,7 +109,7 @@ ecs_run_hierarchy_update_system(PyObject* self, PyObject* args)
     };
 
     PyObject* ptPyLibrary = NULL;
-	if (!pl_parse("O", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+	if (!pl_parse_args("O", (const char**)apcKeywords, args, NULL, __FUNCTION__,
         &ptPyLibrary))
 		return NULL;
 

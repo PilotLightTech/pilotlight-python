@@ -38,7 +38,7 @@ animation_run_animation_update_system(PyObject* self, PyObject* args)
 
     PyObject* ptPyLibrary = NULL;
     float fDeltaTime = 0.0f;
-	if (!pl_parse("Of", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+	if (!pl_parse_args("Of", (const char**)apcKeywords, args, NULL, __FUNCTION__,
         &ptPyLibrary, &fDeltaTime))
 		return NULL;
 
@@ -57,7 +57,7 @@ animation_run_inverse_kinematics_update_system(PyObject* self, PyObject* args)
     };
 
     PyObject* ptPyLibrary = NULL;
-	if (!pl_parse("O", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+	if (!pl_parse_args("O", (const char**)apcKeywords, args, NULL, __FUNCTION__,
         &ptPyLibrary))
 		return NULL;
 

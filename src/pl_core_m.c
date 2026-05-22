@@ -26,77 +26,6 @@ const plWindowI* ptWindows2;
 //-----------------------------------------------------------------------------
 
 PyObject*
-create_bool_pointer(PyObject* self, PyObject* args)
-{
-    bool* ptValue = PL_ALLOC(sizeof(bool));
-    memset(ptValue, 0, sizeof(bool));
-    return PyCapsule_New(ptValue, "plBoolPointer", NULL);
-}
-
-PyObject*
-create_int_pointer(PyObject* self, PyObject* args)
-{
-    static const char* apcKeywords[] = {
-        "count",
-        NULL,
-    };
-    int iCount = 1;
-	if (!pl_parse("|i", (const char**)apcKeywords, args, NULL, __FUNCTION__,
-        &iCount))
-		return NULL;
-    int* ptValue = PL_ALLOC(sizeof(int) * iCount);
-    memset(ptValue, 0, sizeof(int));
-    return PyCapsule_New(ptValue, "plIntPointer", NULL);
-}
-
-PyObject*
-create_float_pointer(PyObject* self, PyObject* args)
-{
-    static const char* apcKeywords[] = {
-        "count",
-        NULL,
-    };
-    int iCount = 1;
-	if (!pl_parse("|i", (const char**)apcKeywords, args, NULL, __FUNCTION__,
-        &iCount))
-		return NULL;
-
-    float* ptValue = PL_ALLOC(sizeof(float) * iCount);
-    memset(ptValue, 0, sizeof(float));
-    return PyCapsule_New(ptValue, "plFloatPointer", NULL);
-}
-
-PyObject*
-create_double_pointer(PyObject* self, PyObject* args)
-{
-    static const char* apcKeywords[] = {
-        "count",
-        NULL,
-    };
-    int iCount = 1;
-	if (!pl_parse("|i", (const char**)apcKeywords, args, NULL, __FUNCTION__,
-        &iCount))
-		return NULL;
-
-    double* ptValue = PL_ALLOC(sizeof(double) * iCount);
-    memset(ptValue, 0, sizeof(double));
-    return PyCapsule_New(ptValue, "plDoublePointer", NULL);
-}
-
-PyObject*
-destroy_pointer(PyObject* self, PyObject* args)
-{
-    const char* pcName = PyCapsule_GetName(args);
-    void* ptValue = PyCapsule_GetPointer(args, pcName);
-    if(ptValue == NULL)
-    {
-        PL_FREE(ptValue);
-        PyCapsule_SetPointer(args, NULL);
-    }
-    Py_RETURN_NONE;
-}
-
-PyObject*
 set_pointer_value(PyObject* self, PyObject* args)
 {
     static const char* apcKeywords[] = {
@@ -109,7 +38,7 @@ set_pointer_value(PyObject* self, PyObject* args)
     PyObject* ptPythonPointer = NULL;
     PyObject* ptPythonValue = NULL;
     int iIndex = 0;
-	if (!pl_parse("OO|i", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+	if (!pl_parse_args("OO|i", (const char**)apcKeywords, args, NULL, __FUNCTION__,
         &ptPythonPointer, &ptPythonValue, &iIndex))
 		return NULL;
 
@@ -118,24 +47,6 @@ set_pointer_value(PyObject* self, PyObject* args)
     {
         double* ptValue = PyCapsule_GetPointer(ptPythonPointer, pcName);
         ptValue[iIndex] = PyFloat_AsDouble(ptPythonValue);
-        return PyBool_FromLong(1);
-    }
-    else if(strcmp(pcName, "plFloatPointer") == 0)
-    {
-        float* ptValue = PyCapsule_GetPointer(ptPythonPointer, pcName);
-        ptValue[iIndex] = (float)PyFloat_AsDouble(ptPythonValue);
-        return PyBool_FromLong(1);
-    }
-    else if(strcmp(pcName, "plBoolPointer") == 0)
-    {
-        bool* ptValue = PyCapsule_GetPointer(ptPythonPointer, pcName);
-        *ptValue = PyLong_AsLong(ptPythonValue);
-        return PyBool_FromLong(1);
-    }
-    else if(strcmp(pcName, "plIntPointer") == 0)
-    {
-        int* ptValue = PyCapsule_GetPointer(ptPythonPointer, pcName);
-        ptValue[iIndex] = PyLong_AsLong(ptPythonValue);
         return PyBool_FromLong(1);
     }
     return PyBool_FromLong(0);
@@ -153,7 +64,7 @@ get_pointer_value(PyObject* self, PyObject* args)
 
     PyObject* ptPythonPointer = NULL;
     int iIndex = 0;
-	if (!pl_parse("O|i", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+	if (!pl_parse_args("O|i", (const char**)apcKeywords, args, NULL, __FUNCTION__,
         &ptPythonPointer, &iIndex))
 		return NULL;
 
@@ -162,21 +73,6 @@ get_pointer_value(PyObject* self, PyObject* args)
     {
         double* ptValue = PyCapsule_GetPointer(ptPythonPointer, pcName);
         return PyFloat_FromDouble(ptValue[iIndex]);
-    }
-    else if(strcmp(pcName, "plFloatPointer") == 0)
-    {
-        float* ptValue = (float*)PyCapsule_GetPointer(ptPythonPointer, pcName);
-        return PyFloat_FromDouble((double)ptValue[iIndex]);
-    }
-    else if(strcmp(pcName, "plBoolPointer") == 0)
-    {
-        bool* ptValue = PyCapsule_GetPointer(ptPythonPointer, pcName);
-        return PyBool_FromLong(ptValue[iIndex]);
-    }
-    else if(strcmp(pcName, "plIntPointer") == 0)
-    {
-        int* ptValue = PyCapsule_GetPointer(ptPythonPointer, pcName);
-        return PyLong_FromLong(ptValue[iIndex]);
     }
     Py_RETURN_NONE;
 }
@@ -193,7 +89,7 @@ io_is_key_pressed(PyObject* self, PyObject* args)
     int iKey = 0;
     int bRepeat = false;
 
-	if (!pl_parse("i|p", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+	if (!pl_parse_args("i|p", (const char**)apcKeywords, args, NULL, __FUNCTION__,
         &iKey, &bRepeat))
 		return NULL;
 
@@ -211,7 +107,7 @@ io_is_key_released(PyObject* self, PyObject* args)
 
     int iKey = 0;
 
-	if (!pl_parse("i", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+	if (!pl_parse_args("i", (const char**)apcKeywords, args, NULL, __FUNCTION__,
         &iKey))
 		return NULL;
 
@@ -229,7 +125,7 @@ io_is_key_down(PyObject* self, PyObject* args)
 
     int iKey = 0;
 
-	if (!pl_parse("i", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+	if (!pl_parse_args("i", (const char**)apcKeywords, args, NULL, __FUNCTION__,
         &iKey))
 		return NULL;
 
@@ -251,7 +147,7 @@ io_get_key_pressed_amount(PyObject* self, PyObject* args)
     float fRepeatDelay = 0.0f;
     float fRate = 0.0f;
 
-	if (!pl_parse("iff", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+	if (!pl_parse_args("iff", (const char**)apcKeywords, args, NULL, __FUNCTION__,
         &iKey, &fRepeatDelay, &fRate))
 		return NULL;
 
@@ -269,7 +165,7 @@ io_is_mouse_down(PyObject* self, PyObject* args)
 
     int iButton = 0;
 
-	if (!pl_parse("i", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+	if (!pl_parse_args("i", (const char**)apcKeywords, args, NULL, __FUNCTION__,
         &iButton))
 		return NULL;
 
@@ -287,7 +183,7 @@ io_is_mouse_released(PyObject* self, PyObject* args)
 
     int iButton = 0;
 
-	if (!pl_parse("i", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+	if (!pl_parse_args("i", (const char**)apcKeywords, args, NULL, __FUNCTION__,
         &iButton))
 		return NULL;
 
@@ -305,7 +201,7 @@ io_is_mouse_double_clicked(PyObject* self, PyObject* args)
 
     int iButton = 0;
 
-	if (!pl_parse("i", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+	if (!pl_parse_args("i", (const char**)apcKeywords, args, NULL, __FUNCTION__,
         &iButton))
 		return NULL;
 
@@ -325,7 +221,7 @@ io_is_mouse_clicked(PyObject* self, PyObject* args)
     int iButton = 0;
     int bRepeat = false;
 
-	if (!pl_parse("ip", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+	if (!pl_parse_args("ip", (const char**)apcKeywords, args, NULL, __FUNCTION__,
         &iButton, &bRepeat))
 		return NULL;
 
@@ -345,7 +241,7 @@ io_is_mouse_dragging(PyObject* self, PyObject* args)
     int iButton = 0;
     float fThreshold = false;
 
-	if (!pl_parse("if", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+	if (!pl_parse_args("if", (const char**)apcKeywords, args, NULL, __FUNCTION__,
         &iButton, &fThreshold))
 		return NULL;
 
@@ -365,11 +261,15 @@ io_is_mouse_hovering_rect(PyObject* self, PyObject* args)
     PyObject* ptPythonMinVec = NULL;
     PyObject* ptPythonMaxVec = NULL;
 
-	if (!pl_parse("OO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+	if (!pl_parse_args("OO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
         &ptPythonMinVec, &ptPythonMaxVec))
 		return NULL;
 
-    bool bResult = gptIOI->is_mouse_hovering_rect(pl_get_vec2_from_python(ptPythonMinVec), pl_get_vec2_from_python(ptPythonMaxVec));
+    plVec2 tMinVec = {0};
+    plVec2 tMaxVec = {0};
+    pl_vec2_from_py(ptPythonMinVec, &tMinVec);
+    pl_vec2_from_py(ptPythonMaxVec, &tMaxVec);
+    bool bResult = gptIOI->is_mouse_hovering_rect(tMinVec, tMaxVec);
     return PyBool_FromLong(bResult);
 }
 
@@ -383,7 +283,7 @@ io_reset_mouse_drag_delta(PyObject* self, PyObject* args)
 
     int iButton = 0;
 
-	if (!pl_parse("i", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+	if (!pl_parse_args("i", (const char**)apcKeywords, args, NULL, __FUNCTION__,
         &iButton))
 		return NULL;
 
@@ -403,7 +303,7 @@ io_get_mouse_drag_delta(PyObject* self, PyObject* args)
     int iButton = 0;
     float fThreshold = false;
 
-	if (!pl_parse("if", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+	if (!pl_parse_args("if", (const char**)apcKeywords, args, NULL, __FUNCTION__,
         &iButton, &fThreshold))
 		return NULL;
 
@@ -434,11 +334,13 @@ io_is_mouse_pos_valid(PyObject* self, PyObject* args)
 
     PyObject* ptPython = NULL;
 
-	if (!pl_parse("O", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+	if (!pl_parse_args("O", (const char**)apcKeywords, args, NULL, __FUNCTION__,
         &ptPython))
 		return NULL;
 
-    bool bResult = gptIOI->is_mouse_pos_valid(pl_get_vec2_from_python(ptPython));
+    plVec2 tPos = {0};
+    pl_vec2_from_py(ptPython, &tPos);
+    bool bResult = gptIOI->is_mouse_pos_valid(tPos);
     return PyBool_FromLong(bResult);
 }
 
@@ -452,7 +354,7 @@ io_set_mouse_cursor(PyObject* self, PyObject* args)
 
     int iCursor = 0;
 
-	if (!pl_parse("i", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+	if (!pl_parse_args("i", (const char**)apcKeywords, args, NULL, __FUNCTION__,
         &iCursor))
 		return NULL;
 
@@ -477,37 +379,10 @@ PyObject*
 io_get_io(PyObject* self, PyObject* arg)
 {
 
-    plPyVec2* obj = (plPyVec2*)PyObject_CallObject(gptIOType, NULL);
+    pyplIO* obj = (pyplIO*)PyObject_CallObject(gptIOType, NULL);
     if(!obj)
         return NULL;
     return (PyObject*)obj;
-
-    // if(ptpyIO == NULL)
-    // {
-    //     ptpyIO = PyDict_New();
-    // }
-
-    // plIO* ptIO = gptIOI->get_io();
-
-    // PyDict_SetItemString(ptpyIO, "fDeltaTime", PyFloat_FromDouble((double)ptIO->fDeltaTime));
-    // PyDict_SetItemString(ptpyIO, "fMouseDragThreshold", PyFloat_FromDouble((double)ptIO->fMouseDragThreshold));
-    // PyDict_SetItemString(ptpyIO, "fMouseDoubleClickTime", PyFloat_FromDouble((double)ptIO->fMouseDoubleClickTime));
-    // PyDict_SetItemString(ptpyIO, "fMouseDoubleClickMaxDist", PyFloat_FromDouble((double)ptIO->fMouseDoubleClickMaxDist));
-    // PyDict_SetItemString(ptpyIO, "fKeyRepeatDelay", PyFloat_FromDouble((double)ptIO->fKeyRepeatDelay));
-    // PyDict_SetItemString(ptpyIO, "fKeyRepeatRate", PyFloat_FromDouble((double)ptIO->fKeyRepeatRate));
-    // PyDict_SetItemString(ptpyIO, "fFrameRate", PyFloat_FromDouble((double)ptIO->fFrameRate));
-    // PyDict_SetItemString(ptpyIO, "ulFrameCount", PyLong_FromInt64(ptIO->ulFrameCount));
-    // PyDict_SetItemString(ptpyIO, "dTime", PyFloat_FromDouble(ptIO->dTime));
-    // PyDict_SetItemString(ptpyIO, "bKeyCtrl", PyBool_FromLong(ptIO->bKeyCtrl));
-    // PyDict_SetItemString(ptpyIO, "bKeyShift", PyBool_FromLong(ptIO->bKeyShift));
-    // PyDict_SetItemString(ptpyIO, "bKeyAlt", PyBool_FromLong(ptIO->bKeyAlt));
-    // PyDict_SetItemString(ptpyIO, "bKeySuper", PyBool_FromLong(ptIO->bKeySuper));
-    // PyDict_SetItemString(ptpyIO, "bRunning", PyBool_FromLong(ptIO->bRunning));
-    // PyDict_SetItemString(ptpyIO, "tMainViewportSize", Py_BuildValue("[ii]", (int)ptIO->tMainViewportSize.x, (int)ptIO->tMainViewportSize.y));
-    // PyDict_SetItemString(ptpyIO, "tMainFramebufferScale", Py_BuildValue("[ff]", ptIO->tMainFramebufferScale.x, ptIO->tMainFramebufferScale.y));
-
-    // Py_XINCREF(ptpyIO);
-    // return ptpyIO;
 }
 
 PyObject*
@@ -521,7 +396,7 @@ window_create(PyObject* self, PyObject* args, PyObject* kwargs)
 
     
     PyObject* ptPythonDesc = NULL;
-	if (!pl_parse("O", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+	if (!pl_parse_args("O", (const char**)apcKeywords, args, NULL, __FUNCTION__,
         &ptPythonDesc))
 		return NULL;
 

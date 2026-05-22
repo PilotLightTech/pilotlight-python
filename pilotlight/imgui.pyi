@@ -24,6 +24,10 @@ class plDearImGuiI:
     def cleanup(**kwargs):
         ...
 
+    @staticmethod
+    def get_texture_id_from_bindgroup(texture):
+        ...
+
 class ImGui:
 
     ########################################################################################################################
@@ -31,23 +35,23 @@ class ImGui:
     ########################################################################################################################
 
     @staticmethod
-    def ShowDemoWindow(bool_pointer: plBoolPointer | None = None):
+    def ShowDemoWindow(open: bool | None = None) -> bool | None:
         ...
 
     @staticmethod
-    def ShowMetricsWindow(bool_pointer: plBoolPointer | None = None):
+    def ShowMetricsWindow(bool: bool | None = None):
         ...
 
     @staticmethod
-    def ShowDebugLogWindow(bool_pointer: plBoolPointer | None = None):
+    def ShowDebugLogWindow(bool: bool | None = None):
         ...
 
     @staticmethod
-    def ShowIDStackToolWindow(bool_pointer: plBoolPointer | None = None):
+    def ShowIDStackToolWindow(bool: bool | None = None):
         ...
 
     @staticmethod
-    def ShowAboutWindow(bool_pointer: plBoolPointer | None = None):
+    def ShowAboutWindow(bool: bool | None = None):
         ...
 
     @staticmethod
@@ -87,7 +91,13 @@ class ImGui:
         ...
 
     @staticmethod
-    def Begin(name: str, bool_pointer: plBoolPointer | None = None, flags: ImGuiWindowFlags | int = 0) -> bool:
+    @overload
+    def Begin(name: str, open: None = None, flags: ImGuiWindowFlags | int = 0) -> bool:
+        ...
+
+    @staticmethod
+    @overload
+    def Begin(name: str, open: bool, flags: ImGuiWindowFlags | int = 0) -> Tuple[bool, bool]:
         ...
 
     @staticmethod
@@ -215,7 +225,11 @@ class ImGui:
         ...
 
     @staticmethod
-    def MenuItem(label:str, shortcut:str="", selected:bool=False, enabled:bool=True, selected_pointer: plBoolPointer | None = None) -> Tuple[bool, bool]:
+    def MenuItemSimple(label:str, shortcut:str="", selected:bool=False, enabled:bool=True) -> Tuple[bool, bool]:
+        ...
+
+    @staticmethod
+    def MenuItem(label:str, shortcut:str, selected:bool, enabled:bool=True) -> Tuple[bool, bool]:
         ...
 
     ########################################################################################################################
@@ -347,6 +361,14 @@ class ImGui:
         ...
 
     ########################################################################################################################
+    # [SECTION] image widgets
+    ########################################################################################################################
+
+    @staticmethod
+    def Image(texture, size, uv0 = [0.0, 0.0], uv1 = [1.0, 1.0]):
+        ...
+
+    ########################################################################################################################
     # [SECTION] imgui main widgets
     ########################################################################################################################
 
@@ -355,7 +377,7 @@ class ImGui:
         ...
 
     @staticmethod
-    def Checkbox(label:str, bool_pointer: plBoolPointer):
+    def Checkbox(label:str, value: bool) -> Tuple[bool, bool]:
         ...
 
     @staticmethod
@@ -371,11 +393,17 @@ class ImGui:
         ...
 
     @staticmethod
-    def CheckboxFlags(label: str, flags_pointer: plIntPointer, flags_value: int) -> bool:
+    def CheckboxFlags(label: str, flags: int, flags_value: int) -> Tuple[bool, int]:
         ...
 
     @staticmethod
-    def RadioButton(label: str, active: bool = False, value_pointer: plIntPointer | None = None, button_value: int = 0) -> bool:
+    @overload
+    def RadioButton(label: str, value: int, button_value: int) -> Tuple[bool, int]:
+        ...
+
+    @staticmethod
+    @overload
+    def RadioButton(label: str, active: bool) -> bool:
         ...
 
     @staticmethod
@@ -407,8 +435,14 @@ class ImGui:
         ...
 
     @staticmethod
-    def Combo(label: str, current_item: plIntPointer, items: List[str], popup_max_height_in_items: int = -1) -> bool:
-        ...
+    @overload
+    def Combo(label: str, current_item: int, items: List[str], popup_max_height_in_items: int = -1) -> Tuple[bool, int]:
+        pass
+
+    @staticmethod
+    @overload
+    def Combo(label: str, current_item: int, items_separated_by_zeros: str, popup_max_height_in_items: int = -1) -> Tuple[bool, int]:
+        pass
 
     ########################################################################################################################
     # [SECTION] imgui list boxes
@@ -451,7 +485,7 @@ class ImGui:
     ########################################################################################################################
 
     @staticmethod
-    def Selectable(label: str, selected: bool = False, flags: ImGuiSelectableFlags | int = 0, size=None, selected_pointer: plBoolPointer | None = None) -> bool:
+    def Selectable(label: str, selected: bool = False, flags: ImGuiSelectableFlags | int = 0, size=None) -> Tuple[bool, bool]:
         ...
 
     ########################################################################################################################
@@ -459,43 +493,43 @@ class ImGui:
     ########################################################################################################################
 
     @staticmethod
-    def DragFloat(label, value_pointer: plFloatPointer, speed: float = 1.0, min: float = 0.0, max: float = 0.0, format: str = "%.3f", flags: ImGuiSliderFlags | int = 0) -> bool:
+    def DragFloat(label, value: float, speed: float = 1.0, min: float = 0.0, max: float = 0.0, format: str = "%.3f", flags: ImGuiSliderFlags | int = 0) -> Tuple[bool, float]:
         ...
 
     @staticmethod
-    def DragFloat2(label, value_pointer: plFloatPointer, speed: float = 1.0, min: float = 0.0, max: float = 0.0, format: str = "%.3f", flags: ImGuiSliderFlags | int = 0) -> bool:
+    def DragFloat2(label, value: List[float], speed: float = 1.0, min: float = 0.0, max: float = 0.0, format: str = "%.3f", flags: ImGuiSliderFlags | int = 0) -> Tuple[bool, List[float]]:
         ...
 
     @staticmethod
-    def DragFloat3(label, value_pointer: plFloatPointer, speed: float = 1.0, min: float = 0.0, max: float = 0.0, format: str = "%.3f", flags: ImGuiSliderFlags | int = 0) -> bool:
+    def DragFloat3(label, value: List[float], speed: float = 1.0, min: float = 0.0, max: float = 0.0, format: str = "%.3f", flags: ImGuiSliderFlags | int = 0) -> Tuple[bool, List[float]]:
         ...
 
     @staticmethod
-    def DragFloat4(label, value_pointer: plFloatPointer, speed: float = 1.0, min: float = 0.0, max: float = 0.0, format: str = "%.3f", flags: ImGuiSliderFlags | int = 0) -> bool:
+    def DragFloat4(label, value: List[float], speed: float = 1.0, min: float = 0.0, max: float = 0.0, format: str = "%.3f", flags: ImGuiSliderFlags | int = 0) -> Tuple[bool, List[float]]:
         ...
 
     @staticmethod
-    def DragFloatRange2(label, current_min_pointer: plFloatPointer, current_max_pointer: plFloatPointer, speed: float = 1.0, min: float = 0.0, max: float = 0.0, format: str = "%.3f", format_max: str | None = None, flags: ImGuiSliderFlags | int = 0) -> bool:
+    def DragFloatRange2(label, min_value: float, max_value: float, speed: float = 1.0, min: float = 0.0, max: float = 0.0, format: str = "%.3f", format_max: str | None = None, flags: ImGuiSliderFlags | int = 0) -> Tuple[bool, float, float]:
         ...
 
     @staticmethod
-    def DragInt(label, value_pointer: plIntPointer, speed: float = 1.0, min: int = 0, max: int = 0, format: str = "%d", flags: ImGuiSliderFlags | int = 0) -> bool:
+    def DragInt(label, value: int, speed: float = 1.0, min: int = 0, max: int = 0, format: str = "%d", flags: ImGuiSliderFlags | int = 0) -> Tuple[bool, int]:
         ...
 
     @staticmethod
-    def DragInt2(label, value_pointer: plIntPointer, speed: float = 1.0, min: int = 0, max: int = 0, format: str = "%d", flags: ImGuiSliderFlags | int = 0) -> bool:
+    def DragInt2(label, value: List[int], speed: float = 1.0, min: int = 0, max: int = 0, format: str = "%d", flags: ImGuiSliderFlags | int = 0) -> Tuple[bool, List[int]]:
         ...
 
     @staticmethod
-    def DragInt3(label, value_pointer: plIntPointer, speed: float = 1.0, min: int = 0, max: int = 0, format: str = "%d", flags: ImGuiSliderFlags | int = 0) -> bool:
+    def DragInt3(label, value: List[int], speed: float = 1.0, min: int = 0, max: int = 0, format: str = "%d", flags: ImGuiSliderFlags | int = 0) -> Tuple[bool, List[int]]:
         ...
 
     @staticmethod
-    def DragInt4(label, value_pointer: plIntPointer, speed: float = 1.0, min: int = 0, max: int = 0, format: str = "%d", flags: ImGuiSliderFlags | int = 0) -> bool:
+    def DragInt4(label, value: List[int], speed: float = 1.0, min: int = 0, max: int = 0, format: str = "%d", flags: ImGuiSliderFlags | int = 0) -> Tuple[bool, List[int]]:
         ...
 
     @staticmethod
-    def DragIntRange2(label, current_min_pointer: plIntPointer, current_max_pointer: plIntPointer, speed: float = 1.0, min: int = 0, max: int = 0, format: str = "%d", format_max: str | None = None, flags: ImGuiSliderFlags | int = 0) -> bool:
+    def DragIntRange2(label, min_value: int, max_value: int, speed: float = 1.0, min: int = 0, max: int = 0, format: str = "%d", format_max: str | None = None, flags: ImGuiSliderFlags | int = 0) -> Tuple[bool, int, int]:
         ...
 
     ########################################################################################################################
@@ -503,47 +537,47 @@ class ImGui:
     ########################################################################################################################
 
     @staticmethod
-    def SliderFloat(label, value_pointer: plFloatPointer, min: float, max: float, format: str = "%.3f", flags: ImGuiSliderFlags | int = 0) -> bool:
+    def SliderFloat(label, value: float, min: float, max: float, format: str = "%.3f", flags: ImGuiSliderFlags | int = 0) -> Tuple[bool, float]:
         ...
 
     @staticmethod
-    def SliderFloat2(label, value_pointer: plFloatPointer, min: float, max: float, format: str = "%.3f", flags: ImGuiSliderFlags | int = 0) -> bool:
+    def SliderFloat2(label, value: List[float], min: float, max: float, format: str = "%.3f", flags: ImGuiSliderFlags | int = 0) -> Tuple[bool, List[float]]:
         ...
 
     @staticmethod
-    def SliderFloat3(label, value_pointer: plFloatPointer, min: float, max: float, format: str = "%.3f", flags: ImGuiSliderFlags | int = 0) -> bool:
+    def SliderFloat3(label, value: List[float], min: float, max: float, format: str = "%.3f", flags: ImGuiSliderFlags | int = 0) -> Tuple[bool, List[float]]:
         ...
 
     @staticmethod
-    def SliderFloat4(label, value_pointer: plFloatPointer, min: float, max: float, format: str = "%.3f", flags: ImGuiSliderFlags | int = 0) -> bool:
+    def SliderFloat4(label, value: List[float], min: float, max: float, format: str = "%.3f", flags: ImGuiSliderFlags | int = 0) -> Tuple[bool, List[float]]:
         ...
 
     @staticmethod
-    def SliderAngle(label, rad_pointer: plFloatPointer, degrees_min: float = -360.0, degrees_max: float = 360.0, format: str = "%.0f deg", flags: ImGuiSliderFlags | int = 0) -> bool:
+    def SliderAngle(label, radians: float, degrees_min: float = -360.0, degrees_max: float = 360.0, format: str = "%.0f deg", flags: ImGuiSliderFlags | int = 0) -> Tuple[bool, float]:
         ...
 
     @staticmethod
-    def SliderInt(label, value_pointer: plIntPointer, min: int, max: int, format: str = "%d", flags: ImGuiSliderFlags | int = 0) -> bool:
+    def SliderInt(label, value: int, min: int, max: int, format: str = "%d", flags: ImGuiSliderFlags | int = 0) -> Tuple[bool, int]:
         ...
 
     @staticmethod
-    def SliderInt2(label, value_pointer: plIntPointer, min: int, max: int, format: str = "%d", flags: ImGuiSliderFlags | int = 0) -> bool:
+    def SliderInt2(label, value: List[int], min: int, max: int, format: str = "%d", flags: ImGuiSliderFlags | int = 0) -> Tuple[bool, List[int]]:
         ...
 
     @staticmethod
-    def SliderInt3(label, value_pointer: plIntPointer, min: int, max: int, format: str = "%d", flags: ImGuiSliderFlags | int = 0) -> bool:
+    def SliderInt3(label, value: List[int], min: int, max: int, format: str = "%d", flags: ImGuiSliderFlags | int = 0) -> Tuple[bool, List[int]]:
         ...
 
     @staticmethod
-    def SliderInt4(label, value_pointer: plIntPointer, min: int, max: int, format: str = "%d", flags: ImGuiSliderFlags | int = 0) -> bool:
+    def SliderInt4(label, value: List[int], min: int, max: int, format: str = "%d", flags: ImGuiSliderFlags | int = 0) -> Tuple[bool, List[int]]:
         ...
 
     @staticmethod
-    def VSliderFloat(label, size, value_pointer: plFloatPointer, min: float, max: float, format: str = "%.3f", flags: ImGuiSliderFlags | int = 0) -> bool:
+    def VSliderFloat(label, size, value: float, min: float, max: float, format: str = "%.3f", flags: ImGuiSliderFlags | int = 0) -> Tuple[bool, float]:
         ...
 
     @staticmethod
-    def VSliderInt(label, size, value_pointer: plIntPointer, min: int, max: int, format: str = "%d", flags: ImGuiSliderFlags | int = 0) -> bool:
+    def VSliderInt(label, size, value: int, min: int, max: int, format: str = "%d", flags: ImGuiSliderFlags | int = 0) -> Tuple[bool, int]:
         ...
 
     ########################################################################################################################
@@ -551,51 +585,51 @@ class ImGui:
     ########################################################################################################################
 
     @staticmethod
-    def InputText(label: str, value: bytearray, flags: ImGuiInputTextFlags | int = 0) -> bool:
+    def InputText(label: str, value: str, flags: ImGuiInputTextFlags | int = 0) -> Tuple[bool, str]:
         ...
 
     @staticmethod
-    def InputTextMultiline(label: str, value: bytearray, size=None, flags: ImGuiInputTextFlags | int = 0) -> bool:
+    def InputTextMultiline(label: str, value: str, size=None, flags: ImGuiInputTextFlags | int = 0) -> Tuple[bool, str]:
         ...
 
     @staticmethod
-    def InputTextWithHint(label: str, hint: str, value: bytearray, flags: ImGuiInputTextFlags | int = 0) -> bool:
+    def InputTextWithHint(label: str, hint: str, value: str, flags: ImGuiInputTextFlags | int = 0) -> Tuple[bool, str]:
         ...
 
     @staticmethod
-    def InputFloat(label: str, value_pointer: plFloatPointer, step: float = 0.0, step_fast: float = 0.0, format: str = "%.3f", flags: ImGuiInputTextFlags | int = 0) -> bool:
+    def InputFloat(label: str, value: float, step: float = 0.0, step_fast: float = 0.0, format: str = "%.3f", flags: ImGuiInputTextFlags | int = 0) -> Tuple[bool, float]:
         ...
 
     @staticmethod
-    def InputFloat2(label: str, value_pointer: plFloatPointer, format: str = "%.3f", flags: ImGuiInputTextFlags | int = 0) -> bool:
+    def InputFloat2(label: str, value: List[float], format: str = "%.3f", flags: ImGuiInputTextFlags | int = 0) -> Tuple[bool, List[float]]:
         ...
 
     @staticmethod
-    def InputFloat3(label: str, value_pointer: plFloatPointer, format: str = "%.3f", flags: ImGuiInputTextFlags | int = 0) -> bool:
+    def InputFloat3(label: str, value: List[float], format: str = "%.3f", flags: ImGuiInputTextFlags | int = 0) -> Tuple[bool, List[float]]:
         ...
 
     @staticmethod
-    def InputFloat4(label: str, value_pointer: plFloatPointer, format: str = "%.3f", flags: ImGuiInputTextFlags | int = 0) -> bool:
+    def InputFloat4(label: str, value: List[float], format: str = "%.3f", flags: ImGuiInputTextFlags | int = 0) -> Tuple[bool, List[float]]:
         ...
 
     @staticmethod
-    def InputInt(label: str, value_pointer: plIntPointer, step: int = 1, step_fast: int = 100, flags: ImGuiInputTextFlags | int = 0) -> bool:
+    def InputInt(label: str, value: int, step: int = 1, step_fast: int = 100, flags: ImGuiInputTextFlags | int = 0) -> bool:
         ...
 
     @staticmethod
-    def InputInt2(label: str, value_pointer: plIntPointer, flags: ImGuiInputTextFlags | int = 0) -> bool:
+    def InputInt2(label: str, value: List[int], flags: ImGuiInputTextFlags | int = 0) -> Tuple[bool, int]:
         ...
 
     @staticmethod
-    def InputInt3(label: str, value_pointer: plIntPointer, flags: ImGuiInputTextFlags | int = 0) -> bool:
+    def InputInt3(label: str, value: List[int], flags: ImGuiInputTextFlags | int = 0) -> Tuple[bool, List[int]]:
         ...
 
     @staticmethod
-    def InputInt4(label: str, value_pointer: plIntPointer, flags: ImGuiInputTextFlags | int = 0) -> bool:
+    def InputInt4(label: str, value: List[int], flags: ImGuiInputTextFlags | int = 0) -> Tuple[bool, List[int]]:
         ...
 
     @staticmethod
-    def InputDouble(label: str, value_pointer: plDoublePointer, step: float = 0.0, step_fast: float = 0.0, format: str = "%.6f", flags: ImGuiInputTextFlags | int = 0) -> bool:
+    def InputDouble(label: str, value: float, step: float = 0.0, step_fast: float = 0.0, format: str = "%.6f", flags: ImGuiInputTextFlags | int = 0) -> Tuple[bool, float]:
         ...
 
     ########################################################################################################################
@@ -815,23 +849,23 @@ class ImGui:
     ########################################################################################################################
 
     @staticmethod
-    def ColorEdit3(label: str, color_pointer: plFloatPointer, flags: ImGuiColorEditFlags | int = 0) -> bool:
+    def ColorEdit3(label: str, color: List[float], flags: ImGuiColorEditFlags | int = 0) -> Tuple[bool, List[float]]:
         ...
 
     @staticmethod
-    def ColorEdit4(label: str, color_pointer: plFloatPointer, flags: ImGuiColorEditFlags | int = 0) -> bool:
+    def ColorEdit4(label: str, color: List[float], flags: ImGuiColorEditFlags | int = 0) -> Tuple[bool, List[float]]:
         ...
 
     @staticmethod
-    def ColorPicker3(label: str, color_pointer: plFloatPointer, flags: ImGuiColorEditFlags | int = 0) -> bool:
+    def ColorPicker3(label: str, color: List[float], flags: ImGuiColorEditFlags | int = 0) -> Tuple[bool, List[float]]:
         ...
 
     @staticmethod
-    def ColorPicker4(label: str, color_pointer: plFloatPointer, flags: ImGuiColorEditFlags | int = 0, ref_color: plFloatPointer | None = None) -> bool:
+    def ColorPicker4(label: str, color: List[float], flags: ImGuiColorEditFlags | int = 0, ref_color: List[float] | None = None) -> Tuple[bool, List[float]]:
         ...
 
     @staticmethod
-    def ColorButton(desc_id: str, color, flags: ImGuiColorEditFlags | int = 0, size=None) -> bool:
+    def ColorButton(desc_id: str, color: List[float], flags: ImGuiColorEditFlags | int = 0, size=None) -> bool:
         ...
 
     @staticmethod
@@ -863,7 +897,13 @@ class ImGui:
         ...
 
     @staticmethod
-    def CollapsingHeader(label: str, visible_pointer: plBoolPointer | None = None, flags: ImGuiTreeNodeFlags | int = 0) -> bool:
+    @overload
+    def CollapsingHeader(label: str, flags: ImGuiTreeNodeFlags | int = 0) -> bool:
+        ...
+
+    @staticmethod
+    @overload
+    def CollapsingHeader(label: str, visible: bool, flags: ImGuiTreeNodeFlags | int = 0) -> Tuple[bool, bool]:
         ...
 
     @staticmethod
@@ -887,7 +927,7 @@ class ImGui:
         ...
 
     @staticmethod
-    def BeginPopupModal(name: str, open: plBoolPointer | None = None, flags: ImGuiWindowFlags | int = 0) -> bool:
+    def BeginPopupModal(name: str, open: bool | None = None, flags: ImGuiWindowFlags | int = 0) -> Tuple[bool, bool | None]:
         ...
 
     @staticmethod
@@ -935,7 +975,7 @@ class ImGui:
         ...
 
     @staticmethod
-    def BeginTabItem(label: str, open: plBoolPointer | None = None, flags: ImGuiTabItemFlags | int = 0) -> bool:
+    def BeginTabItem(label: str, open: bool | None = None, flags: ImGuiTabItemFlags | int = 0) -> Tuple[bool, bool | None]:
         ...
 
     @staticmethod
@@ -1045,5 +1085,5 @@ class ImGui:
 class ImPlot:
 
     @staticmethod
-    def ShowDemoWindow(bool_pointer: plBoolPointer | None = None):
+    def ShowDemoWindow(open: bool | None = None) -> bool | None:
         ...

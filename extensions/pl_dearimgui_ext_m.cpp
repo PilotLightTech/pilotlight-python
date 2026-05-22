@@ -1,30 +1,19 @@
 /*
-   pilotlight.c
+   pl_dearimgui_ext_m.cpp
 */
 
 /*
 Index of this file:
-// [SECTION] notes
-// [SECTION] header mess
 // [SECTION] includes
 // [SECTION] forward declarations
-// [SECTION] helper api implementation
-// [SECTION] core module api
-// [SECTION] python api registration
+// [SECTION] custom type stuff
+// [SECTION] public api implementations
+// [SECTION] helper implementations
+// [SECTION] python module prep
 */
 
 //-----------------------------------------------------------------------------
-// [SECTION] notes
-//-----------------------------------------------------------------------------
-
-/*
-    Python binding functions are registered in the "gatCommands" array at the
-    bottom of this file. Constants are registered at the bottom of the
-    "PyInit_pilotlight" function.
-*/
-
-//-----------------------------------------------------------------------------
-// [SECTION] header mess
+// [SECTION] includes
 //-----------------------------------------------------------------------------
 
 #include "pl_dear_imgui_ext.cpp"
@@ -38,9 +27,15 @@ Index of this file:
 #include "pl_graphics_ext.h"
 #include "pl_ds.h"
 
-bool pl_parse(const char* formatstring, const char** keywords, PyObject* args, PyObject* kwargs, const char* message, ...);
-static ImVec2 pl__get_vec2_from_python(PyObject* ptValue);
-static ImVec4 pl__get_vec4_from_python(PyObject* ptValue);
+//-----------------------------------------------------------------------------
+// [SECTION] forward declarations
+//-----------------------------------------------------------------------------
+
+void pl_fill_int_array_from_python(PyObject* ptPyObject, int* atArray, uint32_t uArraySize);
+void pl_fill_int_array_from_c(PyObject* ptPyObject, int* atArray, uint32_t uArraySize);
+void pl_fill_float_array_from_python(PyObject* ptPyObject, float* atArray, uint32_t uArraySize);
+void pl_fill_float_array_from_c(PyObject* ptPyObject, float* atArray, uint32_t uArraySize);
+bool pl_parse_args(const char* formatstring, const char** keywords, PyObject* args, PyObject* kwargs, const char* message, ...);
 
 typedef struct _plPythonIntConstantPair
 {
@@ -48,13 +43,19 @@ typedef struct _plPythonIntConstantPair
    int         iValue;
 } plPythonIntConstantPair;
 
+//-----------------------------------------------------------------------------
+// [SECTION] custom type stuff
+//-----------------------------------------------------------------------------
 
 static PyObject* gptplDearImGuiIType = nullptr;
 static PyObject* gptImGuiType = nullptr;
 static PyObject* gptImPlotType = nullptr;
 
+static ImVec2 pl__get_vec2_from_python(PyObject* ptValue);
+static ImVec4 pl__get_vec4_from_python(PyObject* ptValue);
+
 //-----------------------------------------------------------------------------
-// [SECTION] includes
+// [SECTION] public api implementations
 //-----------------------------------------------------------------------------
 
 PyObject*
@@ -84,7 +85,7 @@ dear_imgui_initialize(PyObject* self, PyObject* args, PyObject* kwargs)
         NULL,
     };
 
-	if (!pl_parse("OOI", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+	if (!pl_parse_args("OOI", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
         &ptPythonDevice, &ptPythonSwapchain, &uRenderPassHandle))
 		return NULL;
 
@@ -115,7 +116,7 @@ dear_imgui_new_frame(PyObject* self, PyObject* args, PyObject* kwargs)
         NULL,
     };
 
-	if (!pl_parse("OI", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+	if (!pl_parse_args("OI", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
         &ptPythonDevice, &uRenderPassHandle))
 		return NULL;
 
@@ -129,6 +130,30 @@ dear_imgui_new_frame(PyObject* self, PyObject* args, PyObject* kwargs)
 }
 
 PyObject*
+dear_imgui_get_texture_id_from_bindgroup(PyObject* self, PyObject* args, PyObject* kwargs)
+{
+
+    PyObject* ptPythonDevice = nullptr;
+    plBindGroupHandle tBGHandle = {0};
+
+    static const char* apcKeywords[] = {
+        "device",
+        "bindgroup",
+        NULL,
+    };
+
+	if (!pl_parse_args("OI", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+        &ptPythonDevice, &tBGHandle.uData))
+		return NULL;
+
+    plDevice* ptDevice = (plDevice*)PyCapsule_GetPointer(ptPythonDevice, "plDevice");
+
+    void* ptTexture = pl_dear_imgui_get_texture_id_from_bindgroup(ptDevice, tBGHandle);
+    
+    return PyCapsule_New(ptTexture, "void", NULL);
+}
+
+PyObject*
 dear_imgui_render(PyObject* self, PyObject* args, PyObject* kwargs)
 {
 
@@ -139,7 +164,7 @@ dear_imgui_render(PyObject* self, PyObject* args, PyObject* kwargs)
         NULL,
     };
 
-	if (!pl_parse("O", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+	if (!pl_parse_args("O", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
         &ptPythonRenderEncoder))
 		return NULL;
 
@@ -181,24 +206,30 @@ dear_imgui_cleanup(PyObject* self, PyObject* args, PyObject* kwargs)
 PyObject*
 ShowDemoWindow(PyObject* self, PyObject* arg)
 {
-    bool* ptShow = NULL;
+
+    bool bShow = true;
     if(!Py_IsNone(arg))
     {
-        ptShow = (bool*)PyCapsule_GetPointer(arg, "plBoolPointer");
+        bShow = PyLong_AsLong(arg);
+        ImGui::ShowDemoWindow(&bShow);
+        return PyBool_FromLong(bShow);
     }
-    ImGui::ShowDemoWindow(ptShow);
+    ImGui::ShowDemoWindow(nullptr);
     Py_RETURN_NONE;
 }
 
 PyObject*
 ImPlot_ShowDemoWindow(PyObject* self, PyObject* arg)
 {
-    bool* ptShow = NULL;
+
+    bool bShow = true;
     if(!Py_IsNone(arg))
     {
-        ptShow = (bool*)PyCapsule_GetPointer(arg, "plBoolPointer");
+        bShow = PyLong_AsLong(arg);
+        ImPlot::ShowDemoWindow(&bShow);
+        return PyBool_FromLong(bShow);
     }
-    ImPlot::ShowDemoWindow(ptShow);
+    ImPlot::ShowDemoWindow(nullptr);
     Py_RETURN_NONE;
 }
 
@@ -213,23 +244,67 @@ Begin(PyObject* self, PyObject* args, PyObject* kwargs)
         nullptr,
     };
     const char* pcText = nullptr;
-    PyObject* ptPointer = Py_None;
+    PyObject* ptOpen = Py_None;
     int iFlags = 0;
-	if (!pl_parse("s|Oi", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
-        &pcText, &ptPointer, &iFlags))
+	if (!pl_parse_args("s|Oi", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+        &pcText, &ptOpen, &iFlags))
 		return nullptr;
     
     bool* pbOpen = nullptr;
-    if(!Py_IsNone(ptPointer))
-        pbOpen = (bool*)PyCapsule_GetPointer(ptPointer, "plBoolPointer");
+    bool bShow = true;
+    if(!Py_IsNone(ptOpen))
+    {
+        bShow = PyLong_AsLong(ptOpen);
+        pbOpen = &bShow;
+    }
 
-    return PyBool_FromLong(ImGui::Begin(pcText, pbOpen, iFlags));
+    bool bResult = ImGui::Begin(pcText, pbOpen, iFlags);
+    if(pbOpen)
+        return Py_BuildValue("(pp)", bResult, bShow);
+    return PyBool_FromLong(bResult);
 }
 
 PyObject*
 End(PyObject* self)
 {
     ImGui::End();
+    Py_RETURN_NONE;
+}
+
+PyObject*
+Image(PyObject* self, PyObject* args, PyObject* kwargs)
+{
+
+    static const char* apcKeywords[] = {
+        "texture",
+        "size",
+        "uv0",
+        "uv1",
+        nullptr,
+    };
+    PyObject* ptPyTexture = nullptr;
+    PyObject* ptSize = Py_None;
+    PyObject* ptUV0 = Py_None;
+    PyObject* ptUV1 = Py_None;
+	if (!pl_parse_args("OO|OO", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+        &ptPyTexture, &ptSize, &ptUV0, &ptUV1))
+		return nullptr;
+    
+    ImVec2 tSize = pl__get_vec2_from_python(ptSize);
+
+    ImVec2 tUV0 = {};
+    if(!Py_IsNone(ptUV0))
+        tUV0 = pl__get_vec2_from_python(ptUV0);
+
+    ImVec2 tUV1 = {1.0f, 1.0f};
+    if(!Py_IsNone(ptUV1))
+        tUV1 = pl__get_vec2_from_python(ptUV1);
+
+    void* ptTexture = (plDevice*)PyCapsule_GetPointer(ptPyTexture, "void");
+
+    ImTextureRef tTexture = ImTextureRef(ptTexture);
+
+    ImGui::Image(tTexture, tSize, tUV0, tUV1);
     Py_RETURN_NONE;
 }
 
@@ -244,7 +319,7 @@ Button(PyObject* self, PyObject* args, PyObject* kwargs)
     };
     const char* pcLabel = nullptr;
     PyObject* ptSize = Py_None;
-	if (!pl_parse("s|O", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+	if (!pl_parse_args("s|O", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
         &pcLabel, &ptSize))
 		return nullptr;
     
@@ -299,11 +374,37 @@ BeginMenu(PyObject* self, PyObject* args, PyObject* kwargs)
     };
     const char* pcLabel = nullptr;
     int bEnabled = true;
-	if (!pl_parse("s|p", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+	if (!pl_parse_args("s|p", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
         &pcLabel, &bEnabled))
 		return nullptr;
     
     return PyBool_FromLong(ImGui::BeginMenu(pcLabel, bEnabled));
+}
+
+PyObject*
+MenuItemSimple(PyObject* self, PyObject* args, PyObject* kwargs)
+{
+
+    static const char* apcKeywords[] = {
+        "label",
+        "shortcut",
+        "selected",
+        "enabled",
+        "selected_pointer",
+        nullptr,
+    };
+    const char* pcLabel = nullptr;
+    const char* pcShortcut = "";
+    int iSelected = false;
+    int bEnabled = true;
+	if (!pl_parse_args("ssp|p", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+        &pcLabel, &pcShortcut, &iSelected, &bEnabled))
+		return nullptr;
+    
+    bool bSelected = iSelected;
+
+    bool bActivated = ImGui::MenuItem(pcLabel, pcShortcut, bSelected, bEnabled);
+    return Py_BuildValue("(pp)", bActivated, bSelected);
 }
 
 PyObject*
@@ -319,21 +420,18 @@ MenuItem(PyObject* self, PyObject* args, PyObject* kwargs)
         nullptr,
     };
     const char* pcLabel = nullptr;
-    const char* pcShortcut = nullptr;
+    const char* pcShortcut = "";
+    int iSelected = false;
     int bEnabled = true;
-    int bSelected = false;
-    PyObject* ptPointer = Py_None;
-	if (!pl_parse("s|spp$O", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
-        &pcLabel, &pcShortcut, &bSelected, &bEnabled, &ptPointer))
+	if (!pl_parse_args("ssp|p", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+        &pcLabel, &pcShortcut, &iSelected, &bEnabled))
 		return nullptr;
     
-    bool bbSelected = (bool)bSelected;
-    bool* pbSelected = &bbSelected;
-    if(!Py_IsNone(ptPointer))
-        pbSelected = (bool*)PyCapsule_GetPointer(ptPointer, "plBoolPointer");
+    bool bSelected = iSelected;
+    bool* pbSelected = &bSelected;
 
     bool bActivated = ImGui::MenuItem(pcLabel, pcShortcut, pbSelected, bEnabled);
-    return Py_BuildValue("(pp)", bActivated, bbSelected);
+    return Py_BuildValue("(pp)", bActivated, bSelected);
 }
 
 PyObject*
@@ -342,48 +440,48 @@ Checkbox(PyObject* self, PyObject* args, PyObject* kwargs)
 
     static const char* apcKeywords[] = {
         "label",
-        "value_pointer",
+        "value",
         nullptr,
     };
     const char* pcLabel = nullptr;
-    PyObject* ptPointer = Py_None;
-	if (!pl_parse("sO", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
-        &pcLabel, &ptPointer))
+    int iValue = 0;
+	if (!pl_parse_args("sp", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+        &pcLabel, &iValue))
 		return nullptr;
     
-    bool* pbSelected = (bool*)PyCapsule_GetPointer(ptPointer, "plBoolPointer");
-
-    return PyBool_FromLong(ImGui::Checkbox(pcLabel, pbSelected));
+    bool bValue = iValue;
+    bool bResult = ImGui::Checkbox(pcLabel, &bValue);
+    return Py_BuildValue("(pp)", bResult, bValue);
 }
 
 PyObject*
 DragFloat(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {
-        "label", "value_pointer", "speed", "min", "max", "format", "flags", nullptr,
+        "label", "value", "speed", "min", "max", "format", "flags", nullptr,
     };
 
     const char* pcLabel = nullptr;
-    PyObject* ptPointer = Py_None;
+    float fValue = 0.0f;
     float fSpeed = 1.0f;
     float fMin = 0.0f;
     float fMax = 0.0f;
     const char* pcFormat = "%.3f";
     int iFlags = 0;
 
-    if(!pl_parse("sO|fffsi", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
-        &pcLabel, &ptPointer, &fSpeed, &fMin, &fMax, &pcFormat, &iFlags))
+    if(!pl_parse_args("sf|fffsi", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+        &pcLabel, &fValue, &fSpeed, &fMin, &fMax, &pcFormat, &iFlags))
         return nullptr;
 
-    float* pfValue = (float*)PyCapsule_GetPointer(ptPointer, "plFloatPointer");
-    return PyBool_FromLong(ImGui::DragFloat(pcLabel, pfValue, fSpeed, fMin, fMax, pcFormat, iFlags));
+    bool bResult = ImGui::DragFloat(pcLabel, &fValue, fSpeed, fMin, fMax, pcFormat, iFlags);
+    return Py_BuildValue("(pf)", bResult, fValue);
 }
 
 PyObject*
 DragFloat2(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {
-        "label", "value_pointer", "speed", "min", "max", "format", "flags", nullptr,
+        "label", "value", "speed", "min", "max", "format", "flags", nullptr,
     };
 
     const char* pcLabel = nullptr;
@@ -394,12 +492,17 @@ DragFloat2(PyObject* self, PyObject* args, PyObject* kwargs)
     const char* pcFormat = "%.3f";
     int iFlags = 0;
 
-    if(!pl_parse("sO|fffsi", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+    if(!pl_parse_args("sO|fffsi", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
         &pcLabel, &ptPointer, &fSpeed, &fMin, &fMax, &pcFormat, &iFlags))
         return nullptr;
 
-    float* pfValue = (float*)PyCapsule_GetPointer(ptPointer, "plFloatPointer");
-    return PyBool_FromLong(ImGui::DragFloat2(pcLabel, pfValue, fSpeed, fMin, fMax, pcFormat, iFlags));
+    float atValues[4] = {};
+    pl_fill_float_array_from_python(ptPointer, atValues, 4);
+    bool bResult = ImGui::DragFloat2(pcLabel, atValues, fSpeed, fMin, fMax, pcFormat, iFlags);
+    if(bResult)
+        pl_fill_float_array_from_c(ptPointer, atValues, 4);
+
+    return Py_BuildValue("(pO)", bResult, ptPointer);
 }
 
 PyObject*
@@ -417,12 +520,17 @@ DragFloat3(PyObject* self, PyObject* args, PyObject* kwargs)
     const char* pcFormat = "%.3f";
     int iFlags = 0;
 
-    if(!pl_parse("sO|fffsi", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+    if(!pl_parse_args("sO|fffsi", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
         &pcLabel, &ptPointer, &fSpeed, &fMin, &fMax, &pcFormat, &iFlags))
         return nullptr;
 
-    float* pfValue = (float*)PyCapsule_GetPointer(ptPointer, "plFloatPointer");
-    return PyBool_FromLong(ImGui::DragFloat3(pcLabel, pfValue, fSpeed, fMin, fMax, pcFormat, iFlags));
+    float atValues[4] = {};
+    pl_fill_float_array_from_python(ptPointer, atValues, 4);
+    bool bResult = ImGui::DragFloat3(pcLabel, atValues, fSpeed, fMin, fMax, pcFormat, iFlags);
+    if(bResult)
+        pl_fill_float_array_from_c(ptPointer, atValues, 4);
+
+    return Py_BuildValue("(pO)", bResult, ptPointer);
 }
 
 PyObject*
@@ -440,25 +548,30 @@ DragFloat4(PyObject* self, PyObject* args, PyObject* kwargs)
     const char* pcFormat = "%.3f";
     int iFlags = 0;
 
-    if(!pl_parse("sO|fffsi", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+    if(!pl_parse_args("sO|fffsi", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
         &pcLabel, &ptPointer, &fSpeed, &fMin, &fMax, &pcFormat, &iFlags))
         return nullptr;
 
-    float* pfValue = (float*)PyCapsule_GetPointer(ptPointer, "plFloatPointer");
-    return PyBool_FromLong(ImGui::DragFloat4(pcLabel, pfValue, fSpeed, fMin, fMax, pcFormat, iFlags));
+    float atValues[4] = {};
+    pl_fill_float_array_from_python(ptPointer, atValues, 4);
+    bool bResult = ImGui::DragFloat4(pcLabel, atValues, fSpeed, fMin, fMax, pcFormat, iFlags);
+    if(bResult)
+        pl_fill_float_array_from_c(ptPointer, atValues, 4);
+
+    return Py_BuildValue("(pO)", bResult, ptPointer);
 }
 
 PyObject*
 DragFloatRange2(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {
-        "label", "current_min_pointer", "current_max_pointer", "speed", "min", "max",
+        "label", "min_value", "max_value", "speed", "min", "max",
         "format", "format_max", "flags", nullptr,
     };
 
     const char* pcLabel = nullptr;
-    PyObject* ptMinPointer = Py_None;
-    PyObject* ptMaxPointer = Py_None;
+    float fMinValue = 0.0f;
+    float fMaxValue = 0.0f;
     float fSpeed = 1.0f;
     float fMin = 0.0f;
     float fMax = 0.0f;
@@ -466,16 +579,13 @@ DragFloatRange2(PyObject* self, PyObject* args, PyObject* kwargs)
     const char* pcFormatMax = nullptr;
     int iFlags = 0;
 
-    if(!pl_parse("sOO|fffzzi", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
-        &pcLabel, &ptMinPointer, &ptMaxPointer, &fSpeed, &fMin, &fMax,
+    if(!pl_parse_args("sff|fffzzi", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+        &pcLabel, &fMinValue, &fMaxValue, &fSpeed, &fMin, &fMax,
         &pcFormat, &pcFormatMax, &iFlags))
         return nullptr;
 
-    float* pfCurrentMin = (float*)PyCapsule_GetPointer(ptMinPointer, "plFloatPointer");
-    float* pfCurrentMax = (float*)PyCapsule_GetPointer(ptMaxPointer, "plFloatPointer");
-
-    return PyBool_FromLong(ImGui::DragFloatRange2(
-        pcLabel, pfCurrentMin, pfCurrentMax, fSpeed, fMin, fMax, pcFormat, pcFormatMax, iFlags));
+    bool bResult = ImGui::DragFloatRange2(pcLabel, &fMinValue, &fMaxValue, fSpeed, fMin, fMax, pcFormat, pcFormatMax, iFlags);
+    return Py_BuildValue("(pff)", bResult, fMinValue, fMaxValue);
 }
 
 PyObject*
@@ -486,19 +596,19 @@ DragInt(PyObject* self, PyObject* args, PyObject* kwargs)
     };
 
     const char* pcLabel = nullptr;
-    PyObject* ptPointer = Py_None;
+    int iValue = 0;
     float fSpeed = 1.0f;
     int iMin = 0;
     int iMax = 0;
     const char* pcFormat = "%d";
     int iFlags = 0;
 
-    if(!pl_parse("sO|fiisi", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
-        &pcLabel, &ptPointer, &fSpeed, &iMin, &iMax, &pcFormat, &iFlags))
+    if(!pl_parse_args("si|fiisi", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+        &pcLabel, &iValue, &fSpeed, &iMin, &iMax, &pcFormat, &iFlags))
         return nullptr;
 
-    int* piValue = (int*)PyCapsule_GetPointer(ptPointer, "plIntPointer");
-    return PyBool_FromLong(ImGui::DragInt(pcLabel, piValue, fSpeed, iMin, iMax, pcFormat, iFlags));
+    bool bResult = ImGui::DragInt(pcLabel, &iValue, fSpeed, iMin, iMax, pcFormat, iFlags);
+    return Py_BuildValue("(pi)", bResult, iValue);
 }
 
 PyObject*
@@ -516,12 +626,17 @@ DragInt2(PyObject* self, PyObject* args, PyObject* kwargs)
     const char* pcFormat = "%d";
     int iFlags = 0;
 
-    if(!pl_parse("sO|fiisi", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+    if(!pl_parse_args("sO|fiisi", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
         &pcLabel, &ptPointer, &fSpeed, &iMin, &iMax, &pcFormat, &iFlags))
         return nullptr;
 
-    int* piValue = (int*)PyCapsule_GetPointer(ptPointer, "plIntPointer");
-    return PyBool_FromLong(ImGui::DragInt2(pcLabel, piValue, fSpeed, iMin, iMax, pcFormat, iFlags));
+    int atValues[4] = {};
+    pl_fill_int_array_from_python(ptPointer, atValues, 4);
+    bool bResult = ImGui::DragInt2(pcLabel, atValues, fSpeed, iMin, iMax, pcFormat, iFlags);
+    if(bResult)
+        pl_fill_int_array_from_c(ptPointer, atValues, 4);
+
+    return Py_BuildValue("(pO)", bResult, ptPointer);
 }
 
 PyObject*
@@ -539,12 +654,17 @@ DragInt3(PyObject* self, PyObject* args, PyObject* kwargs)
     const char* pcFormat = "%d";
     int iFlags = 0;
 
-    if(!pl_parse("sO|fiisi", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+    if(!pl_parse_args("sO|fiisi", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
         &pcLabel, &ptPointer, &fSpeed, &iMin, &iMax, &pcFormat, &iFlags))
         return nullptr;
 
-    int* piValue = (int*)PyCapsule_GetPointer(ptPointer, "plIntPointer");
-    return PyBool_FromLong(ImGui::DragInt3(pcLabel, piValue, fSpeed, iMin, iMax, pcFormat, iFlags));
+    int atValues[4] = {};
+    pl_fill_int_array_from_python(ptPointer, atValues, 4);
+    bool bResult = ImGui::DragInt3(pcLabel, atValues, fSpeed, iMin, iMax, pcFormat, iFlags);
+    if(bResult)
+        pl_fill_int_array_from_c(ptPointer, atValues, 4);
+
+    return Py_BuildValue("(pO)", bResult, ptPointer);
 }
 
 PyObject*
@@ -562,25 +682,30 @@ DragInt4(PyObject* self, PyObject* args, PyObject* kwargs)
     const char* pcFormat = "%d";
     int iFlags = 0;
 
-    if(!pl_parse("sO|fiisi", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+    if(!pl_parse_args("sO|fiisi", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
         &pcLabel, &ptPointer, &fSpeed, &iMin, &iMax, &pcFormat, &iFlags))
         return nullptr;
 
-    int* piValue = (int*)PyCapsule_GetPointer(ptPointer, "plIntPointer");
-    return PyBool_FromLong(ImGui::DragInt4(pcLabel, piValue, fSpeed, iMin, iMax, pcFormat, iFlags));
+    int atValues[4] = {};
+    pl_fill_int_array_from_python(ptPointer, atValues, 4);
+    bool bResult = ImGui::DragInt4(pcLabel, atValues, fSpeed, iMin, iMax, pcFormat, iFlags);
+    if(bResult)
+        pl_fill_int_array_from_c(ptPointer, atValues, 4);
+
+    return Py_BuildValue("(pO)", bResult, ptPointer);
 }
 
 PyObject*
 DragIntRange2(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {
-        "label", "current_min_pointer", "current_max_pointer", "speed", "min", "max",
+        "label", "min_value", "max_value", "speed", "min", "max",
         "format", "format_max", "flags", nullptr,
     };
 
     const char* pcLabel = nullptr;
-    PyObject* ptMinPointer = Py_None;
-    PyObject* ptMaxPointer = Py_None;
+    int iMinValue = 0;
+    int iMaxValue = 0;
     float fSpeed = 1.0f;
     int iMin = 0;
     int iMax = 0;
@@ -588,45 +713,44 @@ DragIntRange2(PyObject* self, PyObject* args, PyObject* kwargs)
     const char* pcFormatMax = nullptr;
     int iFlags = 0;
 
-    if(!pl_parse("sOO|fiizzi", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
-        &pcLabel, &ptMinPointer, &ptMaxPointer, &fSpeed, &iMin, &iMax,
+    if(!pl_parse_args("sii|fiizzi", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+        &pcLabel, &iMinValue, &iMaxValue, &fSpeed, &iMin, &iMax,
         &pcFormat, &pcFormatMax, &iFlags))
         return nullptr;
 
-    int* piCurrentMin = (int*)PyCapsule_GetPointer(ptMinPointer, "plIntPointer");
-    int* piCurrentMax = (int*)PyCapsule_GetPointer(ptMaxPointer, "plIntPointer");
+    bool bResult = ImGui::DragIntRange2(pcLabel, &iMinValue, &iMaxValue, fSpeed, iMin, iMax, pcFormat, pcFormatMax, iFlags);
 
-    return PyBool_FromLong(ImGui::DragIntRange2(
-        pcLabel, piCurrentMin, piCurrentMax, fSpeed, iMin, iMax, pcFormat, pcFormatMax, iFlags));
+    return Py_BuildValue("(pii)", bResult, iMinValue, iMaxValue);
 }
 
 PyObject*
 SliderFloat(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {
-        "label", "value_pointer", "min", "max", "format", "flags", nullptr,
+        "label", "value", "min", "max", "format", "flags", nullptr,
     };
 
     const char* pcLabel = nullptr;
-    PyObject* ptPointer = Py_None;
+    float fValue = 0.0f;
     float fMin = 0.0f;
     float fMax = 0.0f;
     const char* pcFormat = "%.3f";
     int iFlags = 0;
 
-    if(!pl_parse("sOff|si", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
-        &pcLabel, &ptPointer, &fMin, &fMax, &pcFormat, &iFlags))
+    if(!pl_parse_args("sfff|si", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+        &pcLabel, &fValue, &fMin, &fMax, &pcFormat, &iFlags))
         return nullptr;
 
-    float* pfValue = (float*)PyCapsule_GetPointer(ptPointer, "plFloatPointer");
-    return PyBool_FromLong(ImGui::SliderFloat(pcLabel, pfValue, fMin, fMax, pcFormat, iFlags));
+
+    bool bResult = ImGui::SliderFloat(pcLabel, &fValue, fMin, fMax, pcFormat, iFlags);
+    return Py_BuildValue("(pf)", bResult, fValue);
 }
 
 PyObject*
 SliderFloat2(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {
-        "label", "value_pointer", "min", "max", "format", "flags", nullptr,
+        "label", "value", "min", "max", "format", "flags", nullptr,
     };
 
     const char* pcLabel = nullptr;
@@ -636,19 +760,24 @@ SliderFloat2(PyObject* self, PyObject* args, PyObject* kwargs)
     const char* pcFormat = "%.3f";
     int iFlags = 0;
 
-    if(!pl_parse("sOff|si", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+    if(!pl_parse_args("sOff|si", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
         &pcLabel, &ptPointer, &fMin, &fMax, &pcFormat, &iFlags))
         return nullptr;
 
-    float* pfValue = (float*)PyCapsule_GetPointer(ptPointer, "plFloatPointer");
-    return PyBool_FromLong(ImGui::SliderFloat2(pcLabel, pfValue, fMin, fMax, pcFormat, iFlags));
+    float atValues[4] = {};
+    pl_fill_float_array_from_python(ptPointer, atValues, 4);
+    bool bResult = ImGui::SliderFloat2(pcLabel, atValues, fMin, fMax, pcFormat, iFlags);
+    if(bResult)
+        pl_fill_float_array_from_c(ptPointer, atValues, 4);
+
+    return Py_BuildValue("(pO)", bResult, ptPointer);
 }
 
 PyObject*
 SliderFloat3(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {
-        "label", "value_pointer", "min", "max", "format", "flags", nullptr,
+        "label", "value", "min", "max", "format", "flags", nullptr,
     };
 
     const char* pcLabel = nullptr;
@@ -658,19 +787,24 @@ SliderFloat3(PyObject* self, PyObject* args, PyObject* kwargs)
     const char* pcFormat = "%.3f";
     int iFlags = 0;
 
-    if(!pl_parse("sOff|si", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+    if(!pl_parse_args("sOff|si", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
         &pcLabel, &ptPointer, &fMin, &fMax, &pcFormat, &iFlags))
         return nullptr;
 
-    float* pfValue = (float*)PyCapsule_GetPointer(ptPointer, "plFloatPointer");
-    return PyBool_FromLong(ImGui::SliderFloat3(pcLabel, pfValue, fMin, fMax, pcFormat, iFlags));
+    float atValues[4] = {};
+    pl_fill_float_array_from_python(ptPointer, atValues, 4);
+    bool bResult = ImGui::SliderFloat3(pcLabel, atValues, fMin, fMax, pcFormat, iFlags);
+    if(bResult)
+        pl_fill_float_array_from_c(ptPointer, atValues, 4);
+
+    return Py_BuildValue("(pO)", bResult, ptPointer);
 }
 
 PyObject*
 SliderFloat4(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {
-        "label", "value_pointer", "min", "max", "format", "flags", nullptr,
+        "label", "value", "min", "max", "format", "flags", nullptr,
     };
 
     const char* pcLabel = nullptr;
@@ -680,63 +814,68 @@ SliderFloat4(PyObject* self, PyObject* args, PyObject* kwargs)
     const char* pcFormat = "%.3f";
     int iFlags = 0;
 
-    if(!pl_parse("sOff|si", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+    if(!pl_parse_args("sOff|si", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
         &pcLabel, &ptPointer, &fMin, &fMax, &pcFormat, &iFlags))
         return nullptr;
 
-    float* pfValue = (float*)PyCapsule_GetPointer(ptPointer, "plFloatPointer");
-    return PyBool_FromLong(ImGui::SliderFloat4(pcLabel, pfValue, fMin, fMax, pcFormat, iFlags));
+    float atValues[4] = {};
+    pl_fill_float_array_from_python(ptPointer, atValues, 4);
+    bool bResult = ImGui::SliderFloat4(pcLabel, atValues, fMin, fMax, pcFormat, iFlags);
+    if(bResult)
+        pl_fill_float_array_from_c(ptPointer, atValues, 4);
+
+    return Py_BuildValue("(pO)", bResult, ptPointer);
 }
 
 PyObject*
 SliderAngle(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {
-        "label", "rad_pointer", "degrees_min", "degrees_max", "format", "flags", nullptr,
+        "label", "radians", "degrees_min", "degrees_max", "format", "flags", nullptr,
     };
 
     const char* pcLabel = nullptr;
-    PyObject* ptPointer = Py_None;
+    float fRadians = 0.0f;
     float fDegreesMin = -360.0f;
     float fDegreesMax = 360.0f;
     const char* pcFormat = "%.0f deg";
     int iFlags = 0;
 
-    if(!pl_parse("sO|ffsi", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
-        &pcLabel, &ptPointer, &fDegreesMin, &fDegreesMax, &pcFormat, &iFlags))
+    if(!pl_parse_args("sf|ffsi", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+        &pcLabel, &fRadians, &fDegreesMin, &fDegreesMax, &pcFormat, &iFlags))
         return nullptr;
 
-    float* pfRad = (float*)PyCapsule_GetPointer(ptPointer, "plFloatPointer");
-    return PyBool_FromLong(ImGui::SliderAngle(pcLabel, pfRad, fDegreesMin, fDegreesMax, pcFormat, iFlags));
+    bool bResult = ImGui::SliderAngle(pcLabel, &fRadians, fDegreesMin, fDegreesMax, pcFormat, iFlags);
+    return Py_BuildValue("(pf)", bResult, fRadians);
 }
 
 PyObject*
 SliderInt(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {
-        "label", "value_pointer", "min", "max", "format", "flags", nullptr,
+        "label", "value", "min", "max", "format", "flags", nullptr,
     };
 
     const char* pcLabel = nullptr;
-    PyObject* ptPointer = Py_None;
+    int iValue = 0;
     int iMin = 0;
     int iMax = 0;
     const char* pcFormat = "%d";
     int iFlags = 0;
 
-    if(!pl_parse("sOii|si", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
-        &pcLabel, &ptPointer, &iMin, &iMax, &pcFormat, &iFlags))
+    if(!pl_parse_args("siii|si", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+        &pcLabel, &iValue, &iMin, &iMax, &pcFormat, &iFlags))
         return nullptr;
 
-    int* piValue = (int*)PyCapsule_GetPointer(ptPointer, "plIntPointer");
-    return PyBool_FromLong(ImGui::SliderInt(pcLabel, piValue, iMin, iMax, pcFormat, iFlags));
+    bool bResult = ImGui::SliderInt(pcLabel, &iValue, iMin, iMax, pcFormat, iFlags);
+    return Py_BuildValue("(pi)", bResult, iValue);
 }
 
 PyObject*
 SliderInt2(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {
-        "label", "value_pointer", "min", "max", "format", "flags", nullptr,
+        "label", "value", "min", "max", "format", "flags", nullptr,
     };
 
     const char* pcLabel = nullptr;
@@ -746,19 +885,24 @@ SliderInt2(PyObject* self, PyObject* args, PyObject* kwargs)
     const char* pcFormat = "%d";
     int iFlags = 0;
 
-    if(!pl_parse("sOii|si", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+    if(!pl_parse_args("sOii|si", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
         &pcLabel, &ptPointer, &iMin, &iMax, &pcFormat, &iFlags))
         return nullptr;
 
-    int* piValue = (int*)PyCapsule_GetPointer(ptPointer, "plIntPointer");
-    return PyBool_FromLong(ImGui::SliderInt2(pcLabel, piValue, iMin, iMax, pcFormat, iFlags));
+    int atValues[4] = {};
+    pl_fill_int_array_from_python(ptPointer, atValues, 4);
+    bool bResult = ImGui::SliderInt2(pcLabel, atValues, iMin, iMax, pcFormat, iFlags);
+    if(bResult)
+        pl_fill_int_array_from_c(ptPointer, atValues, 4);
+
+    return Py_BuildValue("(pO)", bResult, ptPointer);
 }
 
 PyObject*
 SliderInt3(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {
-        "label", "value_pointer", "min", "max", "format", "flags", nullptr,
+        "label", "value", "min", "max", "format", "flags", nullptr,
     };
 
     const char* pcLabel = nullptr;
@@ -768,19 +912,24 @@ SliderInt3(PyObject* self, PyObject* args, PyObject* kwargs)
     const char* pcFormat = "%d";
     int iFlags = 0;
 
-    if(!pl_parse("sOii|si", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+    if(!pl_parse_args("sOii|si", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
         &pcLabel, &ptPointer, &iMin, &iMax, &pcFormat, &iFlags))
         return nullptr;
 
-    int* piValue = (int*)PyCapsule_GetPointer(ptPointer, "plIntPointer");
-    return PyBool_FromLong(ImGui::SliderInt3(pcLabel, piValue, iMin, iMax, pcFormat, iFlags));
+    int atValues[4] = {};
+    pl_fill_int_array_from_python(ptPointer, atValues, 4);
+    bool bResult = ImGui::SliderInt3(pcLabel, atValues, iMin, iMax, pcFormat, iFlags);
+    if(bResult)
+        pl_fill_int_array_from_c(ptPointer, atValues, 4);
+
+    return Py_BuildValue("(pO)", bResult, ptPointer);
 }
 
 PyObject*
 SliderInt4(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {
-        "label", "value_pointer", "min", "max", "format", "flags", nullptr,
+        "label", "value", "min", "max", "format", "flags", nullptr,
     };
 
     const char* pcLabel = nullptr;
@@ -790,62 +939,67 @@ SliderInt4(PyObject* self, PyObject* args, PyObject* kwargs)
     const char* pcFormat = "%d";
     int iFlags = 0;
 
-    if(!pl_parse("sOii|si", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+    if(!pl_parse_args("sOii|si", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
         &pcLabel, &ptPointer, &iMin, &iMax, &pcFormat, &iFlags))
         return nullptr;
 
-    int* piValue = (int*)PyCapsule_GetPointer(ptPointer, "plIntPointer");
-    return PyBool_FromLong(ImGui::SliderInt4(pcLabel, piValue, iMin, iMax, pcFormat, iFlags));
+    int atValues[4] = {};
+    pl_fill_int_array_from_python(ptPointer, atValues, 4);
+    bool bResult = ImGui::SliderInt4(pcLabel, atValues, iMin, iMax, pcFormat, iFlags);
+    if(bResult)
+        pl_fill_int_array_from_c(ptPointer, atValues, 4);
+
+    return Py_BuildValue("(pO)", bResult, ptPointer);
 }
 
 PyObject*
 VSliderFloat(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {
-        "label", "size", "value_pointer", "min", "max", "format", "flags", nullptr,
+        "label", "size", "value", "min", "max", "format", "flags", nullptr,
     };
 
     const char* pcLabel = nullptr;
     PyObject* ptSize = Py_None;
-    PyObject* ptPointer = Py_None;
+    float fValue = 0.0f;
     float fMin = 0.0f;
     float fMax = 0.0f;
     const char* pcFormat = "%.3f";
     int iFlags = 0;
 
-    if(!pl_parse("sOOff|si", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
-        &pcLabel, &ptSize, &ptPointer, &fMin, &fMax, &pcFormat, &iFlags))
+    if(!pl_parse_args("sOfff|si", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+        &pcLabel, &ptSize, &fValue, &fMin, &fMax, &pcFormat, &iFlags))
         return nullptr;
 
     ImVec2 tSize = pl__get_vec2_from_python(ptSize);
-    float* pfValue = (float*)PyCapsule_GetPointer(ptPointer, "plFloatPointer");
 
-    return PyBool_FromLong(ImGui::VSliderFloat(pcLabel, tSize, pfValue, fMin, fMax, pcFormat, iFlags));
+    bool bResult = ImGui::VSliderFloat(pcLabel, tSize, &fValue, fMin, fMax, pcFormat, iFlags);
+    return Py_BuildValue("(pf)", bResult, fValue);
 }
 
 PyObject*
 VSliderInt(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {
-        "label", "size", "value_pointer", "min", "max", "format", "flags", nullptr,
+        "label", "size", "value", "min", "max", "format", "flags", nullptr,
     };
 
     const char* pcLabel = nullptr;
     PyObject* ptSize = Py_None;
-    PyObject* ptPointer = Py_None;
+    int iValue = 0;
     int iMin = 0;
     int iMax = 0;
     const char* pcFormat = "%d";
     int iFlags = 0;
 
-    if(!pl_parse("sOOii|si", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
-        &pcLabel, &ptSize, &ptPointer, &iMin, &iMax, &pcFormat, &iFlags))
+    if(!pl_parse_args("sOiii|si", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+        &pcLabel, &ptSize, &iValue, &iMin, &iMax, &pcFormat, &iFlags))
         return nullptr;
 
     ImVec2 tSize = pl__get_vec2_from_python(ptSize);
-    int* piValue = (int*)PyCapsule_GetPointer(ptPointer, "plIntPointer");
 
-    return PyBool_FromLong(ImGui::VSliderInt(pcLabel, tSize, piValue, iMin, iMax, pcFormat, iFlags));
+    bool bResult = ImGui::VSliderInt(pcLabel, tSize, &iValue, iMin, iMax, pcFormat, iFlags);
+    return Py_BuildValue("(pi)", bResult, iValue);
 }
 
 PyObject*
@@ -856,20 +1010,18 @@ InputText(PyObject* self, PyObject* args, PyObject* kwargs)
     };
 
     const char* pcLabel = nullptr;
-    PyObject* ptByteObject = nullptr;
+    const char* pcString = nullptr;
     int iFlags = 0;
 
-    if(!pl_parse("sY|i", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
-        &pcLabel, &ptByteObject, &iFlags))
+    if(!pl_parse_args("ss|i", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+        &pcLabel, &pcString, &iFlags))
         return nullptr;
 
-    char* pcBuffer = PyByteArray_AsString(ptByteObject);
-    Py_ssize_t szBufferSize = PyByteArray_Size(ptByteObject);
+    char acBuffer[256] = {0};
+    strncpy(acBuffer, pcString, 256);
 
-    if(!pcBuffer || szBufferSize <= 0)
-        return nullptr;
-
-    return PyBool_FromLong(ImGui::InputText(pcLabel, pcBuffer, (size_t)szBufferSize, iFlags));
+    bool bResult = ImGui::InputText(pcLabel, acBuffer, 256, iFlags);
+    return Py_BuildValue("(ps)", bResult, acBuffer);
 }
 
 PyObject*
@@ -880,25 +1032,24 @@ InputTextMultiline(PyObject* self, PyObject* args, PyObject* kwargs)
     };
 
     const char* pcLabel = nullptr;
-    PyObject* ptByteObject = nullptr;
+    const char* pcString = nullptr;
     PyObject* ptSize = Py_None;
     int iFlags = 0;
 
-    if(!pl_parse("sY|Oi", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
-        &pcLabel, &ptByteObject, &ptSize, &iFlags))
+    if(!pl_parse_args("ss|Oi", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+        &pcLabel, &pcString, &ptSize, &iFlags))
         return nullptr;
 
     ImVec2 tSize = {};
     if(!Py_IsNone(ptSize))
         tSize = pl__get_vec2_from_python(ptSize);
 
-    char* pcBuffer = PyByteArray_AsString(ptByteObject);
-    Py_ssize_t szBufferSize = PyByteArray_Size(ptByteObject);
 
-    if(!pcBuffer || szBufferSize <= 0)
-        return nullptr;
+    char acBuffer[256] = {0};
+    strncpy(acBuffer, pcString, 256);
 
-    return PyBool_FromLong(ImGui::InputTextMultiline(pcLabel, pcBuffer, (size_t)szBufferSize, tSize, iFlags));
+    bool bResult = ImGui::InputTextMultiline(pcLabel, acBuffer, 256, tSize, iFlags);
+    return Py_BuildValue("(ps)", bResult, acBuffer);
 }
 
 PyObject*
@@ -910,49 +1061,47 @@ InputTextWithHint(PyObject* self, PyObject* args, PyObject* kwargs)
 
     const char* pcLabel = nullptr;
     const char* pcHint = nullptr;
-    PyObject* ptByteObject = nullptr;
+    const char* pcString = nullptr;
     int iFlags = 0;
 
-    if(!pl_parse("ssY|i", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
-        &pcLabel, &pcHint, &ptByteObject, &iFlags))
+    if(!pl_parse_args("sss|i", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+        &pcLabel, &pcHint, &pcString, &iFlags))
         return nullptr;
 
-    char* pcBuffer = PyByteArray_AsString(ptByteObject);
-    Py_ssize_t szBufferSize = PyByteArray_Size(ptByteObject);
-
-    if(!pcBuffer || szBufferSize <= 0)
-        return nullptr;
-
-    return PyBool_FromLong(ImGui::InputTextWithHint(pcLabel, pcHint, pcBuffer, (size_t)szBufferSize, iFlags));
+    char acBuffer[256] = {0};
+    strncpy(acBuffer, pcString, 256);
+    bool bResult = ImGui::InputTextWithHint(pcLabel, pcHint, acBuffer, 256, iFlags);
+    return Py_BuildValue("(ps)", bResult, acBuffer);
 }
 
 PyObject*
 InputFloat(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {
-        "label", "value_pointer", "step", "step_fast", "format", "flags", nullptr,
+        "label", "value", "step", "step_fast", "format", "flags", nullptr,
     };
 
     const char* pcLabel = nullptr;
-    PyObject* ptPointer = Py_None;
+    float fValue = 0.0f;
     float fStep = 0.0f;
     float fStepFast = 0.0f;
     const char* pcFormat = "%.3f";
     int iFlags = 0;
 
-    if(!pl_parse("sO|ffsi", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
-        &pcLabel, &ptPointer, &fStep, &fStepFast, &pcFormat, &iFlags))
+    if(!pl_parse_args("sf|ffsi", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+        &pcLabel, &fValue, &fStep, &fStepFast, &pcFormat, &iFlags))
         return nullptr;
 
-    float* pfValue = (float*)PyCapsule_GetPointer(ptPointer, "plFloatPointer");
-    return PyBool_FromLong(ImGui::InputFloat(pcLabel, pfValue, fStep, fStepFast, pcFormat, iFlags));
+    bool bResult = ImGui::InputFloat(pcLabel, &fValue, fStep, fStepFast, pcFormat, iFlags);
+
+    return Py_BuildValue("(pf)", bResult, fValue);
 }
 
 PyObject*
 InputFloat2(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {
-        "label", "value_pointer", "format", "flags", nullptr,
+        "label", "value", "format", "flags", nullptr,
     };
 
     const char* pcLabel = nullptr;
@@ -960,19 +1109,24 @@ InputFloat2(PyObject* self, PyObject* args, PyObject* kwargs)
     const char* pcFormat = "%.3f";
     int iFlags = 0;
 
-    if(!pl_parse("sO|si", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+    if(!pl_parse_args("sO|si", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
         &pcLabel, &ptPointer, &pcFormat, &iFlags))
         return nullptr;
 
-    float* pfValue = (float*)PyCapsule_GetPointer(ptPointer, "plFloatPointer");
-    return PyBool_FromLong(ImGui::InputFloat2(pcLabel, pfValue, pcFormat, iFlags));
+    float atValues[4] = {};
+    pl_fill_float_array_from_python(ptPointer, atValues, 4);
+    bool bResult = ImGui::InputFloat2(pcLabel, atValues, pcFormat, iFlags);
+    if(bResult)
+        pl_fill_float_array_from_c(ptPointer, atValues, 4);
+
+    return Py_BuildValue("(pO)", bResult, ptPointer);
 }
 
 PyObject*
 InputFloat3(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {
-        "label", "value_pointer", "format", "flags", nullptr,
+        "label", "value", "format", "flags", nullptr,
     };
 
     const char* pcLabel = nullptr;
@@ -980,19 +1134,24 @@ InputFloat3(PyObject* self, PyObject* args, PyObject* kwargs)
     const char* pcFormat = "%.3f";
     int iFlags = 0;
 
-    if(!pl_parse("sO|si", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+    if(!pl_parse_args("sO|si", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
         &pcLabel, &ptPointer, &pcFormat, &iFlags))
         return nullptr;
 
-    float* pfValue = (float*)PyCapsule_GetPointer(ptPointer, "plFloatPointer");
-    return PyBool_FromLong(ImGui::InputFloat3(pcLabel, pfValue, pcFormat, iFlags));
+    float atValues[4] = {};
+    pl_fill_float_array_from_python(ptPointer, atValues, 4);
+    bool bResult = ImGui::InputFloat3(pcLabel, atValues, pcFormat, iFlags);
+    if(bResult)
+        pl_fill_float_array_from_c(ptPointer, atValues, 4);
+
+    return Py_BuildValue("(pO)", bResult, ptPointer);
 }
 
 PyObject*
 InputFloat4(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {
-        "label", "value_pointer", "format", "flags", nullptr,
+        "label", "value", "format", "flags", nullptr,
     };
 
     const char* pcLabel = nullptr;
@@ -1000,112 +1159,132 @@ InputFloat4(PyObject* self, PyObject* args, PyObject* kwargs)
     const char* pcFormat = "%.3f";
     int iFlags = 0;
 
-    if(!pl_parse("sO|si", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+    if(!pl_parse_args("sO|si", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
         &pcLabel, &ptPointer, &pcFormat, &iFlags))
         return nullptr;
 
-    float* pfValue = (float*)PyCapsule_GetPointer(ptPointer, "plFloatPointer");
-    return PyBool_FromLong(ImGui::InputFloat4(pcLabel, pfValue, pcFormat, iFlags));
+    float atValues[4] = {};
+    pl_fill_float_array_from_python(ptPointer, atValues, 4);
+    bool bResult = ImGui::InputFloat4(pcLabel, atValues, pcFormat, iFlags);
+    if(bResult)
+        pl_fill_float_array_from_c(ptPointer, atValues, 4);
+
+    return Py_BuildValue("(pO)", bResult, ptPointer);
 }
 
 PyObject*
 InputInt(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {
-        "label", "value_pointer", "step", "step_fast", "flags", nullptr,
+        "label", "value", "step", "step_fast", "flags", nullptr,
     };
 
     const char* pcLabel = nullptr;
-    PyObject* ptPointer = Py_None;
+    int iValue = 0;
     int iStep = 1;
     int iStepFast = 100;
     int iFlags = 0;
 
-    if(!pl_parse("sO|iii", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
-        &pcLabel, &ptPointer, &iStep, &iStepFast, &iFlags))
+    if(!pl_parse_args("si|iii", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+        &pcLabel, &iValue, &iStep, &iStepFast, &iFlags))
         return nullptr;
 
-    int* piValue = (int*)PyCapsule_GetPointer(ptPointer, "plIntPointer");
-    return PyBool_FromLong(ImGui::InputInt(pcLabel, piValue, iStep, iStepFast, iFlags));
+    bool bResult = ImGui::InputInt(pcLabel, &iValue, iStep, iStepFast, iFlags);
+    return Py_BuildValue("(pi)", bResult, iValue);
 }
 
 PyObject*
 InputInt2(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {
-        "label", "value_pointer", "flags", nullptr,
+        "label", "value", "flags", nullptr,
     };
 
     const char* pcLabel = nullptr;
     PyObject* ptPointer = Py_None;
     int iFlags = 0;
 
-    if(!pl_parse("sO|i", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+    if(!pl_parse_args("sO|i", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
         &pcLabel, &ptPointer, &iFlags))
         return nullptr;
 
-    int* piValue = (int*)PyCapsule_GetPointer(ptPointer, "plIntPointer");
-    return PyBool_FromLong(ImGui::InputInt2(pcLabel, piValue, iFlags));
+    int atValues[4] = {};
+    pl_fill_int_array_from_python(ptPointer, atValues, 4);
+    bool bResult = ImGui::InputInt2(pcLabel, atValues, iFlags);
+    if(bResult)
+        pl_fill_int_array_from_c(ptPointer, atValues, 4);
+
+    return Py_BuildValue("(pO)", bResult, ptPointer);
 }
 
 PyObject*
 InputInt3(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {
-        "label", "value_pointer", "flags", nullptr,
+        "label", "value", "flags", nullptr,
     };
 
     const char* pcLabel = nullptr;
     PyObject* ptPointer = Py_None;
     int iFlags = 0;
 
-    if(!pl_parse("sO|i", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+    if(!pl_parse_args("sO|i", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
         &pcLabel, &ptPointer, &iFlags))
         return nullptr;
 
-    int* piValue = (int*)PyCapsule_GetPointer(ptPointer, "plIntPointer");
-    return PyBool_FromLong(ImGui::InputInt3(pcLabel, piValue, iFlags));
+    int atValues[4] = {};
+    pl_fill_int_array_from_python(ptPointer, atValues, 4);
+    bool bResult = ImGui::InputInt3(pcLabel, atValues, iFlags);
+    if(bResult)
+        pl_fill_int_array_from_c(ptPointer, atValues, 4);
+
+    return Py_BuildValue("(pO)", bResult, ptPointer);
 }
 
 PyObject*
 InputInt4(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {
-        "label", "value_pointer", "flags", nullptr,
+        "label", "value", "flags", nullptr,
     };
 
     const char* pcLabel = nullptr;
     PyObject* ptPointer = Py_None;
     int iFlags = 0;
 
-    if(!pl_parse("sO|i", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+    if(!pl_parse_args("sO|i", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
         &pcLabel, &ptPointer, &iFlags))
         return nullptr;
 
-    int* piValue = (int*)PyCapsule_GetPointer(ptPointer, "plIntPointer");
-    return PyBool_FromLong(ImGui::InputInt4(pcLabel, piValue, iFlags));
+    int atValues[4] = {};
+    pl_fill_int_array_from_python(ptPointer, atValues, 4);
+    bool bResult = ImGui::InputInt4(pcLabel, atValues, iFlags);
+    if(bResult)
+        pl_fill_int_array_from_c(ptPointer, atValues, 4);
+
+    return Py_BuildValue("(pO)", bResult, ptPointer);
 }
 
 PyObject*
 InputDouble(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {
-        "label", "value_pointer", "step", "step_fast", "format", "flags", nullptr,
+        "label", "value", "step", "step_fast", "format", "flags", nullptr,
     };
 
     const char* pcLabel = nullptr;
-    PyObject* ptPointer = Py_None;
+    double dValue = 0.0;
     double dStep = 0.0;
     double dStepFast = 0.0;
     const char* pcFormat = "%.6f";
     int iFlags = 0;
 
-    if(!pl_parse("sO|ddsi", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
-        &pcLabel, &ptPointer, &dStep, &dStepFast, &pcFormat, &iFlags))
+    if(!pl_parse_args("sd|ddsi", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+        &pcLabel, &dValue, &dStep, &dStepFast, &pcFormat, &iFlags))
         return nullptr;
 
-    double* pdValue = (double*)PyCapsule_GetPointer(ptPointer, "plDoublePointer");
-    return PyBool_FromLong(ImGui::InputDouble(pcLabel, pdValue, dStep, dStepFast, pcFormat, iFlags));
+    bool bResult = ImGui::InputDouble(pcLabel, &dValue, dStep, dStepFast, pcFormat, iFlags);
+    return Py_BuildValue("(pd)", bResult, dValue);
 }
 
 PyObject*
@@ -1118,7 +1297,7 @@ TextUnformatted(PyObject* self, PyObject* args, PyObject* kwargs)
 
     const char* pcText = nullptr;
 
-    if(!pl_parse("s", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+    if(!pl_parse_args("s", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
         &pcText))
         return nullptr;
 
@@ -1136,7 +1315,7 @@ Text(PyObject* self, PyObject* args, PyObject* kwargs)
 
     const char* pcText = nullptr;
 
-    if(!pl_parse("s", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+    if(!pl_parse_args("s", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
         &pcText))
         return nullptr;
 
@@ -1156,7 +1335,7 @@ TextColored(PyObject* self, PyObject* args, PyObject* kwargs)
     PyObject* ptColor = Py_None;
     const char* pcText = nullptr;
 
-    if(!pl_parse("Os", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+    if(!pl_parse_args("Os", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
         &ptColor, &pcText))
         return nullptr;
 
@@ -1181,7 +1360,7 @@ TextDisabled(PyObject* self, PyObject* args, PyObject* kwargs)
 
     const char* pcText = nullptr;
 
-    if(!pl_parse("s", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+    if(!pl_parse_args("s", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
         &pcText))
         return nullptr;
 
@@ -1199,7 +1378,7 @@ TextWrapped(PyObject* self, PyObject* args, PyObject* kwargs)
 
     const char* pcText = nullptr;
 
-    if(!pl_parse("s", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+    if(!pl_parse_args("s", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
         &pcText))
         return nullptr;
 
@@ -1219,7 +1398,7 @@ LabelText(PyObject* self, PyObject* args, PyObject* kwargs)
     const char* pcLabel = nullptr;
     const char* pcText = nullptr;
 
-    if(!pl_parse("ss", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+    if(!pl_parse_args("ss", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
         &pcLabel, &pcText))
         return nullptr;
 
@@ -1237,7 +1416,7 @@ BulletText(PyObject* self, PyObject* args, PyObject* kwargs)
 
     const char* pcText = nullptr;
 
-    if(!pl_parse("s", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+    if(!pl_parse_args("s", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
         &pcText))
         return nullptr;
 
@@ -1255,7 +1434,7 @@ SeparatorText(PyObject* self, PyObject* args, PyObject* kwargs)
 
     const char* pcLabel = nullptr;
 
-    if(!pl_parse("s", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+    if(!pl_parse_args("s", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
         &pcLabel))
         return nullptr;
 
@@ -1282,7 +1461,7 @@ SameLine(PyObject* self, PyObject* args, PyObject* kwargs)
     float fOffset = 0.0f;
     float fSpacing = -1.0f;
 
-    if(!pl_parse("|ff", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+    if(!pl_parse_args("|ff", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
         &fOffset, &fSpacing))
         return nullptr;
 
@@ -1314,7 +1493,7 @@ Dummy(PyObject* self, PyObject* args, PyObject* kwargs)
 
     PyObject* ptSize = Py_None;
 
-    if(!pl_parse("O", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+    if(!pl_parse_args("O", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
         &ptSize))
         return nullptr;
 
@@ -1336,7 +1515,7 @@ Indent(PyObject* self, PyObject* args, PyObject* kwargs)
 
     float fIndent = 0.0f;
 
-    if(!pl_parse("|f", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+    if(!pl_parse_args("|f", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
         &fIndent))
         return nullptr;
 
@@ -1354,7 +1533,7 @@ Unindent(PyObject* self, PyObject* args, PyObject* kwargs)
 
     float fIndent = 0.0f;
 
-    if(!pl_parse("|f", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+    if(!pl_parse_args("|f", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
         &fIndent))
         return nullptr;
 
@@ -1424,7 +1603,7 @@ SetCursorScreenPos(PyObject* self, PyObject* args, PyObject* kwargs)
 
     PyObject* ptPos = Py_None;
 
-    if(!pl_parse("O", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+    if(!pl_parse_args("O", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
         &ptPos))
         return nullptr;
 
@@ -1468,7 +1647,7 @@ SetCursorPos(PyObject* self, PyObject* args, PyObject* kwargs)
 
     PyObject* ptPos = Py_None;
 
-    if(!pl_parse("O", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+    if(!pl_parse_args("O", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
         &ptPos))
         return nullptr;
 
@@ -1486,7 +1665,7 @@ SetCursorPosX(PyObject* self, PyObject* args, PyObject* kwargs)
 
     float fLocalX = 0.0f;
 
-    if(!pl_parse("f", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+    if(!pl_parse_args("f", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
         &fLocalX))
         return nullptr;
 
@@ -1504,7 +1683,7 @@ SetCursorPosY(PyObject* self, PyObject* args, PyObject* kwargs)
 
     float fLocalY = 0.0f;
 
-    if(!pl_parse("f", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+    if(!pl_parse_args("f", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
         &fLocalY))
         return nullptr;
 
@@ -1538,7 +1717,7 @@ SetScrollX(PyObject* self, PyObject* args, PyObject* kwargs)
 
     float fScrollX = 0.0f;
 
-    if(!pl_parse("f", (const char**)apcKeywords, args, kwargs, __FUNCTION__, &fScrollX))
+    if(!pl_parse_args("f", (const char**)apcKeywords, args, kwargs, __FUNCTION__, &fScrollX))
         return nullptr;
 
     ImGui::SetScrollX(fScrollX);
@@ -1552,7 +1731,7 @@ SetScrollY(PyObject* self, PyObject* args, PyObject* kwargs)
 
     float fScrollY = 0.0f;
 
-    if(!pl_parse("f", (const char**)apcKeywords, args, kwargs, __FUNCTION__, &fScrollY))
+    if(!pl_parse_args("f", (const char**)apcKeywords, args, kwargs, __FUNCTION__, &fScrollY))
         return nullptr;
 
     ImGui::SetScrollY(fScrollY);
@@ -1578,7 +1757,7 @@ SetScrollHereX(PyObject* self, PyObject* args, PyObject* kwargs)
 
     float fCenterXRatio = 0.5f;
 
-    if(!pl_parse("|f", (const char**)apcKeywords, args, kwargs, __FUNCTION__, &fCenterXRatio))
+    if(!pl_parse_args("|f", (const char**)apcKeywords, args, kwargs, __FUNCTION__, &fCenterXRatio))
         return nullptr;
 
     ImGui::SetScrollHereX(fCenterXRatio);
@@ -1592,7 +1771,7 @@ SetScrollHereY(PyObject* self, PyObject* args, PyObject* kwargs)
 
     float fCenterYRatio = 0.5f;
 
-    if(!pl_parse("|f", (const char**)apcKeywords, args, kwargs, __FUNCTION__, &fCenterYRatio))
+    if(!pl_parse_args("|f", (const char**)apcKeywords, args, kwargs, __FUNCTION__, &fCenterYRatio))
         return nullptr;
 
     ImGui::SetScrollHereY(fCenterYRatio);
@@ -1607,7 +1786,7 @@ SetScrollFromPosX(PyObject* self, PyObject* args, PyObject* kwargs)
     float fLocalX = 0.0f;
     float fCenterXRatio = 0.5f;
 
-    if(!pl_parse("f|f", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+    if(!pl_parse_args("f|f", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
         &fLocalX, &fCenterXRatio))
         return nullptr;
 
@@ -1623,7 +1802,7 @@ SetScrollFromPosY(PyObject* self, PyObject* args, PyObject* kwargs)
     float fLocalY = 0.0f;
     float fCenterYRatio = 0.5f;
 
-    if(!pl_parse("f|f", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+    if(!pl_parse_args("f|f", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
         &fLocalY, &fCenterYRatio))
         return nullptr;
 
@@ -1638,7 +1817,7 @@ PushItemWidth(PyObject* self, PyObject* args, PyObject* kwargs)
 
     float fItemWidth = 0.0f;
 
-    if(!pl_parse("f", (const char**)apcKeywords, args, kwargs, __FUNCTION__, &fItemWidth))
+    if(!pl_parse_args("f", (const char**)apcKeywords, args, kwargs, __FUNCTION__, &fItemWidth))
         return nullptr;
 
     ImGui::PushItemWidth(fItemWidth);
@@ -1659,7 +1838,7 @@ SetNextItemWidth(PyObject* self, PyObject* args, PyObject* kwargs)
 
     float fItemWidth = 0.0f;
 
-    if(!pl_parse("f", (const char**)apcKeywords, args, kwargs, __FUNCTION__, &fItemWidth))
+    if(!pl_parse_args("f", (const char**)apcKeywords, args, kwargs, __FUNCTION__, &fItemWidth))
         return nullptr;
 
     ImGui::SetNextItemWidth(fItemWidth);
@@ -1679,7 +1858,7 @@ PushTextWrapPos(PyObject* self, PyObject* args, PyObject* kwargs)
 
     float fWrapLocalPosX = 0.0f;
 
-    if(!pl_parse("|f", (const char**)apcKeywords, args, kwargs, __FUNCTION__, &fWrapLocalPosX))
+    if(!pl_parse_args("|f", (const char**)apcKeywords, args, kwargs, __FUNCTION__, &fWrapLocalPosX))
         return nullptr;
 
     ImGui::PushTextWrapPos(fWrapLocalPosX);
@@ -1700,7 +1879,7 @@ SmallButton(PyObject* self, PyObject* args, PyObject* kwargs)
 
     const char* pcLabel = nullptr;
 
-    if(!pl_parse("s", (const char**)apcKeywords, args, kwargs, __FUNCTION__, &pcLabel))
+    if(!pl_parse_args("s", (const char**)apcKeywords, args, kwargs, __FUNCTION__, &pcLabel))
         return nullptr;
 
     return PyBool_FromLong(ImGui::SmallButton(pcLabel));
@@ -1715,7 +1894,7 @@ InvisibleButton(PyObject* self, PyObject* args, PyObject* kwargs)
     PyObject* ptSize = Py_None;
     int iFlags = 0;
 
-    if(!pl_parse("sO|i", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+    if(!pl_parse_args("sO|i", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
         &pcStrId, &ptSize, &iFlags))
         return nullptr;
 
@@ -1731,7 +1910,7 @@ ArrowButton(PyObject* self, PyObject* args, PyObject* kwargs)
     const char* pcStrId = nullptr;
     int iDir = 0;
 
-    if(!pl_parse("si", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+    if(!pl_parse_args("si", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
         &pcStrId, &iDir))
         return nullptr;
 
@@ -1741,18 +1920,18 @@ ArrowButton(PyObject* self, PyObject* args, PyObject* kwargs)
 PyObject*
 CheckboxFlags(PyObject* self, PyObject* args, PyObject* kwargs)
 {
-    static const char* apcKeywords[] = {"label", "flags_pointer", "flags_value", nullptr};
+    static const char* apcKeywords[] = {"label", "flags", "flags_value", nullptr};
 
     const char* pcLabel = nullptr;
-    PyObject* ptFlagsPointer = Py_None;
+    int iFlags = 0;
     int iFlagsValue = 0;
 
-    if(!pl_parse("sOi", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
-        &pcLabel, &ptFlagsPointer, &iFlagsValue))
+    if(!pl_parse_args("sii", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+        &pcLabel, &iFlags, &iFlagsValue))
         return nullptr;
 
-    int* piFlags = (int*)PyCapsule_GetPointer(ptFlagsPointer, "plIntPointer");
-    return PyBool_FromLong(ImGui::CheckboxFlags(pcLabel, piFlags, iFlagsValue));
+    bool bResult = ImGui::CheckboxFlags(pcLabel, &iFlags, iFlagsValue);
+    return Py_BuildValue("(pi)", bResult, iFlags);
 }
 
 PyObject*
@@ -1761,21 +1940,22 @@ RadioButton(PyObject* self, PyObject* args, PyObject* kwargs)
     static const char* apcKeywords[] = {"label", "active", "value_pointer", "button_value", nullptr};
 
     const char* pcLabel = nullptr;
-    int bActive = false;
-    PyObject* ptValuePointer = Py_None;
+    PyObject* ptSecondParam = nullptr;
     int iButtonValue = 0;
 
-    if(!pl_parse("s|pOi", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
-        &pcLabel, &bActive, &ptValuePointer, &iButtonValue))
+    if(!pl_parse_args("sO|i", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+        &pcLabel, &ptSecondParam, &iButtonValue))
         return nullptr;
 
-    if(!Py_IsNone(ptValuePointer))
+    if(PyBool_Check(ptSecondParam))
     {
-        int* piValue = (int*)PyCapsule_GetPointer(ptValuePointer, "plIntPointer");
-        return PyBool_FromLong(ImGui::RadioButton(pcLabel, piValue, iButtonValue));
+        bool bActive = PyLong_AsLong(ptSecondParam);
+        return PyBool_FromLong(ImGui::RadioButton(pcLabel, bActive));
     }
 
-    return PyBool_FromLong(ImGui::RadioButton(pcLabel, bActive));
+    int iValue = PyLong_AsLong(ptSecondParam);
+    bool bResult = ImGui::RadioButton(pcLabel, &iValue, iButtonValue);
+    return Py_BuildValue("(pi)", bResult, iValue);
 }
 
 PyObject*
@@ -1787,7 +1967,7 @@ ProgressBar(PyObject* self, PyObject* args, PyObject* kwargs)
     PyObject* ptSize = Py_None;
     const char* pcOverlay = nullptr;
 
-    if(!pl_parse("f|Oz", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+    if(!pl_parse_args("f|Oz", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
         &fFraction, &ptSize, &pcOverlay))
         return nullptr;
 
@@ -1813,7 +1993,7 @@ TextLink(PyObject* self, PyObject* args, PyObject* kwargs)
 
     const char* pcLabel = nullptr;
 
-    if(!pl_parse("s", (const char**)apcKeywords, args, kwargs, __FUNCTION__, &pcLabel))
+    if(!pl_parse_args("s", (const char**)apcKeywords, args, kwargs, __FUNCTION__, &pcLabel))
         return nullptr;
 
     return PyBool_FromLong(ImGui::TextLink(pcLabel));
@@ -1827,7 +2007,7 @@ TextLinkOpenURL(PyObject* self, PyObject* args, PyObject* kwargs)
     const char* pcLabel = nullptr;
     const char* pcUrl = nullptr;
 
-    if(!pl_parse("s|z", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+    if(!pl_parse_args("s|z", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
         &pcLabel, &pcUrl))
         return nullptr;
 
@@ -1837,75 +2017,96 @@ TextLinkOpenURL(PyObject* self, PyObject* args, PyObject* kwargs)
 PyObject*
 ColorEdit3(PyObject* self, PyObject* args, PyObject* kwargs)
 {
-    static const char* apcKeywords[] = {"label", "color_pointer", "flags", nullptr};
+    static const char* apcKeywords[] = {"label", "color", "flags", nullptr};
 
     const char* pcLabel = nullptr;
     PyObject* ptColorPointer = Py_None;
     int iFlags = 0;
 
-    if(!pl_parse("sO|i", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+    if(!pl_parse_args("sO|i", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
         &pcLabel, &ptColorPointer, &iFlags))
         return nullptr;
 
-    float* pfColor = (float*)PyCapsule_GetPointer(ptColorPointer, "plFloatPointer");
-    return PyBool_FromLong(ImGui::ColorEdit3(pcLabel, pfColor, iFlags));
+    float atValues[4] = {};
+    pl_fill_float_array_from_python(ptColorPointer, atValues, 4);
+    bool bResult = ImGui::ColorEdit3(pcLabel, atValues, iFlags);
+    if(bResult)
+        pl_fill_float_array_from_c(ptColorPointer, atValues, 4);
+
+    return Py_BuildValue("(pO)", bResult, ptColorPointer);
 }
 
 PyObject*
 ColorEdit4(PyObject* self, PyObject* args, PyObject* kwargs)
 {
-    static const char* apcKeywords[] = {"label", "color_pointer", "flags", nullptr};
+    static const char* apcKeywords[] = {"label", "color", "flags", nullptr};
 
     const char* pcLabel = nullptr;
     PyObject* ptColorPointer = Py_None;
     int iFlags = 0;
 
-    if(!pl_parse("sO|i", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+    if(!pl_parse_args("sO|i", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
         &pcLabel, &ptColorPointer, &iFlags))
         return nullptr;
 
-    float* pfColor = (float*)PyCapsule_GetPointer(ptColorPointer, "plFloatPointer");
-    return PyBool_FromLong(ImGui::ColorEdit4(pcLabel, pfColor, iFlags));
+    float atValues[4] = {};
+    pl_fill_float_array_from_python(ptColorPointer, atValues, 4);
+    bool bResult = ImGui::ColorEdit4(pcLabel, atValues, iFlags);
+    if(bResult)
+        pl_fill_float_array_from_c(ptColorPointer, atValues, 4);
+
+    return Py_BuildValue("(pO)", bResult, ptColorPointer);
 }
 
 PyObject*
 ColorPicker3(PyObject* self, PyObject* args, PyObject* kwargs)
 {
-    static const char* apcKeywords[] = {"label", "color_pointer", "flags", nullptr};
+    static const char* apcKeywords[] = {"label", " color", "flags", nullptr};
 
     const char* pcLabel = nullptr;
     PyObject* ptColorPointer = Py_None;
     int iFlags = 0;
 
-    if(!pl_parse("sO|i", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+    if(!pl_parse_args("sO|i", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
         &pcLabel, &ptColorPointer, &iFlags))
         return nullptr;
 
-    float* pfColor = (float*)PyCapsule_GetPointer(ptColorPointer, "plFloatPointer");
-    return PyBool_FromLong(ImGui::ColorPicker3(pcLabel, pfColor, iFlags));
+    float atValues[4] = {};
+    pl_fill_float_array_from_python(ptColorPointer, atValues, 4);
+    bool bResult = ImGui::ColorPicker3(pcLabel, atValues, iFlags);
+    if(bResult)
+        pl_fill_float_array_from_c(ptColorPointer, atValues, 4);
+
+    return Py_BuildValue("(pO)", bResult, ptColorPointer);
 }
 
 PyObject*
 ColorPicker4(PyObject* self, PyObject* args, PyObject* kwargs)
 {
-    static const char* apcKeywords[] = {"label", "color_pointer", "flags", "ref_color", nullptr};
+    static const char* apcKeywords[] = {"label", "color", "flags", "ref_color", nullptr};
 
     const char* pcLabel = nullptr;
     PyObject* ptColorPointer = Py_None;
     int iFlags = 0;
     PyObject* ptRefColorPointer = Py_None;
 
-    if(!pl_parse("sO|iO", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+    if(!pl_parse_args("sO|iO", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
         &pcLabel, &ptColorPointer, &iFlags, &ptRefColorPointer))
         return nullptr;
 
-    float* pfColor = (float*)PyCapsule_GetPointer(ptColorPointer, "plFloatPointer");
+    float atValues[4] = {};
+    pl_fill_float_array_from_python(ptColorPointer, atValues, 4);
+    float atRefValues[4] = {};
+    pl_fill_float_array_from_python(ptRefColorPointer, atRefValues, 4);
+    bool bResult = false;
+    if(Py_IsNone(ptRefColorPointer))
+        ImGui::ColorPicker4(pcLabel, atValues, iFlags);
+    else
+        ImGui::ColorPicker4(pcLabel, atValues, iFlags, atRefValues);
+    if(bResult)
+        pl_fill_float_array_from_c(ptColorPointer, atValues, 4);
 
-    const float* pfRefColor = nullptr;
-    if(!Py_IsNone(ptRefColorPointer))
-        pfRefColor = (const float*)PyCapsule_GetPointer(ptRefColorPointer, "plFloatPointer");
-
-    return PyBool_FromLong(ImGui::ColorPicker4(pcLabel, pfColor, iFlags, pfRefColor));
+    return Py_BuildValue("(pO)", bResult, ptColorPointer);
 }
 
 PyObject*
@@ -1918,7 +2119,7 @@ ColorButton(PyObject* self, PyObject* args, PyObject* kwargs)
     int iFlags = 0;
     PyObject* ptSize = Py_None;
 
-    if(!pl_parse("sO|iO", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+    if(!pl_parse_args("sO|iO", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
         &pcDescId, &ptColor, &iFlags, &ptSize))
         return nullptr;
 
@@ -1938,7 +2139,7 @@ SetColorEditOptions(PyObject* self, PyObject* args, PyObject* kwargs)
 
     int iFlags = 0;
 
-    if(!pl_parse("i", (const char**)apcKeywords, args, kwargs, __FUNCTION__, &iFlags))
+    if(!pl_parse_args("i", (const char**)apcKeywords, args, kwargs, __FUNCTION__, &iFlags))
         return nullptr;
 
     ImGui::SetColorEditOptions(iFlags);
@@ -1952,7 +2153,7 @@ TreeNode(PyObject* self, PyObject* args, PyObject* kwargs)
 
     const char* pcLabel = nullptr;
 
-    if(!pl_parse("s", (const char**)apcKeywords, args, kwargs, __FUNCTION__, &pcLabel))
+    if(!pl_parse_args("s", (const char**)apcKeywords, args, kwargs, __FUNCTION__, &pcLabel))
         return nullptr;
 
     return PyBool_FromLong(ImGui::TreeNode(pcLabel));
@@ -1966,7 +2167,7 @@ TreeNodeEx(PyObject* self, PyObject* args, PyObject* kwargs)
     const char* pcLabel = nullptr;
     int iFlags = 0;
 
-    if(!pl_parse("s|i", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+    if(!pl_parse_args("s|i", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
         &pcLabel, &iFlags))
         return nullptr;
 
@@ -1980,7 +2181,7 @@ TreePush(PyObject* self, PyObject* args, PyObject* kwargs)
 
     const char* pcStrId = nullptr;
 
-    if(!pl_parse("s", (const char**)apcKeywords, args, kwargs, __FUNCTION__, &pcStrId))
+    if(!pl_parse_args("s", (const char**)apcKeywords, args, kwargs, __FUNCTION__, &pcStrId))
         return nullptr;
 
     ImGui::TreePush(pcStrId);
@@ -2005,23 +2206,24 @@ CollapsingHeader(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {
         "label",
-        "visible_pointer",
+        "visible",
         "flags",
         nullptr,
     };
 
     const char* pcLabel = nullptr;
-    PyObject* ptVisiblePointer = Py_None;
+    PyObject* ptSecondParam = Py_None;
     int iFlags = 0;
 
-    if(!pl_parse("s|Oi", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
-        &pcLabel, &ptVisiblePointer, &iFlags))
+    if(!pl_parse_args("sO|i", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+        &pcLabel, &ptSecondParam, &iFlags))
         return nullptr;
 
-    if(!Py_IsNone(ptVisiblePointer))
+    if(PyBool_Check(ptSecondParam))
     {
-        bool* pbVisible = (bool*)PyCapsule_GetPointer(ptVisiblePointer, "plBoolPointer");
-        return PyBool_FromLong(ImGui::CollapsingHeader(pcLabel, pbVisible, iFlags));
+        bool bVisible = PyLong_AsLong(ptSecondParam);
+        bool bResult = ImGui::CollapsingHeader(pcLabel, &bVisible, iFlags);
+        return Py_BuildValue("(pp)", bResult, bVisible);
     }
 
     return PyBool_FromLong(ImGui::CollapsingHeader(pcLabel, iFlags));
@@ -2035,7 +2237,7 @@ SetNextItemOpen(PyObject* self, PyObject* args, PyObject* kwargs)
     int bIsOpen = false;
     int iCond = 0;
 
-    if(!pl_parse("p|i", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+    if(!pl_parse_args("p|i", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
         &bIsOpen, &iCond))
         return nullptr;
 
@@ -2050,7 +2252,7 @@ SetNextItemStorageID(PyObject* self, PyObject* args, PyObject* kwargs)
 
     uint32_t uStorageId = 0;
 
-    if(!pl_parse("I", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+    if(!pl_parse_args("I", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
         &uStorageId))
         return nullptr;
 
@@ -2065,7 +2267,7 @@ TreeNodeGetOpen(PyObject* self, PyObject* args, PyObject* kwargs)
 
     uint32_t uStorageId = 0;
 
-    if(!pl_parse("I", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+    if(!pl_parse_args("I", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
         &uStorageId))
         return nullptr;
 
@@ -2095,7 +2297,7 @@ IsWindowFocused(PyObject* self, PyObject* args, PyObject* kwargs)
 
     int iFlags = 0;
 
-    if(!pl_parse("|i", (const char**)apcKeywords, args, kwargs, __FUNCTION__, &iFlags))
+    if(!pl_parse_args("|i", (const char**)apcKeywords, args, kwargs, __FUNCTION__, &iFlags))
         return nullptr;
 
     return PyBool_FromLong(ImGui::IsWindowFocused(iFlags));
@@ -2108,7 +2310,7 @@ IsWindowHovered(PyObject* self, PyObject* args, PyObject* kwargs)
 
     int iFlags = 0;
 
-    if(!pl_parse("|i", (const char**)apcKeywords, args, kwargs, __FUNCTION__, &iFlags))
+    if(!pl_parse_args("|i", (const char**)apcKeywords, args, kwargs, __FUNCTION__, &iFlags))
         return nullptr;
 
     return PyBool_FromLong(ImGui::IsWindowHovered(iFlags));
@@ -2155,7 +2357,7 @@ SetNextWindowPos(PyObject* self, PyObject* args, PyObject* kwargs)
     int iCond = 0;
     PyObject* ptPivot = Py_None;
 
-    if(!pl_parse("O|iO", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+    if(!pl_parse_args("O|iO", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
         &ptPos, &iCond, &ptPivot))
         return nullptr;
 
@@ -2175,7 +2377,7 @@ SetNextWindowSize(PyObject* self, PyObject* args, PyObject* kwargs)
     PyObject* ptSize = Py_None;
     int iCond = 0;
 
-    if(!pl_parse("O|i", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+    if(!pl_parse_args("O|i", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
         &ptSize, &iCond))
         return nullptr;
 
@@ -2190,7 +2392,7 @@ SetNextWindowContentSize(PyObject* self, PyObject* args, PyObject* kwargs)
 
     PyObject* ptSize = Py_None;
 
-    if(!pl_parse("O", (const char**)apcKeywords, args, kwargs, __FUNCTION__, &ptSize))
+    if(!pl_parse_args("O", (const char**)apcKeywords, args, kwargs, __FUNCTION__, &ptSize))
         return nullptr;
 
     ImGui::SetNextWindowContentSize(pl__get_vec2_from_python(ptSize));
@@ -2205,7 +2407,7 @@ SetNextWindowCollapsed(PyObject* self, PyObject* args, PyObject* kwargs)
     int bCollapsed = false;
     int iCond = 0;
 
-    if(!pl_parse("p|i", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+    if(!pl_parse_args("p|i", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
         &bCollapsed, &iCond))
         return nullptr;
 
@@ -2227,7 +2429,7 @@ SetNextWindowScroll(PyObject* self, PyObject* args, PyObject* kwargs)
 
     PyObject* ptScroll = Py_None;
 
-    if(!pl_parse("O", (const char**)apcKeywords, args, kwargs, __FUNCTION__, &ptScroll))
+    if(!pl_parse_args("O", (const char**)apcKeywords, args, kwargs, __FUNCTION__, &ptScroll))
         return nullptr;
 
     ImGui::SetNextWindowScroll(pl__get_vec2_from_python(ptScroll));
@@ -2241,7 +2443,7 @@ SetNextWindowBgAlpha(PyObject* self, PyObject* args, PyObject* kwargs)
 
     float fAlpha = 0.0f;
 
-    if(!pl_parse("f", (const char**)apcKeywords, args, kwargs, __FUNCTION__, &fAlpha))
+    if(!pl_parse_args("f", (const char**)apcKeywords, args, kwargs, __FUNCTION__, &fAlpha))
         return nullptr;
 
     ImGui::SetNextWindowBgAlpha(fAlpha);
@@ -2255,7 +2457,7 @@ SetNextWindowViewport(PyObject* self, PyObject* args, PyObject* kwargs)
 
     uint32_t uViewportId = 0;
 
-    if(!pl_parse("I", (const char**)apcKeywords, args, kwargs, __FUNCTION__, &uViewportId))
+    if(!pl_parse_args("I", (const char**)apcKeywords, args, kwargs, __FUNCTION__, &uViewportId))
         return nullptr;
 
     ImGui::SetNextWindowViewport((ImGuiID)uViewportId);
@@ -2271,7 +2473,7 @@ SetWindowPos(PyObject* self, PyObject* args, PyObject* kwargs)
     int iCond = 0;
     const char* pcName = nullptr;
 
-    if(!pl_parse("O|iz", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+    if(!pl_parse_args("O|iz", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
         &ptPos, &iCond, &pcName))
         return nullptr;
 
@@ -2292,7 +2494,7 @@ SetWindowSize(PyObject* self, PyObject* args, PyObject* kwargs)
     int iCond = 0;
     const char* pcName = nullptr;
 
-    if(!pl_parse("O|iz", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+    if(!pl_parse_args("O|iz", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
         &ptSize, &iCond, &pcName))
         return nullptr;
 
@@ -2313,7 +2515,7 @@ SetWindowCollapsed(PyObject* self, PyObject* args, PyObject* kwargs)
     int iCond = 0;
     const char* pcName = nullptr;
 
-    if(!pl_parse("p|iz", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+    if(!pl_parse_args("p|iz", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
         &bCollapsed, &iCond, &pcName))
         return nullptr;
 
@@ -2332,7 +2534,7 @@ SetWindowFocus(PyObject* self, PyObject* args, PyObject* kwargs)
 
     const char* pcName = nullptr;
 
-    if(!pl_parse("|z", (const char**)apcKeywords, args, kwargs, __FUNCTION__, &pcName))
+    if(!pl_parse_args("|z", (const char**)apcKeywords, args, kwargs, __FUNCTION__, &pcName))
         return nullptr;
 
     if(pcName)
@@ -2351,7 +2553,6 @@ Selectable(PyObject* self, PyObject* args, PyObject* kwargs)
         "selected",
         "flags",
         "size",
-        "selected_pointer",
         nullptr,
     };
 
@@ -2359,23 +2560,18 @@ Selectable(PyObject* self, PyObject* args, PyObject* kwargs)
     int bSelected = false;
     int iFlags = 0;
     PyObject* ptSize = Py_None;
-    PyObject* ptSelectedPointer = Py_None;
 
-    if(!pl_parse("s|piO$O", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
-        &pcLabel, &bSelected, &iFlags, &ptSize, &ptSelectedPointer))
+    if(!pl_parse_args("s|piO", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+        &pcLabel, &bSelected, &iFlags, &ptSize))
         return nullptr;
 
     ImVec2 tSize = {};
     if(!Py_IsNone(ptSize))
         tSize = pl__get_vec2_from_python(ptSize);
 
-    if(!Py_IsNone(ptSelectedPointer))
-    {
-        bool* pbSelected = (bool*)PyCapsule_GetPointer(ptSelectedPointer, "plBoolPointer");
-        return PyBool_FromLong(ImGui::Selectable(pcLabel, pbSelected, iFlags, tSize));
-    }
+    bool bResult = ImGui::Selectable(pcLabel, &bSelected, iFlags, tSize);
 
-    return PyBool_FromLong(ImGui::Selectable(pcLabel, bSelected, iFlags, tSize));
+    return Py_BuildValue("(pp)", bResult, bSelected);
 }
 
 PyObject*
@@ -2398,7 +2594,7 @@ SetTooltip(PyObject* self, PyObject* args, PyObject* kwargs)
 
     const char* pcText = nullptr;
 
-    if(!pl_parse("s", (const char**)apcKeywords, args, kwargs, __FUNCTION__, &pcText))
+    if(!pl_parse_args("s", (const char**)apcKeywords, args, kwargs, __FUNCTION__, &pcText))
         return nullptr;
 
     ImGui::SetTooltip("%s", pcText);
@@ -2418,7 +2614,7 @@ SetItemTooltip(PyObject* self, PyObject* args, PyObject* kwargs)
 
     const char* pcText = nullptr;
 
-    if(!pl_parse("s", (const char**)apcKeywords, args, kwargs, __FUNCTION__, &pcText))
+    if(!pl_parse_args("s", (const char**)apcKeywords, args, kwargs, __FUNCTION__, &pcText))
         return nullptr;
 
     ImGui::SetItemTooltip("%s", pcText);
@@ -2433,7 +2629,7 @@ BeginPopup(PyObject* self, PyObject* args, PyObject* kwargs)
     const char* pcStrId = nullptr;
     int iFlags = 0;
 
-    if(!pl_parse("s|i", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+    if(!pl_parse_args("s|i", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
         &pcStrId, &iFlags))
         return nullptr;
 
@@ -2449,15 +2645,24 @@ BeginPopupModal(PyObject* self, PyObject* args, PyObject* kwargs)
     PyObject* ptOpen = Py_None;
     int iFlags = 0;
 
-    if(!pl_parse("s|Oi", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+    if(!pl_parse_args("s|Oi", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
         &pcName, &ptOpen, &iFlags))
         return nullptr;
 
+    bool bValue = true;
     bool* pbOpen = nullptr;
     if(!Py_IsNone(ptOpen))
-        pbOpen = (bool*)PyCapsule_GetPointer(ptOpen, "plBoolPointer");
+    {
+        bValue = PyLong_AsLong(ptOpen);
+        pbOpen = &bValue;
+    }
 
-    return PyBool_FromLong(ImGui::BeginPopupModal(pcName, pbOpen, iFlags));
+    bool bResult = ImGui::BeginPopupModal(pcName, pbOpen, iFlags);
+
+    if(pbOpen)
+        return Py_BuildValue("(pp)", bResult, bValue);
+    return Py_BuildValue("(pO)", bResult, Py_None);
+    
 }
 
 PyObject*
@@ -2475,7 +2680,7 @@ OpenPopup(PyObject* self, PyObject* args, PyObject* kwargs)
     const char* pcStrId = nullptr;
     int iPopupFlags = 0;
 
-    if(!pl_parse("s|i", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+    if(!pl_parse_args("s|i", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
         &pcStrId, &iPopupFlags))
         return nullptr;
 
@@ -2491,7 +2696,7 @@ OpenPopupOnItemClick(PyObject* self, PyObject* args, PyObject* kwargs)
     const char* pcStrId = nullptr;
     int iPopupFlags = 0;
 
-    if(!pl_parse("|zi", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+    if(!pl_parse_args("|zi", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
         &pcStrId, &iPopupFlags))
         return nullptr;
 
@@ -2514,7 +2719,7 @@ BeginPopupContextItem(PyObject* self, PyObject* args, PyObject* kwargs)
     const char* pcStrId = nullptr;
     int iPopupFlags = 0;
 
-    if(!pl_parse("|zi", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+    if(!pl_parse_args("|zi", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
         &pcStrId, &iPopupFlags))
         return nullptr;
 
@@ -2529,7 +2734,7 @@ BeginPopupContextWindow(PyObject* self, PyObject* args, PyObject* kwargs)
     const char* pcStrId = nullptr;
     int iPopupFlags = 0;
 
-    if(!pl_parse("|zi", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+    if(!pl_parse_args("|zi", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
         &pcStrId, &iPopupFlags))
         return nullptr;
 
@@ -2544,7 +2749,7 @@ BeginPopupContextVoid(PyObject* self, PyObject* args, PyObject* kwargs)
     const char* pcStrId = nullptr;
     int iPopupFlags = 0;
 
-    if(!pl_parse("|zi", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+    if(!pl_parse_args("|zi", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
         &pcStrId, &iPopupFlags))
         return nullptr;
 
@@ -2559,7 +2764,7 @@ IsPopupOpen(PyObject* self, PyObject* args, PyObject* kwargs)
     const char* pcStrId = nullptr;
     int iFlags = 0;
 
-    if(!pl_parse("s|i", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+    if(!pl_parse_args("s|i", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
         &pcStrId, &iFlags))
         return nullptr;
 
@@ -2574,7 +2779,7 @@ BeginTabBar(PyObject* self, PyObject* args, PyObject* kwargs)
     const char* pcStrId = nullptr;
     int iFlags = 0;
 
-    if(!pl_parse("s|i", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+    if(!pl_parse_args("s|i", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
         &pcStrId, &iFlags))
         return nullptr;
 
@@ -2597,15 +2802,23 @@ BeginTabItem(PyObject* self, PyObject* args, PyObject* kwargs)
     PyObject* ptOpen = Py_None;
     int iFlags = 0;
 
-    if(!pl_parse("s|Oi", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+    if(!pl_parse_args("s|Oi", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
         &pcLabel, &ptOpen, &iFlags))
         return nullptr;
 
+    bool bValue = true;
     bool* pbOpen = nullptr;
     if(!Py_IsNone(ptOpen))
-        pbOpen = (bool*)PyCapsule_GetPointer(ptOpen, "plBoolPointer");
+    {
+        bValue = PyLong_AsLong(ptOpen);
+        pbOpen = &bValue;
+    }
 
-    return PyBool_FromLong(ImGui::BeginTabItem(pcLabel, pbOpen, iFlags));
+    bool bResult = ImGui::BeginTabItem(pcLabel, pbOpen, iFlags);
+
+    if(pbOpen)
+        return Py_BuildValue("(pp)", bResult, bValue);
+    return Py_BuildValue("(pO)", bResult, Py_None);
 }
 
 PyObject*
@@ -2623,7 +2836,7 @@ TabItemButton(PyObject* self, PyObject* args, PyObject* kwargs)
     const char* pcLabel = nullptr;
     int iFlags = 0;
 
-    if(!pl_parse("s|i", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+    if(!pl_parse_args("s|i", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
         &pcLabel, &iFlags))
         return nullptr;
 
@@ -2637,7 +2850,7 @@ SetTabItemClosed(PyObject* self, PyObject* args, PyObject* kwargs)
 
     const char* pcLabel = nullptr;
 
-    if(!pl_parse("s", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+    if(!pl_parse_args("s", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
         &pcLabel))
         return nullptr;
 
@@ -2650,7 +2863,7 @@ IsItemHovered(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {"flags", nullptr};
     int iFlags = 0;
-    if(!pl_parse("|i", (const char**)apcKeywords, args, kwargs, __FUNCTION__, &iFlags))
+    if(!pl_parse_args("|i", (const char**)apcKeywords, args, kwargs, __FUNCTION__, &iFlags))
         return nullptr;
     return PyBool_FromLong(ImGui::IsItemHovered(iFlags));
 }
@@ -2672,7 +2885,7 @@ IsItemClicked(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {"mouse_button", nullptr};
     int iMouseButton = 0;
-    if(!pl_parse("|i", (const char**)apcKeywords, args, kwargs, __FUNCTION__, &iMouseButton))
+    if(!pl_parse_args("|i", (const char**)apcKeywords, args, kwargs, __FUNCTION__, &iMouseButton))
         return nullptr;
     return PyBool_FromLong(ImGui::IsItemClicked(iMouseButton));
 }
@@ -2777,7 +2990,7 @@ SetKeyboardFocusHere(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {"offset", nullptr};
     int iOffset = 0;
-    if(!pl_parse("|i", (const char**)apcKeywords, args, kwargs, __FUNCTION__, &iOffset))
+    if(!pl_parse_args("|i", (const char**)apcKeywords, args, kwargs, __FUNCTION__, &iOffset))
         return nullptr;
     ImGui::SetKeyboardFocusHere(iOffset);
     Py_RETURN_NONE;
@@ -2799,7 +3012,7 @@ BeginChild(PyObject* self, PyObject* args, PyObject* kwargs)
     int iChildFlags = 0;
     int iWindowFlags = 0;
 
-    if(!pl_parse("s|Oii", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+    if(!pl_parse_args("s|Oii", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
         &pcStrId, &ptSize, &iChildFlags, &iWindowFlags))
         return nullptr;
 
@@ -2824,7 +3037,7 @@ PushID(PyObject* self, PyObject* args, PyObject* kwargs)
 
     PyObject* ptId = Py_None;
 
-    if(!pl_parse("O", (const char**)apcKeywords, args, kwargs, __FUNCTION__, &ptId))
+    if(!pl_parse_args("O", (const char**)apcKeywords, args, kwargs, __FUNCTION__, &ptId))
         return nullptr;
 
     if(PyLong_Check(ptId))
@@ -2859,7 +3072,7 @@ GetID(PyObject* self, PyObject* args, PyObject* kwargs)
 
     PyObject* ptId = Py_None;
 
-    if(!pl_parse("O", (const char**)apcKeywords, args, kwargs, __FUNCTION__, &ptId))
+    if(!pl_parse_args("O", (const char**)apcKeywords, args, kwargs, __FUNCTION__, &ptId))
         return nullptr;
 
     ImGuiID tId = 0;
@@ -2887,44 +3100,60 @@ GetID(PyObject* self, PyObject* args, PyObject* kwargs)
 PyObject*
 ShowMetricsWindow(PyObject* self, PyObject* arg)
 {
-    bool* ptShow = NULL;
+    bool bShow = true;
     if(!Py_IsNone(arg))
-        ptShow = (bool*)PyCapsule_GetPointer(arg, "plBoolPointer");
+    {
+        bShow = PyLong_AsLong(arg);
+        ImGui::ShowMetricsWindow(&bShow);
+        return PyBool_FromLong(bShow);
+    }
 
-    ImGui::ShowMetricsWindow(ptShow);
+    ImGui::ShowMetricsWindow(nullptr);
     Py_RETURN_NONE;
 }
 
 PyObject*
 ShowDebugLogWindow(PyObject* self, PyObject* arg)
 {
-    bool* ptShow = NULL;
+    bool bShow = true;
     if(!Py_IsNone(arg))
-        ptShow = (bool*)PyCapsule_GetPointer(arg, "plBoolPointer");
+    {
+        bShow = PyLong_AsLong(arg);
+        ImGui::ShowDebugLogWindow(&bShow);
+        return PyBool_FromLong(bShow);
+    }
 
-    ImGui::ShowDebugLogWindow(ptShow);
+    ImGui::ShowDebugLogWindow(nullptr);
     Py_RETURN_NONE;
 }
 
 PyObject*
 ShowIDStackToolWindow(PyObject* self, PyObject* arg)
 {
-    bool* ptShow = NULL;
+    bool bShow = true;
     if(!Py_IsNone(arg))
-        ptShow = (bool*)PyCapsule_GetPointer(arg, "plBoolPointer");
+    {
+        bShow = PyLong_AsLong(arg);
+        ImGui::ShowIDStackToolWindow(&bShow);
+        return PyBool_FromLong(bShow);
+    }
 
-    ImGui::ShowIDStackToolWindow(ptShow);
+    ImGui::ShowIDStackToolWindow(nullptr);
     Py_RETURN_NONE;
 }
 
 PyObject*
 ShowAboutWindow(PyObject* self, PyObject* arg)
 {
-    bool* ptShow = NULL;
+    bool bShow = true;
     if(!Py_IsNone(arg))
-        ptShow = (bool*)PyCapsule_GetPointer(arg, "plBoolPointer");
+    {
+        bShow = PyLong_AsLong(arg);
+        ImGui::ShowAboutWindow(&bShow);
+        return PyBool_FromLong(bShow);
+    }
 
-    ImGui::ShowAboutWindow(ptShow);
+    ImGui::ShowAboutWindow(nullptr);
     Py_RETURN_NONE;
 }
 
@@ -2942,7 +3171,7 @@ ShowStyleSelector(PyObject* self, PyObject* args, PyObject* kwargs)
 
     const char* pcLabel = nullptr;
 
-    if(!pl_parse("s", (const char**)apcKeywords, args, kwargs, __FUNCTION__, &pcLabel))
+    if(!pl_parse_args("s", (const char**)apcKeywords, args, kwargs, __FUNCTION__, &pcLabel))
         return nullptr;
 
     return PyBool_FromLong(ImGui::ShowStyleSelector(pcLabel));
@@ -2955,7 +3184,7 @@ ShowFontSelector(PyObject* self, PyObject* args, PyObject* kwargs)
 
     const char* pcLabel = nullptr;
 
-    if(!pl_parse("s", (const char**)apcKeywords, args, kwargs, __FUNCTION__, &pcLabel))
+    if(!pl_parse_args("s", (const char**)apcKeywords, args, kwargs, __FUNCTION__, &pcLabel))
         return nullptr;
 
     ImGui::ShowFontSelector(pcLabel);
@@ -2984,7 +3213,7 @@ BeginCombo(PyObject* self, PyObject* args, PyObject* kwargs)
     const char* pcPreviewValue = nullptr;
     int iFlags = 0;
 
-    if(!pl_parse("ss|i", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+    if(!pl_parse_args("ss|i", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
         &pcLabel, &pcPreviewValue, &iFlags))
         return nullptr;
 
@@ -3011,26 +3240,33 @@ Combo(PyObject* self, PyObject* args, PyObject* kwargs)
     static const char** sbtEntries = nullptr;
 
     const char* pcLabel = nullptr;
-    PyObject* ptCurrentItem = nullptr;
+    int iCurrentItem = 0;
     PyObject* ptItems = nullptr;
     int popup_max_height_in_items = -1;
-	if (!pl_parse("sOO|i", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
-        &pcLabel, &ptCurrentItem, &ptItems, &popup_max_height_in_items))
+	if (!pl_parse_args("siO|i", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+        &pcLabel, &iCurrentItem, &ptItems, &popup_max_height_in_items))
 		return nullptr;
     
-    int* ptCurrentItemInt = (int*)PyCapsule_GetPointer(ptCurrentItem, "plIntPointer");
-
-    Py_ssize_t pySize = PyList_Size(ptItems);
-    pl_sb_resize(sbtEntries, (uint32_t)pySize);
-    for(Py_ssize_t i = 0; i < pySize; i++)
+    bool bActivated = false;
+    if(PyList_Check(ptItems))
     {
-        PyObject* item = PyList_GetItem(ptItems, i);
-        sbtEntries[i] = PyUnicode_AsUTF8(item);
-    }
+        Py_ssize_t pySize = PyList_Size(ptItems);
+        pl_sb_resize(sbtEntries, (uint32_t)pySize);
+        for(Py_ssize_t i = 0; i < pySize; i++)
+        {
+            PyObject* item = PyList_GetItem(ptItems, i);
+            sbtEntries[i] = PyUnicode_AsUTF8(item);
+        }
 
-    bool bActivated = ImGui::Combo(pcLabel, ptCurrentItemInt, sbtEntries, (int)pySize, popup_max_height_in_items);
-    pl_sb_reset(sbtEntries);
-    return Py_BuildValue("p", bActivated);
+        bActivated = ImGui::Combo(pcLabel, &iCurrentItem, sbtEntries, (int)pySize, popup_max_height_in_items);
+        pl_sb_reset(sbtEntries);
+    }
+    else
+    {
+        const char* pcItems = PyUnicode_AsUTF8(ptItems);
+        bActivated = ImGui::Combo(pcLabel, &iCurrentItem, pcItems, popup_max_height_in_items);
+    }
+    return Py_BuildValue("(pi)", bActivated, iCurrentItem);
 }
 
 
@@ -3042,7 +3278,7 @@ BeginListBox(PyObject* self, PyObject* args, PyObject* kwargs)
     const char* pcLabel = nullptr;
     PyObject* ptSize = Py_None;
 
-    if(!pl_parse("s|O", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+    if(!pl_parse_args("s|O", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
         &pcLabel, &ptSize))
         return nullptr;
 
@@ -3067,7 +3303,7 @@ IsMouseDown(PyObject* self, PyObject* args, PyObject* kwargs)
 
     int iButton = 0;
 
-    if(!pl_parse("i", (const char**)apcKeywords, args, kwargs, __FUNCTION__, &iButton))
+    if(!pl_parse_args("i", (const char**)apcKeywords, args, kwargs, __FUNCTION__, &iButton))
         return nullptr;
 
     return PyBool_FromLong(ImGui::IsMouseDown(iButton));
@@ -3081,7 +3317,7 @@ IsMouseClicked(PyObject* self, PyObject* args, PyObject* kwargs)
     int iButton = 0;
     int bRepeat = false;
 
-    if(!pl_parse("i|p", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+    if(!pl_parse_args("i|p", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
         &iButton, &bRepeat))
         return nullptr;
 
@@ -3095,7 +3331,7 @@ IsMouseReleased(PyObject* self, PyObject* args, PyObject* kwargs)
 
     int iButton = 0;
 
-    if(!pl_parse("i", (const char**)apcKeywords, args, kwargs, __FUNCTION__, &iButton))
+    if(!pl_parse_args("i", (const char**)apcKeywords, args, kwargs, __FUNCTION__, &iButton))
         return nullptr;
 
     return PyBool_FromLong(ImGui::IsMouseReleased(iButton));
@@ -3108,7 +3344,7 @@ IsMouseDoubleClicked(PyObject* self, PyObject* args, PyObject* kwargs)
 
     int iButton = 0;
 
-    if(!pl_parse("i", (const char**)apcKeywords, args, kwargs, __FUNCTION__, &iButton))
+    if(!pl_parse_args("i", (const char**)apcKeywords, args, kwargs, __FUNCTION__, &iButton))
         return nullptr;
 
     return PyBool_FromLong(ImGui::IsMouseDoubleClicked(iButton));
@@ -3121,7 +3357,7 @@ GetMouseClickedCount(PyObject* self, PyObject* args, PyObject* kwargs)
 
     int iButton = 0;
 
-    if(!pl_parse("i", (const char**)apcKeywords, args, kwargs, __FUNCTION__, &iButton))
+    if(!pl_parse_args("i", (const char**)apcKeywords, args, kwargs, __FUNCTION__, &iButton))
         return nullptr;
 
     return PyLong_FromLong(ImGui::GetMouseClickedCount(iButton));
@@ -3136,7 +3372,7 @@ IsMouseHoveringRect(PyObject* self, PyObject* args, PyObject* kwargs)
     PyObject* ptMax = Py_None;
     int bClip = true;
 
-    if(!pl_parse("OO|p", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+    if(!pl_parse_args("OO|p", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
         &ptMin, &ptMax, &bClip))
         return nullptr;
 
@@ -3153,7 +3389,7 @@ IsMousePosValid(PyObject* self, PyObject* args, PyObject* kwargs)
 
     PyObject* ptMousePos = Py_None;
 
-    if(!pl_parse("|O", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+    if(!pl_parse_args("|O", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
         &ptMousePos))
         return nullptr;
 
@@ -3192,7 +3428,7 @@ IsMouseDragging(PyObject* self, PyObject* args, PyObject* kwargs)
     int iButton = 0;
     float fLockThreshold = -1.0f;
 
-    if(!pl_parse("i|f", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+    if(!pl_parse_args("i|f", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
         &iButton, &fLockThreshold))
         return nullptr;
 
@@ -3207,7 +3443,7 @@ GetMouseDragDelta(PyObject* self, PyObject* args, PyObject* kwargs)
     int iButton = 0;
     float fLockThreshold = -1.0f;
 
-    if(!pl_parse("|if", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+    if(!pl_parse_args("|if", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
         &iButton, &fLockThreshold))
         return nullptr;
 
@@ -3222,7 +3458,7 @@ ResetMouseDragDelta(PyObject* self, PyObject* args, PyObject* kwargs)
 
     int iButton = 0;
 
-    if(!pl_parse("|i", (const char**)apcKeywords, args, kwargs, __FUNCTION__, &iButton))
+    if(!pl_parse_args("|i", (const char**)apcKeywords, args, kwargs, __FUNCTION__, &iButton))
         return nullptr;
 
     ImGui::ResetMouseDragDelta(iButton);
@@ -3242,7 +3478,7 @@ SetMouseCursor(PyObject* self, PyObject* args, PyObject* kwargs)
 
     int iCursorType = 0;
 
-    if(!pl_parse("i", (const char**)apcKeywords, args, kwargs, __FUNCTION__, &iCursorType))
+    if(!pl_parse_args("i", (const char**)apcKeywords, args, kwargs, __FUNCTION__, &iCursorType))
         return nullptr;
 
     ImGui::SetMouseCursor(iCursorType);
@@ -3256,7 +3492,7 @@ SetNextFrameWantCaptureMouse(PyObject* self, PyObject* args, PyObject* kwargs)
 
     int bWantCaptureMouse = false;
 
-    if(!pl_parse("p", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+    if(!pl_parse_args("p", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
         &bWantCaptureMouse))
         return nullptr;
 
@@ -3285,7 +3521,7 @@ SetClipboardText(PyObject* self, PyObject* args, PyObject* kwargs)
 
     const char* pcText = nullptr;
 
-    if(!pl_parse("s", (const char**)apcKeywords, args, kwargs, __FUNCTION__, &pcText))
+    if(!pl_parse_args("s", (const char**)apcKeywords, args, kwargs, __FUNCTION__, &pcText))
         return nullptr;
 
     ImGui::SetClipboardText(pcText);
@@ -3304,7 +3540,7 @@ LoadIniSettingsFromDisk(PyObject* self, PyObject* args, PyObject* kwargs)
 
     const char* pcIniFilename = nullptr;
 
-    if(!pl_parse("s", (const char**)apcKeywords, args, kwargs, __FUNCTION__, &pcIniFilename))
+    if(!pl_parse_args("s", (const char**)apcKeywords, args, kwargs, __FUNCTION__, &pcIniFilename))
         return nullptr;
 
     ImGui::LoadIniSettingsFromDisk(pcIniFilename);
@@ -3318,7 +3554,7 @@ LoadIniSettingsFromMemory(PyObject* self, PyObject* args, PyObject* kwargs)
 
     const char* pcIniData = nullptr;
 
-    if(!pl_parse("s", (const char**)apcKeywords, args, kwargs, __FUNCTION__, &pcIniData))
+    if(!pl_parse_args("s", (const char**)apcKeywords, args, kwargs, __FUNCTION__, &pcIniData))
         return nullptr;
 
     ImGui::LoadIniSettingsFromMemory(pcIniData);
@@ -3332,7 +3568,7 @@ SaveIniSettingsToDisk(PyObject* self, PyObject* args, PyObject* kwargs)
 
     const char* pcIniFilename = nullptr;
 
-    if(!pl_parse("s", (const char**)apcKeywords, args, kwargs, __FUNCTION__, &pcIniFilename))
+    if(!pl_parse_args("s", (const char**)apcKeywords, args, kwargs, __FUNCTION__, &pcIniFilename))
         return nullptr;
 
     ImGui::SaveIniSettingsToDisk(pcIniFilename);
@@ -3349,6 +3585,217 @@ SaveIniSettingsToMemory(PyObject* self)
 
     return PyUnicode_FromString(pcIniData);
 }
+
+static ImVec2
+pl__get_vec2_from_python(PyObject* ptValue)
+{
+    ImVec2 tResult = {};
+
+    if (PyTuple_Check(ptValue))
+    {
+        Py_ssize_t pySize = PyTuple_Size(ptValue);
+        pySize = pl_min(pySize, 2);
+        for (Py_ssize_t i = 0; i < pySize; ++i)
+        {
+            tResult[i] = (float)PyFloat_AsDouble(PyTuple_GetItem(ptValue, i));
+        }
+    }
+
+    else if (PyList_Check(ptValue))
+    {
+        Py_ssize_t pySize = PyList_Size(ptValue);
+        pySize = pl_min(pySize, 2);
+        for (Py_ssize_t i = 0; i < pySize; ++i)
+        {
+            tResult[i] = (float)PyFloat_AsDouble(PyList_GetItem(ptValue, i));
+        }
+    }
+
+    // else if (PyObject_CheckBuffer(ptValue))
+    // {
+    //     Py_buffer buffer_info;
+
+    //     if (!PyObject_GetBuffer(ptValue, &buffer_info,
+    //                             PyBUF_CONTIG_RO | PyBUF_FORMAT))
+    //     {
+
+    //         auto BufferViewer = BufferViewFunctionsFloat(buffer_info);
+    //         items.reserve(buffer_info.len / buffer_info.itemsize);
+
+    //         for (Py_ssize_t i = 0; i < buffer_info.len / buffer_info.itemsize; ++i)
+    //         {
+    //             items.emplace_back(BufferViewer(buffer_info, i));
+    //         }
+    //     }
+    //     PyBuffer_Release(&buffer_info);
+    // }
+    // else
+    //     mvThrowPythonError(mvErrorCode::mvWrongType, "Python value error. Must be List[float].");
+
+    return tResult;
+}
+
+static ImVec4
+pl__get_vec4_from_python(PyObject* ptValue)
+{
+    ImVec4 tResult = {};
+
+    if (PyTuple_Check(ptValue))
+    {
+        tResult.x = (float)PyFloat_AsDouble(PyTuple_GetItem(ptValue, 0));
+        tResult.y = (float)PyFloat_AsDouble(PyTuple_GetItem(ptValue, 1));
+        tResult.z = (float)PyFloat_AsDouble(PyTuple_GetItem(ptValue, 2));
+        tResult.w = (float)PyFloat_AsDouble(PyTuple_GetItem(ptValue, 3));
+    }
+
+    else if (PyList_Check(ptValue))
+    {
+        tResult.x = (float)PyFloat_AsDouble(PyList_GetItem(ptValue, 0));
+        tResult.y = (float)PyFloat_AsDouble(PyList_GetItem(ptValue, 1));
+        tResult.z = (float)PyFloat_AsDouble(PyList_GetItem(ptValue, 2));
+        tResult.w = (float)PyFloat_AsDouble(PyList_GetItem(ptValue, 3));
+    }
+
+    // else if (PyObject_CheckBuffer(ptValue))
+    // {
+    //     Py_buffer buffer_info;
+
+    //     if (!PyObject_GetBuffer(ptValue, &buffer_info,
+    //                             PyBUF_CONTIG_RO | PyBUF_FORMAT))
+    //     {
+
+    //         auto BufferViewer = BufferViewFunctionsFloat(buffer_info);
+    //         items.reserve(buffer_info.len / buffer_info.itemsize);
+
+    //         for (Py_ssize_t i = 0; i < buffer_info.len / buffer_info.itemsize; ++i)
+    //         {
+    //             items.emplace_back(BufferViewer(buffer_info, i));
+    //         }
+    //     }
+    //     PyBuffer_Release(&buffer_info);
+    // }
+    // else
+    //     mvThrowPythonError(mvErrorCode::mvWrongType, "Python value error. Must be List[float].");
+
+    return tResult;
+}
+
+//-----------------------------------------------------------------------------
+// [SECTION] helper implementations
+//-----------------------------------------------------------------------------
+
+bool
+pl_parse_args(const char* formatstring, const char** keywords, PyObject* args, PyObject* kwargs, const char* message, ...)
+{
+
+    bool check = true;
+
+    va_list arguments;
+    va_start(arguments, message);
+    if (!PyArg_VaParseTupleAndKeywords(args, kwargs, formatstring, (char * const *)keywords, arguments))
+    {
+        check = false;
+    }
+
+    va_end(arguments);
+
+    // if (!check)
+    //     mvThrowPythonError(mvErrorCode::mvNone, "Error parsing Dear PyGui command: " + std::string(message));
+
+    return check;
+}
+
+void
+pl_fill_float_array_from_python(PyObject* ptPyObject, float* atArray, uint32_t uArraySize)
+{
+    if (PyTuple_Check(ptPyObject))
+    {
+        Py_ssize_t pySize = pl_min(uArraySize, PyTuple_Size(ptPyObject));
+        for (Py_ssize_t i = 0; i < pySize; ++i)
+        {
+            atArray[i] = (float)PyFloat_AsDouble(PyTuple_GetItem(ptPyObject, i));
+        }
+    }
+
+    else if (PyList_Check(ptPyObject))
+    {
+        Py_ssize_t pySize = pl_min(uArraySize, PyList_Size(ptPyObject));
+        for (Py_ssize_t i = 0; i < pySize; ++i)
+        {
+            atArray[i] = (float)PyFloat_AsDouble(PyList_GetItem(ptPyObject, i));
+        }
+    }
+}
+
+void
+pl_fill_float_array_from_c(PyObject* ptPyObject, float* atArray, uint32_t uArraySize)
+{
+    if (PyTuple_Check(ptPyObject))
+    {
+        Py_ssize_t pySize = pl_min(uArraySize, PyTuple_Size(ptPyObject));
+        for (Py_ssize_t i = 0; i < pySize; ++i)
+        {
+            PyTuple_SetItem(ptPyObject, i, PyFloat_FromDouble((double)atArray[i]));
+        }
+    }
+
+    else if (PyList_Check(ptPyObject))
+    {
+        Py_ssize_t pySize = pl_min(uArraySize, PyList_Size(ptPyObject));
+        for (Py_ssize_t i = 0; i < pySize; ++i)
+        {
+            PyList_SetItem(ptPyObject, i, PyFloat_FromDouble((double)atArray[i]));
+        }
+    }
+}
+
+void
+pl_fill_int_array_from_python(PyObject* ptPyObject, int* atArray, uint32_t uArraySize)
+{
+    if (PyTuple_Check(ptPyObject))
+    {
+        Py_ssize_t pySize = pl_min(uArraySize, PyTuple_Size(ptPyObject));
+        for (Py_ssize_t i = 0; i < pySize; ++i)
+        {
+            atArray[i] = PyLong_AsLong(PyTuple_GetItem(ptPyObject, i));
+        }
+    }
+
+    else if (PyList_Check(ptPyObject))
+    {
+        Py_ssize_t pySize = pl_min(uArraySize, PyList_Size(ptPyObject));
+        for (Py_ssize_t i = 0; i < pySize; ++i)
+        {
+            atArray[i] = PyLong_AsLong(PyList_GetItem(ptPyObject, i));
+        }
+    }
+}
+
+void
+pl_fill_int_array_from_c(PyObject* ptPyObject, int* atArray, uint32_t uArraySize)
+{
+    if (PyTuple_Check(ptPyObject))
+    {
+        Py_ssize_t pySize = pl_min(uArraySize, PyTuple_Size(ptPyObject));
+        for (Py_ssize_t i = 0; i < pySize; ++i)
+        {
+            PyTuple_SetItem(ptPyObject, i, PyLong_FromInt32(atArray[i]));
+        }
+    }
+
+    else if (PyList_Check(ptPyObject))
+    {
+        Py_ssize_t pySize = pl_min(uArraySize, PyList_Size(ptPyObject));
+        for (Py_ssize_t i = 0; i < pySize; ++i)
+        {
+            PyList_SetItem(ptPyObject, i, PyLong_FromInt32(atArray[i]));
+        }
+    }
+}
+
+//-----------------------------------------------------------------------------
+// [SECTION] python module prep
+//-----------------------------------------------------------------------------
 
 #define PL_ADD_INT_CONSTANT(X_ARG) {#X_ARG, X_ARG}
 #define PL_PYTHON_COMMAND(ARG, FLAGS, DOCS) {#ARG, (PyCFunction)ARG, FLAGS | METH_STATIC, DOCS}
@@ -3507,6 +3954,7 @@ static PyMethodDef gatImGuiCommands[] =
     PL_PYTHON_COMMAND(EndMenu, METH_NOARGS, NULL),
     PL_PYTHON_COMMAND(BeginMenu, METH_VARARGS | METH_KEYWORDS, NULL),
     PL_PYTHON_COMMAND(MenuItem, METH_VARARGS | METH_KEYWORDS, NULL),
+    PL_PYTHON_COMMAND(MenuItemSimple, METH_VARARGS | METH_KEYWORDS, NULL),
 
     // imgui input widgets
     PL_PYTHON_COMMAND(InputText, METH_VARARGS | METH_KEYWORDS, NULL),
@@ -3522,6 +3970,9 @@ static PyMethodDef gatImGuiCommands[] =
     PL_PYTHON_COMMAND(InputInt4, METH_VARARGS | METH_KEYWORDS, NULL),
     PL_PYTHON_COMMAND(InputDouble, METH_VARARGS | METH_KEYWORDS, NULL),
     
+    // image widgets
+    PL_PYTHON_COMMAND(Image, METH_VARARGS | METH_KEYWORDS, NULL),
+
     // imgui text widgets
     PL_PYTHON_COMMAND(TextUnformatted, METH_VARARGS | METH_KEYWORDS, NULL),
     PL_PYTHON_COMMAND(Text, METH_VARARGS | METH_KEYWORDS, NULL),
@@ -3661,6 +4112,7 @@ static PyMethodDef gatplDearImGuiICommands[] =
     {"new_frame", (PyCFunction)dear_imgui_new_frame, METH_VARARGS | METH_KEYWORDS | METH_STATIC, NULL},
     {"render", (PyCFunction)dear_imgui_render, METH_VARARGS | METH_KEYWORDS | METH_STATIC, NULL},
     {"cleanup", (PyCFunction)dear_imgui_cleanup, METH_VARARGS | METH_KEYWORDS | METH_STATIC, NULL},
+    {"get_texture_id_from_bindgroup", (PyCFunction)dear_imgui_get_texture_id_from_bindgroup, METH_VARARGS | METH_KEYWORDS | METH_STATIC, NULL},
     {NULL, NULL, 0, NULL}
 };
 
@@ -3998,119 +4450,4 @@ PyInit_imgui(void)
     PyModule_AddObject(ptModule, "plDearImGuiI", gptplDearImGuiIType);
 
     return ptModule;
-}
-
-bool
-pl_parse(const char* formatstring, const char** keywords, PyObject* args, PyObject* kwargs, const char* message, ...)
-{
-
-    bool check = true;
-
-    va_list arguments;
-    va_start(arguments, message);
-    if (!PyArg_VaParseTupleAndKeywords(args, kwargs, formatstring, (char * const *)keywords, arguments))
-    {
-        check = false;
-    }
-
-    va_end(arguments);
-
-    // if (!check)
-    //     mvThrowPythonError(mvErrorCode::mvNone, "Error parsing Dear PyGui command: " + std::string(message));
-
-    return check;
-}
-
-static ImVec2
-pl__get_vec2_from_python(PyObject* ptValue)
-{
-    ImVec2 tResult = {};
-
-    if (PyTuple_Check(ptValue))
-    {
-        Py_ssize_t pySize = PyTuple_Size(ptValue);
-        pySize = pl_min(pySize, 2);
-        for (Py_ssize_t i = 0; i < pySize; ++i)
-        {
-            tResult[i] = (float)PyFloat_AsDouble(PyTuple_GetItem(ptValue, i));
-        }
-    }
-
-    else if (PyList_Check(ptValue))
-    {
-        Py_ssize_t pySize = PyList_Size(ptValue);
-        pySize = pl_min(pySize, 2);
-        for (Py_ssize_t i = 0; i < pySize; ++i)
-        {
-            tResult[i] = (float)PyFloat_AsDouble(PyList_GetItem(ptValue, i));
-        }
-    }
-
-    // else if (PyObject_CheckBuffer(ptValue))
-    // {
-    //     Py_buffer buffer_info;
-
-    //     if (!PyObject_GetBuffer(ptValue, &buffer_info,
-    //                             PyBUF_CONTIG_RO | PyBUF_FORMAT))
-    //     {
-
-    //         auto BufferViewer = BufferViewFunctionsFloat(buffer_info);
-    //         items.reserve(buffer_info.len / buffer_info.itemsize);
-
-    //         for (Py_ssize_t i = 0; i < buffer_info.len / buffer_info.itemsize; ++i)
-    //         {
-    //             items.emplace_back(BufferViewer(buffer_info, i));
-    //         }
-    //     }
-    //     PyBuffer_Release(&buffer_info);
-    // }
-    // else
-    //     mvThrowPythonError(mvErrorCode::mvWrongType, "Python value error. Must be List[float].");
-
-    return tResult;
-}
-
-static ImVec4
-pl__get_vec4_from_python(PyObject* ptValue)
-{
-    ImVec4 tResult = {};
-
-    if (PyTuple_Check(ptValue))
-    {
-        tResult.x = (float)PyFloat_AsDouble(PyTuple_GetItem(ptValue, 0));
-        tResult.y = (float)PyFloat_AsDouble(PyTuple_GetItem(ptValue, 1));
-        tResult.z = (float)PyFloat_AsDouble(PyTuple_GetItem(ptValue, 2));
-        tResult.w = (float)PyFloat_AsDouble(PyTuple_GetItem(ptValue, 3));
-    }
-
-    else if (PyList_Check(ptValue))
-    {
-        tResult.x = (float)PyFloat_AsDouble(PyList_GetItem(ptValue, 0));
-        tResult.y = (float)PyFloat_AsDouble(PyList_GetItem(ptValue, 1));
-        tResult.z = (float)PyFloat_AsDouble(PyList_GetItem(ptValue, 2));
-        tResult.w = (float)PyFloat_AsDouble(PyList_GetItem(ptValue, 3));
-    }
-
-    // else if (PyObject_CheckBuffer(ptValue))
-    // {
-    //     Py_buffer buffer_info;
-
-    //     if (!PyObject_GetBuffer(ptValue, &buffer_info,
-    //                             PyBUF_CONTIG_RO | PyBUF_FORMAT))
-    //     {
-
-    //         auto BufferViewer = BufferViewFunctionsFloat(buffer_info);
-    //         items.reserve(buffer_info.len / buffer_info.itemsize);
-
-    //         for (Py_ssize_t i = 0; i < buffer_info.len / buffer_info.itemsize; ++i)
-    //         {
-    //             items.emplace_back(BufferViewer(buffer_info, i));
-    //         }
-    //     }
-    //     PyBuffer_Release(&buffer_info);
-    // }
-    // else
-    //     mvThrowPythonError(mvErrorCode::mvWrongType, "Python value error. Must be List[float].");
-
-    return tResult;
 }

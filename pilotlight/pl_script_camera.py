@@ -79,4 +79,4 @@ def pl_script_run(ptCamera: plCamera):
             ptCamera.tPosition = plVec3(xChange, ptCamera.tPosition.y, zChange)
             plIOI.reset_mouse_drag_delta(plMouseButton.PL_MOUSE_BUTTON_LEFT)
 
-        plCameraI.update(ptCamera)
+    plCameraI.update(ptCamera)

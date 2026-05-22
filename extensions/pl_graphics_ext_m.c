@@ -19,59 +19,6 @@ Index of this file:
 // [SECTION] implementations
 //-----------------------------------------------------------------------------
 
-static PyObject*
-pl_swapchain_info_get_tSampleCount(pyplSwapchainInfo* self, void *closure)
-{
-    return PyLong_FromInt32(self->tInfo.tSampleCount);
-}
-
-static PyGetSetDef gatSwapchainInfoProps[] =
-{
-    {"tSampleCount", (getter)pl_swapchain_info_get_tSampleCount, (setter)NULL, "Property: tSampleCount"},
-    {NULL, NULL, 0, NULL}
-};
-
-static int
-pl_swapchain_info_init(PyObject* self, PyObject* args, PyObject* kwargs)
-{
-    pyplSwapchainInfo* vec = (pyplSwapchainInfo*)self;
-
-    static const char* kwlist[] = {"tSampleCount", NULL};
-
-    if(!PyArg_ParseTupleAndKeywords(args, kwargs, "|i", (char**)kwlist, &vec->tInfo.tSampleCount))
-        return -1;
-
-    return 0;
-}
-
-static PyObject*
-pl_swapchain_info_new(plSwapchainInfo tInfo)
-{
-    PyObject* args = Py_BuildValue("(i)", tInfo.tSampleCount);
-    if(!args)
-        return NULL;
-
-    PyObject* obj = PyObject_CallObject(gptSwapchainInfoType, args);
-    Py_DECREF(args);
-    return obj;
-}
-
-static PyType_Slot pl_swapchain_info_slots[] = {
-    {Py_tp_init, (void*)pl_swapchain_info_init},
-    {Py_tp_getset, (void*)gatSwapchainInfoProps},
-    // {Py_tp_methods, (void*)gatIOCommands},
-    {0, 0}
-};
-
-static PyType_Spec pl_swapchain_info_spec = {
-    "pilotlight.plSwapchainInfo",
-    sizeof(pyplSwapchainInfo),
-    0,
-    Py_TPFLAGS_DEFAULT,
-    pl_swapchain_info_slots
-};
-
-
 PyObject*
 graphics_flush_device(PyObject* self, PyObject* args, PyObject* kwargs)
 {
@@ -83,7 +30,7 @@ graphics_flush_device(PyObject* self, PyObject* args, PyObject* kwargs)
         NULL,
     };
 
-	if (!pl_parse("O", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+	if (!pl_parse_args("O", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
         &ptPythonDevice))
 		return NULL;
 

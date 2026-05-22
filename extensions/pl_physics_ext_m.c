@@ -38,7 +38,7 @@ physics_update(PyObject* self, PyObject* args)
 
     float fDeltaTime = 0.0f;
     PyObject* ptPyLibrary = NULL;
-	if (!pl_parse("fO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+	if (!pl_parse_args("fO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
         &fDeltaTime, &ptPyLibrary))
 		return NULL;
 

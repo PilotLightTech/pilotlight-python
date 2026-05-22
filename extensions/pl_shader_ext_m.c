@@ -81,7 +81,7 @@ shader_load_glsl(PyObject* self, PyObject* args, PyObject* kwargs)
     const char* pcEntryFunc = NULL;
     const char* pcFile = NULL;
     PyObject* ptOptions = NULL;
-	if (!pl_parse("ss|sO", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+	if (!pl_parse_args("ss|sO", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
         &pcShader, &pcEntryFunc, &pcFile, &ptOptions))
 		return NULL;
 
@@ -139,7 +139,7 @@ shader_compile_glsl(PyObject* self, PyObject* args, PyObject* kwargs)
     const char* pcShader = NULL;
     const char* pcEntryFunc = NULL;
     PyObject* ptOptions = NULL;
-	if (!pl_parse("ss|O", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+	if (!pl_parse_args("ss|O", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
         &pcShader, &pcEntryFunc, &ptOptions))
 		return NULL;
 
@@ -195,7 +195,7 @@ shader_write_to_disk(PyObject* self, PyObject* args)
 
     const char* pcShader = NULL;
     PyObject* ptModule = NULL;
-	if (!pl_parse("sO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+	if (!pl_parse_args("sO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
         &pcShader, &ptModule))
 		return NULL;
 

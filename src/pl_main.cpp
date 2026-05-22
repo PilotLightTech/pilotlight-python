@@ -18,7 +18,6 @@ Index of this file:
 // [SECTION] includes
 //-----------------------------------------------------------------------------
 
-#define PL_EXPERIMENTAL
 #ifdef _WIN32
     const char* gpcLibraryExtension = "dll";
     const char* gpcLibraryPrefix    = "";

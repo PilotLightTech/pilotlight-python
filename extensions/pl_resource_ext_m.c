@@ -53,7 +53,7 @@ resource_initialize(PyObject* self, PyObject* args)
 
     PyObject* pyptInit = NULL;
 
-	if (!pl_parse("O", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+	if (!pl_parse_args("O", (const char**)apcKeywords, args, NULL, __FUNCTION__,
         &pyptInit))
 		return NULL;
 
@@ -94,7 +94,7 @@ resource_load(PyObject* self, PyObject* args)
     const char* pcFile = NULL;
     plResourceLoadFlags tFlags = PL_RESOURCE_LOAD_FLAG_NONE;
 
-	if (!pl_parse("si", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+	if (!pl_parse_args("si", (const char**)apcKeywords, args, NULL, __FUNCTION__,
         &pcFile, &tFlags))
 		return NULL;
 
@@ -113,7 +113,7 @@ resource_get_texture(PyObject* self, PyObject* args)
 
     plResourceHandle tHandle = {0};
 
-	if (!pl_parse("K", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+	if (!pl_parse_args("K", (const char**)apcKeywords, args, NULL, __FUNCTION__,
         &tHandle.ulData))
 		return NULL;
 
