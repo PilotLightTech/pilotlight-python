@@ -25,7 +25,7 @@ class plDearImGuiI:
         ...
 
     @staticmethod
-    def get_texture_id_from_bindgroup(texture):
+    def get_texture_id_from_bindgroup(device, texture):
         ...
 
 class ImGui:

@@ -42,9 +42,9 @@ def pl_script_run(ptCamera: plCamera):
             if plIOI.is_key_down(plKey.PL_KEY_S):
                 plCameraI.translate_local(ptCamera,  [0.0,  0.0, -static.fCameraTravelSpeed* io.fDeltaTime])
             if plIOI.is_key_down(plKey.PL_KEY_A):
-                plCameraI.translate_local(ptCamera, [-static.fCameraTravelSpeed * io.fDeltaTime,  0.0,  0.0])
-            if plIOI.is_key_down(plKey.PL_KEY_D):
                 plCameraI.translate_local(ptCamera, [static.fCameraTravelSpeed * io.fDeltaTime,  0.0,  0.0])
+            if plIOI.is_key_down(plKey.PL_KEY_D):
+                plCameraI.translate_local(ptCamera, [-static.fCameraTravelSpeed * io.fDeltaTime,  0.0,  0.0])
 
             # world space
             if plIOI.is_key_down(plKey.PL_KEY_Q):
@@ -62,7 +62,7 @@ def pl_script_run(ptCamera: plCamera):
 
         if bLMB and plIOI.is_mouse_dragging(plMouseButton.PL_MOUSE_BUTTON_RIGHT, 1.0):
             tMouseDelta = plIOI.get_mouse_drag_delta(plMouseButton.PL_MOUSE_BUTTON_RIGHT, 1.0)
-            plCameraI.translate_local(ptCamera,  [tMouseDelta.x * static.fCameraTravelSpeed * io.fDeltaTime, -tMouseDelta.y * static.fCameraTravelSpeed * io.fDeltaTime, 0.0])
+            plCameraI.translate_local(ptCamera,  [-tMouseDelta.x * static.fCameraTravelSpeed * io.fDeltaTime, -tMouseDelta.y * static.fCameraTravelSpeed * io.fDeltaTime, 0.0])
             plIOI.reset_mouse_drag_delta(plMouseButton.PL_MOUSE_BUTTON_RIGHT)
             plIOI.reset_mouse_drag_delta(plMouseButton.PL_MOUSE_BUTTON_LEFT)
 
