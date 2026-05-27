@@ -67,17 +67,44 @@ renderer_prepare_scene(PyObject* self, PyObject* args)
 {
     static const char* apcKeywords[] = {
         "scene",
+        "cameras",
         NULL,
     };
 
     PyObject* ptPyScene = NULL;
-	if (!pl_parse_args("O", (const char**)apcKeywords, args, NULL, __FUNCTION__,
-        &ptPyScene))
+    PyObject* ptPyCameras = NULL;
+	if (!pl_parse_args("OO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+        &ptPyScene, &ptPyCameras))
 		return NULL;
 
     plScene* ptScene = PyCapsule_GetPointer(ptPyScene, "plScene");
 
-    gptRenderer->prepare_scene(ptScene);
+    const plCamera* atCameras[4] = {0};
+    uint32_t uCameraCount = 0;
+
+    if (PyTuple_Check(ptPyCameras))
+    {
+        Py_ssize_t pySize = PyTuple_Size(ptPyCameras);
+        for (Py_ssize_t i = 0; i < pySize; ++i)
+        {
+            PyObject* ptPyCamera = PyTuple_GetItem(ptPyCameras, i);
+            atCameras[i] = ((pyplCamera*)ptPyCamera)->ptCamera;
+            uCameraCount++;
+        }
+    }
+
+    else if (PyList_Check(ptPyCameras))
+    {
+        Py_ssize_t pySize = PyList_Size(ptPyCameras);
+        for (Py_ssize_t i = 0; i < pySize; ++i)
+        {
+            PyObject* ptPyCamera = PyList_GetItem(ptPyCameras, i);
+            atCameras[i] = ((pyplCamera*)ptPyCamera)->ptCamera;
+            uCameraCount++;
+        }
+    }
+
+    gptRenderer->prepare_scene(ptScene, atCameras, uCameraCount);
     Py_RETURN_NONE;
 }
 
@@ -110,7 +137,7 @@ renderer_prepare_view(PyObject* self, PyObject* args)
 {
     static const char* apcKeywords[] = {
         "view",
-        "camera",
+        "cameras",
         NULL,
     };
 

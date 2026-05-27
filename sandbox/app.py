@@ -189,7 +189,7 @@ class App:
         ImGui.End()
 
         camera = plEcsI.get_component(self.ptComponentLibrary, plCameraEcsI.get_ecs_type_key(), self.tMainCamera)
-        plRendererI.prepare_scene(self.ptScene)
+        plRendererI.prepare_scene(self.ptScene, [camera])
         plRendererI.prepare_view(self.ptView, camera)
         plRendererI.render_view(self.ptView, camera)
 

@@ -1022,7 +1022,7 @@ class plRendererI:
         ...
 
     @staticmethod
-    def prepare_scene(scene: plScene):
+    def prepare_scene(scene: plScene, cameras: List[plCamera]):
         ...
 
     @staticmethod
