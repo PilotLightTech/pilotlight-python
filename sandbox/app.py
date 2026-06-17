@@ -49,12 +49,14 @@ class App:
         shader_options.pcCacheOutputDirectory = "/shader-temp/"
         shader_options.apcDirectories = ["/shaders/"]
         shader_options.apcIncludeDirectories = ["/shaders/"]
-        shader_options.tFlags = plShaderFlags.PL_SHADER_FLAGS_AUTO_OUTPUT | plShaderFlags.PL_SHADER_FLAGS_INCLUDE_DEBUG | plShaderFlags.PL_SHADER_FLAGS_ALWAYS_COMPILE
+        shader_options.eFlags = plShaderFlags.PL_SHADER_FLAGS_AUTO_OUTPUT | plShaderFlags.PL_SHADER_FLAGS_INCLUDE_DEBUG | plShaderFlags.PL_SHADER_FLAGS_ALWAYS_COMPILE
         plShaderI.initialize(shader_options)
 
         plStarterI.finalize()
 
-        plDearImGuiI.initialize(plStarterI.get_device(), plStarterI.get_swapchain(), plStarterI.get_render_pass())
+        tRenderAttachmentInfo = plRenderAttachmentInfo()
+        plStarterI.get_render_attachment_info(tRenderAttachmentInfo)
+        plDearImGuiI.initialize(plStarterI.get_device(), plStarterI.get_swapchain(), tRenderAttachmentInfo)
 
         self.counter = plStatsI.get_counter("python counter")
 
@@ -118,7 +120,7 @@ class App:
             plRendererI.resize_view(self.ptView, io.tMainViewportSize)
             self.bResize = False
 
-        plDearImGuiI.new_frame(plStarterI.get_device(), plStarterI.get_render_pass())
+        plDearImGuiI.new_frame(plStarterI.get_device())
 
         if self.show_imgui_demo:
             self.show_imgui_demo = ImGui.ShowDemoWindow(self.show_imgui_demo)
@@ -204,12 +206,12 @@ class App:
             ImGui.Image(self.texture_bg2, [500, 500])
             ImGui.End()
 
-        render_encoder = plStarterI.begin_main_pass()
+        cmdBuffer = plStarterI.begin_main_pass()
         
-        plDrawI.submit_2d_drawlist(self.drawlist, render_encoder, io.tMainViewportSize.x, io.tMainViewportSize.y, plGraphicsI.get_swapchain_info(plStarterI.get_swapchain()).tSampleCount)
-        plDearImGuiI.render(render_encoder)
-
-        
+        tRenderAttachmentInfo = plRenderAttachmentInfo()
+        plStarterI.get_render_attachment_info(tRenderAttachmentInfo)
+        plDrawI.submit_2d_drawlist(self.drawlist, cmdBuffer, io.tMainViewportSize.x, io.tMainViewportSize.y, plGraphicsI.get_swapchain_info(plStarterI.get_swapchain()).eSampleCount, tRenderAttachmentInfo)
+        plDearImGuiI.render(cmdBuffer)
 
         plStarterI.end_main_pass()
 

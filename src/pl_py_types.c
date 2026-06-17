@@ -634,7 +634,7 @@ static PyType_Spec pl_io_spec = {
 static PyObject*
 pl_swapchain_info_get_tSampleCount(pyplSwapchainInfo* self, void *closure)
 {
-    return PyLong_FromInt32(self->tInfo.tSampleCount);
+    return PyLong_FromInt32(self->tInfo.eSampleCount);
 }
 
 static int
@@ -642,9 +642,9 @@ pl_swapchain_info_init(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     pyplSwapchainInfo* vec = (pyplSwapchainInfo*)self;
 
-    static const char* kwlist[] = {"tSampleCount", NULL};
+    static const char* kwlist[] = {"eSampleCount", NULL};
 
-    if(!PyArg_ParseTupleAndKeywords(args, kwargs, "|i", (char**)kwlist, &vec->tInfo.tSampleCount))
+    if(!PyArg_ParseTupleAndKeywords(args, kwargs, "|i", (char**)kwlist, &vec->tInfo.eSampleCount))
         return -1;
 
     return 0;
@@ -653,7 +653,7 @@ pl_swapchain_info_init(PyObject* self, PyObject* args, PyObject* kwargs)
 static PyObject*
 pl_swapchain_info_new(plSwapchainInfo tInfo)
 {
-    PyObject* args = Py_BuildValue("(i)", tInfo.tSampleCount);
+    PyObject* args = Py_BuildValue("(i)", tInfo.eSampleCount);
     if(!args)
         return NULL;
 
@@ -664,7 +664,7 @@ pl_swapchain_info_new(plSwapchainInfo tInfo)
 
 static PyGetSetDef gatSwapchainInfoProps[] =
 {
-    {"tSampleCount", (getter)pl_swapchain_info_get_tSampleCount, (setter)NULL, "Property: tSampleCount"},
+    {"eSampleCount", (getter)pl_swapchain_info_get_tSampleCount, (setter)NULL, "Property: eSampleCount"},
     {NULL, NULL, 0, NULL}
 };
 

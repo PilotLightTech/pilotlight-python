@@ -6,6 +6,9 @@ import pilotlight.imgui as imgui
 # [SECTION] enums
 ########################################################################################################################
 
+class plFormat(IntEnum):
+    PL_FORMAT_UNKNOWN=0
+
 class plCameraProjectionType(IntEnum):
     PL_CAMERA_PROJECTION_TYPE_PERSPECTIVE=pl.PL_CAMERA_PROJECTION_TYPE_PERSPECTIVE
     PL_CAMERA_PROJECTION_TYPE_ORTHOGRAPHIC=pl.PL_CAMERA_PROJECTION_TYPE_ORTHOGRAPHIC

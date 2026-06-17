@@ -180,7 +180,7 @@ class plIO:
     tMainFramebufferScale: plVec2
 
 class plSwapchainInfo:
-    tSampleCount: int
+    eSampleCount: int
 
 type plVec2Like = plVec2 | Tuple[float] | List[float]
 type plVec2ListLike = Tuple[plVec2Like] | List[plVec2Like]
@@ -453,7 +453,7 @@ class plDrawI:
     ####################################################################################################################
 
     @staticmethod
-    def submit_2d_drawlist(drawlist: plDrawList2D, encoder: plRenderEncoder, width: float, height: float, sampleCount: int):
+    def submit_2d_drawlist(drawlist: plDrawList2D, commandBuffer: plCommandBuffer, width: float, height: float, sampleCount: int, attachmentInfo: plRenderAttachmentInfo):
         ...
 
     @staticmethod
@@ -587,7 +587,7 @@ class plDrawI:
         ...
 
     @staticmethod
-    def submit_3d_drawlist(drawlist: plDrawList3D, encoder: plRenderEncoder, width: float, height: float, mvp, flags, sampleCount: int):
+    def submit_3d_drawlist(drawlist: plDrawList3D, commandBuffer: plCommandBuffer, width: float, height: float, mvp, flags, sampleCount: int, attachmentInfo: plRenderAttachmentInfo):
         ...
 
     @staticmethod
@@ -822,11 +822,11 @@ class plStarterI:
         ...
 
     @staticmethod
-    def get_render_pass() -> int: # TODO: figure out handles
+    def get_render_attachment_info(infoOut: plRenderAttachmentInfo):
         ...
 
     @staticmethod
-    def begin_main_pass() -> plRenderEncoder:
+    def begin_main_pass() -> plCommandBuffer:
         ...
 
     @staticmethod

@@ -1118,116 +1118,120 @@ pl__python_shutdown(void)
 extern "C" int
 pl__python_pre_update(void)
 {
-    glfwPollEvents();
-    pl__garbage_collect_data_reg();
-
-    // update time step
-    #ifdef _WIN32
-        INT64 ilCurrentTime = 0;
-        QueryPerformanceCounter((LARGE_INTEGER*)&ilCurrentTime);
-        gptIOCtx->fDeltaTime = (float)(ilCurrentTime - ilTime) / ilTicksPerSecond;
-        ilTime = ilCurrentTime;
-    #elif defined(__APPLE__)
-        if(gtTime == 0.0)
-            gtTime = pl__get_absolute_time();
-        double dCurrentTime = pl__get_absolute_time();
-        gptIOCtx->fDeltaTime = (float)(dCurrentTime - gtTime);
-        gtTime = dCurrentTime;
-    #else // linux
-        const double dCurrentTime = pl__get_linux_absolute_time();
-        gptIOCtx->fDeltaTime = (float)(dCurrentTime - gdTime);
-        gdTime = dCurrentTime;
+    #if defined(__APPLE__)
+        @autoreleasepool
     #endif
-
-    // start imgui glfw frame
-    ImGui_ImplGlfw_NewFrame();
-
-    // update mouse cursor
-    plMouseCursor tCursor0 = gptIOCtx->tNextCursor;
-    if(tCursor0 != PL_MOUSE_CURSOR_ARROW)
     {
-        glfwSetCursor(gptGlfwWindow, atMouseCursors[tCursor0] ? atMouseCursors[tCursor0] : atMouseCursors[PL_MOUSE_CURSOR_ARROW]);
-        glfwSetInputMode(gptGlfwWindow, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-    }
-    gptIOCtx->tNextCursor = PL_MOUSE_CURSOR_ARROW;
-    gptIOCtx->bCursorChanged = false;
+        glfwPollEvents();
+        pl__garbage_collect_data_reg();
 
-    // handle retina displays
-    #ifdef __APPLE__
-
-        float fCurrentScale = nswin.screen.backingScaleFactor;
-        layer.contentsScale = fCurrentScale;
-
-        int width, height;
-        glfwGetFramebufferSize(gptGlfwWindow, &width, &height);
-        layer.drawableSize = CGSizeMake(width, height);
-        gptIOCtx->pBackendPlatformData = layer;
-
-        // Setup display size (every frame to accommodate for window resizing)
-        int w, h;
-        glfwGetWindowSize(gptGlfwWindow, &w, &h);
-
-        if (w > 0 && h > 0)
-        {
-            bool bResize = false;
-
-            if(gptIOCtx->bViewportSizeChanged)
-                bResize = true;
-
-            if(w != gptIOCtx->tMainViewportSize.x || h != gptIOCtx->tMainViewportSize.y)
-                bResize = true;
-            else if(fCurrentScale != gptIOCtx->tMainFramebufferScale.x || fCurrentScale != gptIOCtx->tMainFramebufferScale.y )
-                bResize = true;
-
-            if(bResize)
-            {
-                gptIOCtx->tMainViewportSize.x = w;
-                gptIOCtx->tMainViewportSize.y = h;
-                gptIOCtx->tMainFramebufferScale.x = fCurrentScale;
-                gptIOCtx->tMainFramebufferScale.y = fCurrentScale;
-                return 1;
-            }
-        }
-    #else
-
-        int width, height;
-        glfwGetFramebufferSize(gptGlfwWindow, &width, &height);
-
-        // Setup display size (every frame to accommodate for window resizing)
-        int w, h;
-        glfwGetWindowSize(gptGlfwWindow, &w, &h);
-
-        if (w > 0 && h > 0)
-        {
-            bool bResize = false;
-
-            if(gptIOCtx->bViewportSizeChanged)
-                bResize = true;
-
-            if((float)w != gptIOCtx->tMainViewportSize.x || (float)h != gptIOCtx->tMainViewportSize.y)
-                bResize = true;
-
-            if(bResize)
-            {
-                gptIOCtx->tMainViewportSize.x = (float)w;
-                gptIOCtx->tMainViewportSize.y = (float)h;
-                gptIOCtx->tMainFramebufferScale.x = 1.0f;
-                gptIOCtx->tMainFramebufferScale.y = 1.0f;
-                return 1;
-
-            }
-        }
-    #endif
-
-    if (glfwGetWindowAttrib(gptGlfwWindow, GLFW_ICONIFIED) != 0)
-    {
+        // update time step
         #ifdef _WIN32
-            Sleep(10);
-        #else
-            usleep(10 * 1000);
+            INT64 ilCurrentTime = 0;
+            QueryPerformanceCounter((LARGE_INTEGER*)&ilCurrentTime);
+            gptIOCtx->fDeltaTime = (float)(ilCurrentTime - ilTime) / ilTicksPerSecond;
+            ilTime = ilCurrentTime;
+        #elif defined(__APPLE__)
+            if(gtTime == 0.0)
+                gtTime = pl__get_absolute_time();
+            double dCurrentTime = pl__get_absolute_time();
+            gptIOCtx->fDeltaTime = (float)(dCurrentTime - gtTime);
+            gtTime = dCurrentTime;
+        #else // linux
+            const double dCurrentTime = pl__get_linux_absolute_time();
+            gptIOCtx->fDeltaTime = (float)(dCurrentTime - gdTime);
+            gdTime = dCurrentTime;
         #endif
-    }
 
+        // start imgui glfw frame
+        ImGui_ImplGlfw_NewFrame();
+
+        // update mouse cursor
+        plMouseCursor tCursor0 = gptIOCtx->tNextCursor;
+        if(tCursor0 != PL_MOUSE_CURSOR_ARROW)
+        {
+            glfwSetCursor(gptGlfwWindow, atMouseCursors[tCursor0] ? atMouseCursors[tCursor0] : atMouseCursors[PL_MOUSE_CURSOR_ARROW]);
+            glfwSetInputMode(gptGlfwWindow, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+        }
+        gptIOCtx->tNextCursor = PL_MOUSE_CURSOR_ARROW;
+        gptIOCtx->bCursorChanged = false;
+
+        // handle retina displays
+        #ifdef __APPLE__
+
+            float fCurrentScale = nswin.screen.backingScaleFactor;
+            layer.contentsScale = fCurrentScale;
+
+            int width, height;
+            glfwGetFramebufferSize(gptGlfwWindow, &width, &height);
+            layer.drawableSize = CGSizeMake(width, height);
+            gptIOCtx->pBackendPlatformData = layer;
+
+            // Setup display size (every frame to accommodate for window resizing)
+            int w, h;
+            glfwGetWindowSize(gptGlfwWindow, &w, &h);
+
+            if (w > 0 && h > 0)
+            {
+                bool bResize = false;
+
+                if(gptIOCtx->bViewportSizeChanged)
+                    bResize = true;
+
+                if(w != gptIOCtx->tMainViewportSize.x || h != gptIOCtx->tMainViewportSize.y)
+                    bResize = true;
+                else if(fCurrentScale != gptIOCtx->tMainFramebufferScale.x || fCurrentScale != gptIOCtx->tMainFramebufferScale.y )
+                    bResize = true;
+
+                if(bResize)
+                {
+                    gptIOCtx->tMainViewportSize.x = w;
+                    gptIOCtx->tMainViewportSize.y = h;
+                    gptIOCtx->tMainFramebufferScale.x = fCurrentScale;
+                    gptIOCtx->tMainFramebufferScale.y = fCurrentScale;
+                    return 1;
+                }
+            }
+        #else
+
+            int width, height;
+            glfwGetFramebufferSize(gptGlfwWindow, &width, &height);
+
+            // Setup display size (every frame to accommodate for window resizing)
+            int w, h;
+            glfwGetWindowSize(gptGlfwWindow, &w, &h);
+
+            if (w > 0 && h > 0)
+            {
+                bool bResize = false;
+
+                if(gptIOCtx->bViewportSizeChanged)
+                    bResize = true;
+
+                if((float)w != gptIOCtx->tMainViewportSize.x || (float)h != gptIOCtx->tMainViewportSize.y)
+                    bResize = true;
+
+                if(bResize)
+                {
+                    gptIOCtx->tMainViewportSize.x = (float)w;
+                    gptIOCtx->tMainViewportSize.y = (float)h;
+                    gptIOCtx->tMainFramebufferScale.x = 1.0f;
+                    gptIOCtx->tMainFramebufferScale.y = 1.0f;
+                    return 1;
+
+                }
+            }
+        #endif
+
+        if (glfwGetWindowAttrib(gptGlfwWindow, GLFW_ICONIFIED) != 0)
+        {
+            #ifdef _WIN32
+                Sleep(10);
+            #else
+                usleep(10 * 1000);
+            #endif
+        }
+    }
     return 0;
 }
 

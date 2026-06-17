@@ -90,7 +90,7 @@ class App:
         shader_options.pcCacheOutputDirectory = "/shader-temp/"
         shader_options.apcDirectories = ["/shaders/"]
         shader_options.apcIncludeDirectories = ["/shaders/"]
-        shader_options.tFlags = (
+        shader_options.eFlags = (
             plShaderFlags.PL_SHADER_FLAGS_AUTO_OUTPUT
             | plShaderFlags.PL_SHADER_FLAGS_INCLUDE_DEBUG
             | plShaderFlags.PL_SHADER_FLAGS_ALWAYS_COMPILE
@@ -472,7 +472,7 @@ class App:
         self.draw_scene()
 
         # Main render pass.
-        encoder = plStarterI.begin_main_pass()
+        cmdBuffer = plStarterI.begin_main_pass()
 
         tMainViewportSize = ptIO.tMainViewportSize
 
@@ -480,14 +480,17 @@ class App:
         # mvp = self.camera.tViewProjMat
         # mvp = self.camera.tProjMat
 
+        tRenderAttachmentInfo = plRenderAttachmentInfo()
+        plStarterI.get_render_attachment_info(tRenderAttachmentInfo)
         plDrawI.submit_3d_drawlist(
             self.drawlist,
-            encoder,
+            cmdBuffer,
             tMainViewportSize.x,
             tMainViewportSize.y,
             mvp,
             plDrawFlag.PL_DRAW_FLAG_DEPTH_TEST | plDrawFlag.PL_DRAW_FLAG_DEPTH_WRITE,
-            plGraphicsI.get_swapchain_info(plStarterI.get_swapchain()).tSampleCount
+            plGraphicsI.get_swapchain_info(plStarterI.get_swapchain()).eSampleCount,
+            tRenderAttachmentInfo
         )
 
         plStarterI.end_main_pass()

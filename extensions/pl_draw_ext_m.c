@@ -229,23 +229,45 @@ draw_submit_2d_drawlist(PyObject* self, PyObject* args)
     float fWidth = 0.0f;
     float fHeight = 0.0f;
     int iSampleCount = 1;
+    PyObject* ptPythonAttachmentInfo = NULL;
 
     static const char* apcKeywords[] = {
         "drawlist",
-        "encoder",
+        "commandBuffer",
         "width",
         "height",
         "sampleCount",
+        "attachmentInfo",
         NULL,
     };
 
-	if (!pl_parse_args("OOffi", (const char**)apcKeywords, args, NULL, __FUNCTION__,
-        &ptPythonDrawlist, &ptPythonEncoder, &fWidth, &fHeight, &iSampleCount))
+	if (!pl_parse_args("OOffiO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+        &ptPythonDrawlist, &ptPythonEncoder, &fWidth, &fHeight, &iSampleCount, &ptPythonAttachmentInfo))
 		return NULL;
 
     plDrawList2D* ptDrawlist = PyCapsule_GetPointer(ptPythonDrawlist, "plDrawList2D");
-    plRenderEncoder* ptEncoder = PyCapsule_GetPointer(ptPythonEncoder, "plRenderEncoder");
-    gptDraw->submit_2d_drawlist(ptDrawlist, ptEncoder, fWidth, fHeight, (uint32_t)iSampleCount);
+    plCommandBuffer* ptCmdBuffer = PyCapsule_GetPointer(ptPythonEncoder, "plCommandBuffer");
+
+    plRenderAttachmentInfo tInfo = {0};
+    PyObject* ptPythonAttachmentDepth = PyObject_GetAttrString(ptPythonAttachmentInfo, "eDepthFormat");
+    PyLong_AsInt32(ptPythonAttachmentDepth, &tInfo.eDepthFormat);
+    Py_DECREF(ptPythonAttachmentDepth);
+
+    ptPythonAttachmentDepth = PyObject_GetAttrString(ptPythonAttachmentInfo, "eStencilFormat");
+    PyLong_AsInt32(ptPythonAttachmentDepth, &tInfo.eStencilFormat);
+    Py_DECREF(ptPythonAttachmentDepth);
+
+    ptPythonAttachmentDepth = PyObject_GetAttrString(ptPythonAttachmentInfo, "aeColorFormats");
+    Py_ssize_t pySize = PyList_Size(ptPythonAttachmentDepth);
+    for (Py_ssize_t i = 0; i < pySize; ++i)
+    {
+        PyObject* ptColor = PyList_GetItem(ptPythonAttachmentDepth, i);
+        PyLong_AsInt32(ptColor, &tInfo.aeColorFormats[i]);
+    }
+    Py_DECREF(ptPythonAttachmentDepth);
+
+
+    gptDraw->submit_2d_drawlist(ptDrawlist, ptCmdBuffer, fWidth, fHeight, (uint32_t)iSampleCount, &tInfo);
     Py_RETURN_NONE;
 }
 
@@ -259,26 +281,49 @@ draw_submit_3d_drawlist(PyObject* self, PyObject* args)
     PyObject* ptPythonMVP = NULL;
     int iFlags = 0;
     int iSampleCount = 1;
+    PyObject* ptPythonAttachmentInfo = NULL;
 
     static const char* apcKeywords[] = {
         "drawlist",
-        "encoder",
+        "commandBuffer",
         "width",
         "height",
         "mvp",
         "flags",
         "sampleCount",
+        "attachmentInfo",
         NULL,
     };
 
-	if (!pl_parse_args("OOffOii", (const char**)apcKeywords, args, NULL, __FUNCTION__,
-        &ptPythonDrawlist, &ptPythonEncoder, &fWidth, &fHeight, &ptPythonMVP, &iFlags, &iSampleCount))
+	if (!pl_parse_args("OOffOiiO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+        &ptPythonDrawlist, &ptPythonEncoder, &fWidth, &fHeight, &ptPythonMVP, &iFlags, &iSampleCount, &ptPythonAttachmentInfo))
 		return NULL;
 
+
+
     plDrawList3D* ptDrawlist = PyCapsule_GetPointer(ptPythonDrawlist, "plDrawList3D");
-    plRenderEncoder* ptEncoder = PyCapsule_GetPointer(ptPythonEncoder, "plRenderEncoder");
+    plCommandBuffer* ptCmdBuffer = PyCapsule_GetPointer(ptPythonEncoder, "plCommandBuffer");
+
+    plRenderAttachmentInfo tInfo = {0};
+    PyObject* ptPythonAttachmentDepth = PyObject_GetAttrString(ptPythonAttachmentInfo, "eDepthFormat");
+    PyLong_AsInt32(ptPythonAttachmentDepth, &tInfo.eDepthFormat);
+    Py_DECREF(ptPythonAttachmentDepth);
+
+    ptPythonAttachmentDepth = PyObject_GetAttrString(ptPythonAttachmentInfo, "eStencilFormat");
+    PyLong_AsInt32(ptPythonAttachmentDepth, &tInfo.eStencilFormat);
+    Py_DECREF(ptPythonAttachmentDepth);
+
+    ptPythonAttachmentDepth = PyObject_GetAttrString(ptPythonAttachmentInfo, "aeColorFormats");
+    Py_ssize_t pySize = PyList_Size(ptPythonAttachmentDepth);
+    for (Py_ssize_t i = 0; i < pySize; ++i)
+    {
+        PyObject* ptColor = PyList_GetItem(ptPythonAttachmentDepth, i);
+        PyLong_AsInt32(ptColor, &tInfo.aeColorFormats[i]);
+    }
+    Py_DECREF(ptPythonAttachmentDepth);
+
     pyplMat4* m = (pyplMat4*)ptPythonMVP;
-    gptDraw->submit_3d_drawlist(ptDrawlist, ptEncoder, fWidth, fHeight, &m->m, iFlags, (uint32_t)iSampleCount);
+    gptDraw->submit_3d_drawlist(ptDrawlist, ptCmdBuffer, fWidth, fHeight, &m->m, iFlags, (uint32_t)iSampleCount, &tInfo);
     Py_RETURN_NONE;
 }
 

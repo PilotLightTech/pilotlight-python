@@ -9,15 +9,15 @@ from pilotlight.enums import *
 class plDearImGuiI:
 
     @staticmethod
-    def initialize(device: plDevice, swapchain: plSwapchain, renderpass_handle, **kwargs):
+    def initialize(device: plDevice, swapchain: plSwapchain, attachmentInfo, **kwargs):
         ...
 
     @staticmethod
-    def new_frame(device: plDevice, renderpass_handle, **kwargs):
+    def new_frame(device: plDevice, **kwargs):
         ...
 
     @staticmethod
-    def render(encoder: plRenderEncoder, **kwargs):
+    def render(commandBuffer: plCommandBuffer, **kwargs):
         ...
 
     @staticmethod

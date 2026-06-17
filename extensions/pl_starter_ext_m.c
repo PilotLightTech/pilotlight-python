@@ -39,7 +39,7 @@ starter_initialize(PyObject* self, PyObject* args, PyObject* kwargs)
 
     // initialize the starter API (handles alot of boilerplate)
     plStarterInit tStarterInit = {
-        .tFlags   = iFlags,
+        .eFlags   = iFlags,
         .ptWindow = ptWindowPtr
     };
     gptStarter->initialize(tStarterInit);
@@ -112,17 +112,30 @@ starter_get_swapchain(PyObject* self)
 }
 
 PyObject*
-starter_get_render_pass(PyObject* self)
+starter_get_render_attachment_info(PyObject* self, PyObject* arg)
 {
-    plRenderPassHandle tHandle = gptStarter->get_render_pass();
-    return Py_BuildValue("K", tHandle.uData);
+    plRenderAttachmentInfo tInfo = {0};
+    gptStarter->get_render_attachment_info(&tInfo);
+
+    PyObject_SetAttrString(arg, "eDepthFormat", PyLong_FromInt32(tInfo.eDepthFormat));
+    PyObject_SetAttrString(arg, "eStencilFormat", PyLong_FromInt32(tInfo.eStencilFormat));
+
+    PyObject* ptPyColorList = PyObject_GetAttrString(arg, "aeColorFormats");
+    for(uint32_t i = 0; i < PL_MAX_RENDER_TARGETS; i++)
+    {
+        if(tInfo.aeColorFormats[i] == 0)
+            break;
+        PyList_Append(ptPyColorList, PyLong_FromInt32(tInfo.aeColorFormats[i]));
+    }
+    Py_DECREF(ptPyColorList);
+    Py_RETURN_NONE;
 }
 
 PyObject*
 starter_begin_main_pass(PyObject* self)
 {
-    plRenderEncoder* ptEncoder = gptStarter->begin_main_pass();
-    return PyCapsule_New(ptEncoder, "plRenderEncoder", NULL);
+    plCommandBuffer* ptCommandBuffer = gptStarter->begin_main_pass();
+    return PyCapsule_New(ptCommandBuffer, "plCommandBuffer", NULL);
 }
 
 PyObject*
@@ -207,7 +220,7 @@ static PyMethodDef gatCommandsplStarterI[] =
     {"get_background_layer", (PyCFunction)starter_get_background_layer, METH_NOARGS | METH_STATIC, NULL},
     {"get_device", (PyCFunction)starter_get_device, METH_NOARGS | METH_STATIC, NULL},
     {"get_swapchain", (PyCFunction)starter_get_swapchain, METH_NOARGS | METH_STATIC, NULL},
-    {"get_render_pass", (PyCFunction)starter_get_render_pass, METH_NOARGS | METH_STATIC, NULL},
+    {"get_render_attachment_info", (PyCFunction)starter_get_render_attachment_info, METH_O | METH_STATIC, NULL},
     {"begin_main_pass", (PyCFunction)starter_begin_main_pass, METH_NOARGS | METH_STATIC, NULL},
     {"end_main_pass", (PyCFunction)starter_end_main_pass, METH_NOARGS | METH_STATIC, NULL},
     {"get_command_buffer", (PyCFunction)starter_get_command_buffer, METH_NOARGS | METH_STATIC, NULL},

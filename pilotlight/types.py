@@ -17,13 +17,18 @@ plWindow = NewType("plWindow", object)
 plDevice = NewType("plDevice", object)
 plSwapchain = NewType("plSwapchain", object)
 plComponentLibrary = NewType("plComponentLibrary", object)
-plRenderEncoder = NewType("plRenderEncoder", object)
 plPakFile = NewType("plPakFile", object)
 plDoublePointer = NewType("plDoublePointer", object)
 plScene = NewType("plScene", object)
 plView = NewType("plView", object)
 
 type plQuat = plVec4
+
+class plRenderAttachmentInfo:
+    def __init__(self):
+        self.aeColorFormats = []
+        self.eDepthFormat = plFormat.PL_FORMAT_UNKNOWN
+        self.eStencilFormat = plFormat.PL_FORMAT_UNKNOWN
 
 class plShaderMacroDefinition:
     def __init__(self):
@@ -32,8 +37,8 @@ class plShaderMacroDefinition:
 
 class plShaderOptions:
     def __init__(self):
-        self.tFlags = 0
-        self.tOptimizationLevel = 0
+        self.eFlags = 0
+        self.eOptimizationLevel = 0
         self.ptMacroDefinitions = []
         self.apcIncludeDirectories = []
         self.apcDirectories = []

@@ -87,7 +87,7 @@ class App:
         shader_options.pcCacheOutputDirectory = "/shader-temp/"
         shader_options.apcDirectories = ["/shaders/"]
         shader_options.apcIncludeDirectories = ["/shaders/"]
-        shader_options.tFlags = (
+        shader_options.eFlags = (
             plShaderFlags.PL_SHADER_FLAGS_AUTO_OUTPUT
             | plShaderFlags.PL_SHADER_FLAGS_INCLUDE_DEBUG
             | plShaderFlags.PL_SHADER_FLAGS_ALWAYS_COMPILE
@@ -154,12 +154,14 @@ class App:
         # text
         plDrawI.add_text(self.ptFGLayer, [300, 300], "Hello Python", plDrawTextOptions(self.ptFont, 18.0, PL_COLOR_32_CYAN))
 
-        encoder = plStarterI.begin_main_pass()
+        cmdBuffer = plStarterI.begin_main_pass()
 
         plDrawI.submit_2d_layer(self.ptFGLayer)
         io = plIOI.get_io()
         tMainViewportSize = io.tMainViewportSize
-        plDrawI.submit_2d_drawlist(self.drawlist, encoder, tMainViewportSize.x, tMainViewportSize.y, 1)
+        tRenderAttachmentInfo = plRenderAttachmentInfo()
+        plStarterI.get_render_attachment_info(tRenderAttachmentInfo)
+        plDrawI.submit_2d_drawlist(self.drawlist, cmdBuffer, tMainViewportSize.x, tMainViewportSize.y, 1, tRenderAttachmentInfo)
 
         plStarterI.end_main_pass()
 

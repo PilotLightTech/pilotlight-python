@@ -42,7 +42,7 @@ class App:
 
         # Create and show the OS window.
         window_desc = plWindowDesc()
-        window_desc.pcTitle = "Pilot Light Python - Basic Example 0"
+        window_desc.pcTitle = "Pilot Light Python - Basic Example 3"
         window_desc.iXPos = 100
         window_desc.iYPos = 100
         window_desc.uWidth = 1280
@@ -66,7 +66,7 @@ class App:
         shader_options.pcCacheOutputDirectory = "/shader-temp/"
         shader_options.apcDirectories = ["/shaders/"]
         shader_options.apcIncludeDirectories = ["/shaders/"]
-        shader_options.tFlags = (
+        shader_options.eFlags = (
             plShaderFlags.PL_SHADER_FLAGS_AUTO_OUTPUT
             | plShaderFlags.PL_SHADER_FLAGS_INCLUDE_DEBUG
             | plShaderFlags.PL_SHADER_FLAGS_ALWAYS_COMPILE

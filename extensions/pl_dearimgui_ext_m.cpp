@@ -76,25 +76,41 @@ dear_imgui_initialize(PyObject* self, PyObject* args, PyObject* kwargs)
 
     PyObject* ptPythonDevice = nullptr;
     PyObject* ptPythonSwapchain = nullptr;
-    uint32_t  uRenderPassHandle = 0;
+    PyObject* ptPythonAttachmentInfo = NULL;
 
     static const char* apcKeywords[] = {
         "device",
         "swapchain",
-        "renderpass_handle",
+        "attachmentInfo",
         NULL,
     };
 
-	if (!pl_parse_args("OOI", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
-        &ptPythonDevice, &ptPythonSwapchain, &uRenderPassHandle))
+	if (!pl_parse_args("OOO", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+        &ptPythonDevice, &ptPythonSwapchain, &ptPythonAttachmentInfo))
 		return NULL;
 
     plDevice* ptDevice = (plDevice*)PyCapsule_GetPointer(ptPythonDevice, "plDevice");
     plSwapchain* ptSwapchain = (plSwapchain*)PyCapsule_GetPointer(ptPythonSwapchain, "plSwapchain");
-    plRenderPassHandle tHandle = {};
-    tHandle.uData = uRenderPassHandle;
 
-    pl_dear_imgui_initialize(ptDevice, ptSwapchain, tHandle);
+    plRenderAttachmentInfo tInfo = {0};
+    PyObject* ptPythonAttachmentDepth = PyObject_GetAttrString(ptPythonAttachmentInfo, "eDepthFormat");
+    PyLong_AsInt32(ptPythonAttachmentDepth, &tInfo.eDepthFormat);
+    Py_DECREF(ptPythonAttachmentDepth);
+
+    ptPythonAttachmentDepth = PyObject_GetAttrString(ptPythonAttachmentInfo, "eStencilFormat");
+    PyLong_AsInt32(ptPythonAttachmentDepth, &tInfo.eStencilFormat);
+    Py_DECREF(ptPythonAttachmentDepth);
+
+    ptPythonAttachmentDepth = PyObject_GetAttrString(ptPythonAttachmentInfo, "aeColorFormats");
+    Py_ssize_t pySize = PyList_Size(ptPythonAttachmentDepth);
+    for (Py_ssize_t i = 0; i < pySize; ++i)
+    {
+        PyObject* ptColor = PyList_GetItem(ptPythonAttachmentDepth, i);
+        PyLong_AsInt32(ptColor, &tInfo.aeColorFormats[i]);
+    }
+    Py_DECREF(ptPythonAttachmentDepth);
+
+    pl_dear_imgui_initialize(ptDevice, ptSwapchain, &tInfo);
 
     // ImPlot::SetCurrentContext((ImPlotContext*)ptDataRegistry->get_data("implot"));
     ImGuiIO& tImGuiIO = ImGui::GetIO();
@@ -108,23 +124,19 @@ dear_imgui_new_frame(PyObject* self, PyObject* args, PyObject* kwargs)
 {
 
     PyObject* ptPythonDevice = nullptr;
-    uint32_t  uRenderPassHandle = 0;
 
     static const char* apcKeywords[] = {
         "device",
-        "renderpass_handle",
         NULL,
     };
 
-	if (!pl_parse_args("OI", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
-        &ptPythonDevice, &uRenderPassHandle))
+	if (!pl_parse_args("O", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+        &ptPythonDevice))
 		return NULL;
 
     plDevice* ptDevice = (plDevice*)PyCapsule_GetPointer(ptPythonDevice, "plDevice");
-    plRenderPassHandle tHandle = {};
-    tHandle.uData = uRenderPassHandle;
 
-    pl_dear_imgui_new_frame(ptDevice, tHandle);
+    pl_dear_imgui_new_frame(ptDevice);
 
     Py_RETURN_NONE;
 }
@@ -160,7 +172,7 @@ dear_imgui_render(PyObject* self, PyObject* args, PyObject* kwargs)
     PyObject* ptPythonRenderEncoder = nullptr;
 
     static const char* apcKeywords[] = {
-        "render_encoder",
+        "commandBuffer",
         NULL,
     };
 
@@ -168,9 +180,9 @@ dear_imgui_render(PyObject* self, PyObject* args, PyObject* kwargs)
         &ptPythonRenderEncoder))
 		return NULL;
 
-    plRenderEncoder* ptRenderEncoder = (plRenderEncoder*)PyCapsule_GetPointer(ptPythonRenderEncoder, "plRenderEncoder");
+    plCommandBuffer* ptCmdBuffer = (plCommandBuffer*)PyCapsule_GetPointer(ptPythonRenderEncoder, "plCommandBuffer");
 
-    pl_dear_imgui_render(ptRenderEncoder, gptGfx->get_encoder_command_buffer(ptRenderEncoder));
+    pl_dear_imgui_render(ptCmdBuffer);
 
     Py_RETURN_NONE;
 }

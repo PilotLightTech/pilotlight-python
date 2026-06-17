@@ -21,8 +21,8 @@ Index of this file:
 PyObject*
 shader_initialize(PyObject* self, PyObject* args)
 {
-    PyObject* ptFlags = PyObject_GetAttrString(args, "tFlags");
-    PyObject* ptOptimizationLevel = PyObject_GetAttrString(args, "tOptimizationLevel");
+    PyObject* ptFlags = PyObject_GetAttrString(args, "eFlags");
+    PyObject* ptOptimizationLevel = PyObject_GetAttrString(args, "eOptimizationLevel");
     PyObject* ptCacheOutputDirectory = PyObject_GetAttrString(args, "pcCacheOutputDirectory");
     PyObject* apcIncludeDirectories = PyObject_GetAttrString(args, "apcIncludeDirectories");
     PyObject* apcDirectories = PyObject_GetAttrString(args, "apcDirectories");
@@ -31,8 +31,8 @@ shader_initialize(PyObject* self, PyObject* args)
 
     plShaderOptions tOptions = {0};
 
-    PyLong_AsInt32(ptFlags, &tOptions.tFlags);
-    PyLong_AsInt32(ptOptimizationLevel, &tOptions.tOptimizationLevel);
+    PyLong_AsInt32(ptFlags, &tOptions.eFlags);
+    PyLong_AsInt32(ptOptimizationLevel, &tOptions.eOptimizationLevel);
     tOptions.pcCacheOutputDirectory = PyUnicode_AsUTF8(ptCacheOutputDirectory);
 
     Py_ssize_t szIncludeCount = PyList_Size(apcIncludeDirectories);
@@ -89,15 +89,15 @@ shader_load_glsl(PyObject* self, PyObject* args, PyObject* kwargs)
 
     if(ptOptions)
     {
-        PyObject* ptFlags = PyObject_GetAttrString(ptOptions, "tFlags");
-        PyObject* ptOptimizationLevel = PyObject_GetAttrString(ptOptions, "tOptimizationLevel");
+        PyObject* ptFlags = PyObject_GetAttrString(ptOptions, "eFlags");
+        PyObject* ptOptimizationLevel = PyObject_GetAttrString(ptOptions, "eOptimizationLevel");
         PyObject* ptCacheOutputDirectory = PyObject_GetAttrString(ptOptions, "pcCacheOutputDirectory");
         PyObject* apcIncludeDirectories = PyObject_GetAttrString(ptOptions, "apcIncludeDirectories");
         PyObject* apcDirectories = PyObject_GetAttrString(ptOptions, "apcDirectories");
         PyObject* ptMacroDefinitions = PyObject_GetAttrString(ptOptions, "ptMacroDefinitions");
 
-        PyLong_AsInt32(ptFlags, &tOptions.tFlags);
-        PyLong_AsInt32(ptOptimizationLevel, &tOptions.tOptimizationLevel);
+        PyLong_AsInt32(ptFlags, &tOptions.eFlags);
+        PyLong_AsInt32(ptOptimizationLevel, &tOptions.eOptimizationLevel);
         tOptions.pcCacheOutputDirectory = PyUnicode_AsUTF8(ptCacheOutputDirectory);
 
         Py_ssize_t szIncludeCount = PyList_Size(apcIncludeDirectories);
@@ -147,15 +147,15 @@ shader_compile_glsl(PyObject* self, PyObject* args, PyObject* kwargs)
 
     if(ptOptions)
     {
-        PyObject* ptFlags = PyObject_GetAttrString(ptOptions, "tFlags");
-        PyObject* ptOptimizationLevel = PyObject_GetAttrString(ptOptions, "tOptimizationLevel");
+        PyObject* ptFlags = PyObject_GetAttrString(ptOptions, "eFlags");
+        PyObject* ptOptimizationLevel = PyObject_GetAttrString(ptOptions, "eOptimizationLevel");
         PyObject* ptCacheOutputDirectory = PyObject_GetAttrString(ptOptions, "pcCacheOutputDirectory");
         PyObject* apcIncludeDirectories = PyObject_GetAttrString(ptOptions, "apcIncludeDirectories");
         PyObject* apcDirectories = PyObject_GetAttrString(ptOptions, "apcDirectories");
         PyObject* ptMacroDefinitions = PyObject_GetAttrString(ptOptions, "ptMacroDefinitions");
 
-        PyLong_AsInt32(ptFlags, &tOptions.tFlags);
-        PyLong_AsInt32(ptOptimizationLevel, &tOptions.tOptimizationLevel);
+        PyLong_AsInt32(ptFlags, &tOptions.eFlags);
+        PyLong_AsInt32(ptOptimizationLevel, &tOptions.eOptimizationLevel);
         tOptions.pcCacheOutputDirectory = PyUnicode_AsUTF8(ptCacheOutputDirectory);
 
         Py_ssize_t szIncludeCount = PyList_Size(apcIncludeDirectories);

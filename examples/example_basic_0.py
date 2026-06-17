@@ -65,7 +65,7 @@ class App:
         shader_options.pcCacheOutputDirectory = "/shader-temp/"
         shader_options.apcDirectories = ["/shaders/"]
         shader_options.apcIncludeDirectories = ["/shaders/"]
-        shader_options.tFlags = (
+        shader_options.eFlags = (
             plShaderFlags.PL_SHADER_FLAGS_AUTO_OUTPUT
             | plShaderFlags.PL_SHADER_FLAGS_INCLUDE_DEBUG
             | plShaderFlags.PL_SHADER_FLAGS_ALWAYS_COMPILE
