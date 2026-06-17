@@ -80,7 +80,6 @@ class plFontConfig:
 
 class plResourceManagerInit:
     ptDevice: plDevice
-    uMaxTextureResolution: int = 1024
     pcCacheDirectory: str = "../cache"
 
 @dataclass(slots=True)

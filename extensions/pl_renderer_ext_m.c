@@ -25,18 +25,15 @@ renderer_initialize(PyObject* self, PyObject* args, PyObject* kwargs)
     static const char* apcKeywords[] = {
         "ptDevice",
         "ptSwap",
-        "uMaxTextureResolution",
         NULL,
     };
 
-    plRendererSettings tRenderSettings = {
-        .uMaxTextureResolution = 1024
-    };
+    plRendererSettings tRenderSettings = {0};
 
     PyObject* ptPyDevice = NULL;
     PyObject* ptPySwapchain = NULL;
-	if (!pl_parse_args("OO|$I", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
-        &ptPyDevice, &ptPySwapchain, &tRenderSettings.uMaxTextureResolution))
+	if (!pl_parse_args("OO", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+        &ptPyDevice, &ptPySwapchain))
 		return NULL;
 
     tRenderSettings.ptDevice = PyCapsule_GetPointer(ptPyDevice, "plDevice");
