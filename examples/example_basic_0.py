@@ -52,11 +52,9 @@ class App:
         # Initialize the starter extension.
         # We explicitly disable the shader ext from the starter flags because
         # we are going to initialize the shader system ourselves below.
-        starter_flags = plStarterFlag.PL_STARTER_FLAGS_ALL_EXTENSIONS
-        starter_flags &= ~plStarterFlag.PL_STARTER_FLAGS_SHADER_EXT
-        starter_flags |= plStarterFlag.PL_STARTER_FLAGS_MSAA
-
-        plStarterI.initialize(self.ptWindow, starter_flags)
+        starterInit = plStarterInit(plStarterFlag.PL_STARTER_FLAGS_ALL_EXTENSIONS | plStarterFlag.PL_STARTER_FLAGS_MSAA, self.ptWindow)
+        starterInit.eFlags &= ~plStarterFlag.PL_STARTER_FLAGS_SHADER_EXT
+        plStarterI.initialize(starterInit)
 
         # Initialize shader system.
         # This is required even for simple drawing examples because the

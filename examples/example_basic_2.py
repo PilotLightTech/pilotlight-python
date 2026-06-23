@@ -35,7 +35,7 @@ class App:
         plVfsI.mount_directory("/cache", str(Path.cwd()) + "/../cache")
         plVfsI.mount_directory("/shaders", os.path.dirname(os.path.abspath(pl.__file__)) + "/shaders")
         plVfsI.mount_directory("/shader-temp", str(Path.cwd()) + "/../shader-temp")
-        plVfsI.mount_directory("/assets", str(Path.cwd()) + "/../../pilotlight/assets")
+        plVfsI.mount_directory("/assets", str(Path.cwd()) + "/../pilotlight/assets")
 
         # Create window.
         window_desc = plWindowDesc()
@@ -50,13 +50,12 @@ class App:
 
         # Initialize starter, but manually initialize shader/draw so this example
         # clearly shows what is required.
-        starter_flags = plStarterFlag.PL_STARTER_FLAGS_ALL_EXTENSIONS
-        starter_flags |= plStarterFlag.PL_STARTER_FLAGS_DEPTH_BUFFER
-        starter_flags |= plStarterFlag.PL_STARTER_FLAGS_MSAA
-        starter_flags &= ~plStarterFlag.PL_STARTER_FLAGS_SHADER_EXT
-        starter_flags &= ~plStarterFlag.PL_STARTER_FLAGS_DRAW_EXT
-
-        plStarterI.initialize(self.ptWindow, starter_flags)
+        starterInit = plStarterInit(plStarterFlag.PL_STARTER_FLAGS_ALL_EXTENSIONS, self.ptWindow)
+        starterInit.eFlags |= plStarterFlag.PL_STARTER_FLAGS_DEPTH_BUFFER
+        starterInit.eFlags |= plStarterFlag.PL_STARTER_FLAGS_MSAA
+        starterInit.eFlags &= ~plStarterFlag.PL_STARTER_FLAGS_SHADER_EXT
+        starterInit.eFlags &= ~plStarterFlag.PL_STARTER_FLAGS_DRAW_EXT
+        plStarterI.initialize(starterInit)
 
         # Draw system.
         ptDevice = plStarterI.get_device()

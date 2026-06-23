@@ -782,7 +782,7 @@ class plEcsI:
 class plStarterI:
 
     @staticmethod
-    def initialize(window: plWindow, flags: plStarterFlag):
+    def initialize(starterInit: plStarterInit):
         ...
 
     @staticmethod

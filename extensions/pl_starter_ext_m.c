@@ -20,28 +20,22 @@ Index of this file:
 //-----------------------------------------------------------------------------
 
 PyObject*
-starter_initialize(PyObject* self, PyObject* args, PyObject* kwargs)
+starter_initialize(PyObject* self, PyObject* ptInit)
 {
-    PyObject* ptWindow = NULL;
 
-    static const char* apcKeywords[] = {
-        "window",
-        "flags",
-        NULL,
-    };
+    plStarterInit tStarterInit = {0};
 
-    int iFlags = 0;
-	if (!pl_parse_args("Oi", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
-        &ptWindow, &iFlags))
-		return NULL;
+    {
+        PyObject* ptPythonOption = PyObject_GetAttrString(ptInit, "eFlags");
+        tStarterInit.eFlags = PyLong_AsInt(ptPythonOption);
+        Py_DECREF(ptPythonOption);
+    }
 
-    plWindow* ptWindowPtr = PyCapsule_GetPointer(ptWindow, "plWindow");
-
-    // initialize the starter API (handles alot of boilerplate)
-    plStarterInit tStarterInit = {
-        .eFlags   = iFlags,
-        .ptWindow = ptWindowPtr
-    };
+    {
+        PyObject* ptPythonOption = PyObject_GetAttrString(ptInit, "ptWindow");
+        tStarterInit.ptWindow = PyCapsule_GetPointer(ptPythonOption, "plWindow");
+        Py_DECREF(ptPythonOption);
+    }
     gptStarter->initialize(tStarterInit);
     Py_RETURN_NONE;
 }
@@ -200,6 +194,7 @@ plPythonIntConstantPair gatStarterIntPairs[] = {
     PL_ADD_INT_CONSTANT(PL_STARTER_FLAGS_SHADER_EXT),
     PL_ADD_INT_CONSTANT(PL_STARTER_FLAGS_SCREEN_LOG_EXT),
     PL_ADD_INT_CONSTANT(PL_STARTER_FLAGS_GRAPHICS_EXT),
+    PL_ADD_INT_CONSTANT(PL_STARTER_FLAGS_RESOURCE_EXT),
     PL_ADD_INT_CONSTANT(PL_STARTER_FLAGS_TOOLS_EXT),
     PL_ADD_INT_CONSTANT(PL_STARTER_FLAGS_DEPTH_BUFFER),
     PL_ADD_INT_CONSTANT(PL_STARTER_FLAGS_MSAA),
@@ -211,7 +206,7 @@ plPythonIntConstantPair gatStarterIntPairs[] = {
 static PyMethodDef gatCommandsplStarterI[] =
 {
     {"begin_frame", (PyCFunction)starter_begin_frame, METH_NOARGS | METH_STATIC, NULL},
-    {"initialize", (PyCFunction)starter_initialize, METH_VARARGS | METH_STATIC, NULL},
+    {"initialize", (PyCFunction)starter_initialize, METH_O | METH_STATIC, NULL},
     {"finalize", (PyCFunction)starter_finalize, METH_NOARGS | METH_STATIC, NULL},
     {"cleanup", (PyCFunction)starter_cleanup, METH_NOARGS | METH_STATIC, NULL},
     {"resize", (PyCFunction)starter_resize, METH_NOARGS | METH_STATIC, NULL},

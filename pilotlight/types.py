@@ -45,6 +45,11 @@ class plShaderOptions:
         self.pcCacheOutputDirectory = ""
 
 @dataclass(slots=True)
+class plStarterInit:
+    eFlags: plStarterFlag
+    ptWindow: plWindow
+
+@dataclass(slots=True)
 class plDrawSolidOptions:
     uColor: int = 0xFFFFFFFF  # default white
 

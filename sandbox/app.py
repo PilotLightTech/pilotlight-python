@@ -40,10 +40,9 @@ class App:
         _, self.ptWindow = plWindowI.create(window_desc)
         plWindowI.show(self.ptWindow)
 
-        starter_flags = plStarterFlag.PL_STARTER_FLAGS_ALL_EXTENSIONS
-        # starter_flags |= plStarterFlag.PL_STARTER_FLAGS_MSAA
-        starter_flags &= ~plStarterFlag.PL_STARTER_FLAGS_SHADER_EXT
-        plStarterI.initialize(self.ptWindow, starter_flags)
+        starterInit = plStarterInit(plStarterFlag.PL_STARTER_FLAGS_ALL_EXTENSIONS | plStarterFlag.PL_STARTER_FLAGS_MSAA, self.ptWindow)
+        starterInit.eFlags &= ~plStarterFlag.PL_STARTER_FLAGS_SHADER_EXT
+        plStarterI.initialize(starterInit)
 
         shader_options = plShaderOptions()
         shader_options.pcCacheOutputDirectory = "/shader-temp/"

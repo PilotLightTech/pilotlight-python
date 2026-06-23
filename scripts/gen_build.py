@@ -557,6 +557,9 @@ elif plat.system() == "Linux":
 # copy shaders
 if os.path.isdir(working_directory + "/../pilotlight/shaders"):
     shutil.rmtree(working_directory + "/../pilotlight/shaders")
+    shutil.rmtree(working_directory + "/../pilotlight/assets")
 
 
 shutil.copytree(working_directory + "/../../pilotlight/shaders", working_directory + "/../pilotlight/shaders")
+os.mkdir(working_directory + "/../pilotlight/assets")
+shutil.copytree(working_directory + "/../../pilotlight/assets/core", working_directory + "/../pilotlight/assets/core")

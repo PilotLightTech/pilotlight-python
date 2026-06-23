@@ -21,6 +21,7 @@ pilotlight/*.so
 pilotlight/*.rdi
 pilotlight/*.dSYM
 pilotlight/shaders/
+pilotlight/assets/
 
 # debug files
 src/*.pdb

@@ -32,14 +32,14 @@ def setup_package():
     sys.path.insert(0, src_path)
 
     metadata = dict(
-        name='pilotlight',                                      # Required
-        version="0.1.19",                              # Required
-        author="Jonathan Hoffstadt",       # Optional
-        author_email="jonathanhoffstadt@yahoo.com",            # Optional
+        name='pilotlight', # Required
+        version="0.1.20", # Required
+        author="Jonathan Hoffstadt", # Optional
+        author_email="jonathanhoffstadt@yahoo.com", # Optional
         description='Pilot Light',  # Required
-        # long_description=long_description,                     # Optional
-        # long_description_content_type='text/markdown',         # Optional
-        url='https://github.com/PilotLightTech/pilotlight-python',          # Optional
+        # long_description=long_description, # Optional
+        # long_description_content_type='text/markdown', # Optional
+        url='https://github.com/PilotLightTech/pilotlight-python', # Optional
         license = 'MIT',
         python_requires='>=3.14',
         classifiers=[
@@ -72,7 +72,14 @@ def setup_package():
             "shaders/*.comp",
             "shaders/*.glsl",
             "shaders/*.frag",
-            "shaders/*.vert"
+            "shaders/*.vert",
+            "assets/core/environments/*.*",
+            "assets/core/fonts/*.*",
+            "assets/core/models/gltf/*.*",
+            "assets/core/models/stl/*.*",
+            "assets/core/scenes/*.*",
+            "assets/core/textures/*.*",
+            "data/*.*"
             ]
     else:
         metadata['package_data']['pilotlight'] = [
@@ -85,7 +92,14 @@ def setup_package():
             "shaders/*.comp",
             "shaders/*.glsl",
             "shaders/*.frag",
-            "shaders/*.vert"
+            "shaders/*.vert",
+            "assets/core/environments/*.*",
+            "assets/core/fonts/*.*",
+            "assets/core/models/gltf/*.*",
+            "assets/core/models/stl/*.*",
+            "assets/core/scenes/*.*",
+            "assets/core/textures/*.*",
+            "data/*.*"
             ]
 
     if "--force" in sys.argv:
