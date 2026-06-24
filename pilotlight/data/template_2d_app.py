@@ -27,12 +27,11 @@ class App:
     def pl_app_load(self): # called on load
 
         # mount directories used by the shader extension
-        package_dir = os.path.dirname(os.path.abspath(pl.__file__))
-
-        plVfsI.mount_directory("/shaders", package_dir + "/shaders")
-        plVfsI.mount_directory("/cache", str(Path.cwd()) + "/cache")
-        plVfsI.mount_directory("/shader-temp", str(Path.cwd()) + "/shader-temp")
-        plVfsI.mount_directory("/assets", str(Path.cwd()) + "/assets")
+        file_directory = os.path.dirname(os.path.abspath(__file__))
+        plVfsI.mount_directory("/shaders", file_directory + "/../shaders")
+        plVfsI.mount_directory("/cache", file_directory + "/../cache")
+        plVfsI.mount_directory("/shader-temp", file_directory + "/../shader-temp")
+        plVfsI.mount_directory("/assets", file_directory + "/../assets")
 
         # create & show the OS window
         window_desc = plWindowDesc()
@@ -67,7 +66,7 @@ class App:
         tFontConfig.uHOverSampling = 1
         tFontConfig.uVOverSampling = 1
         tFontConfig.ptRanges = [tFontRange]
-        self.ptFont = plDrawI.add_font_from_file_ttf(self.ptFontAtlas, tFontConfig, "/assets/fonts/Cousine-Regular.ttf");
+        self.ptFont = plDrawI.add_font_from_file_ttf(self.ptFontAtlas, tFontConfig, "/assets/core/fonts/Cousine-Regular.ttf");
 
         self.drawlist = plDrawI.request_2d_drawlist()
         self.ptFGLayer = plDrawI.request_2d_layer(self.drawlist)

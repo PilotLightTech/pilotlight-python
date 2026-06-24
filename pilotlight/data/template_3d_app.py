@@ -29,12 +29,11 @@ class App:
     def pl_app_load(self): # called on load
 
         # mount directories used by the shader extension
-        package_dir = os.path.dirname(os.path.abspath(pl.__file__))
-
-        plVfsI.mount_directory("/shaders", package_dir + "/shaders")
-        plVfsI.mount_directory("/cache", str(Path.cwd()) + "/cache")
-        plVfsI.mount_directory("/shader-temp", str(Path.cwd()) + "/shader-temp")
-        plVfsI.mount_directory("/assets", str(Path.cwd()) + "/assets")
+        file_directory = os.path.dirname(os.path.abspath(__file__))
+        plVfsI.mount_directory("/shaders", file_directory + "/../shaders")
+        plVfsI.mount_directory("/cache", file_directory + "/../cache")
+        plVfsI.mount_directory("/shader-temp", file_directory + "/../shader-temp")
+        plVfsI.mount_directory("/assets", file_directory + "/../assets")
 
         # Create window.
         window_desc = plWindowDesc()
