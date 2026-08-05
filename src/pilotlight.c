@@ -100,7 +100,6 @@ pl_python_run(PyObject* self, PyObject* arg)
     pl_load_ext((plApiRegistryI*)ptApiRegistry, false);
     pl_load_platform_ext((plApiRegistryI*)ptApiRegistry, false);
     plIO* ptIO = gptIOI->get_io();
-    ptWindows2 = pl_get_api_latest(ptApiRegistry, plWindowI);
 
     PyObject* ptResult = PyObject_CallMethod(arg, "pl_app_load", NULL);
 

@@ -110,7 +110,7 @@ dear_imgui_initialize(PyObject* self, PyObject* args, PyObject* kwargs)
     }
     Py_DECREF(ptPythonAttachmentDepth);
 
-    pl_dear_imgui_initialize(ptDevice, ptSwapchain, &tInfo);
+    pl_dear_imgui_initialize(nullptr);
 
     // ImPlot::SetCurrentContext((ImPlotContext*)ptDataRegistry->get_data("implot"));
     ImGuiIO& tImGuiIO = ImGui::GetIO();
@@ -139,30 +139,6 @@ dear_imgui_new_frame(PyObject* self, PyObject* args, PyObject* kwargs)
     pl_dear_imgui_new_frame(ptDevice);
 
     Py_RETURN_NONE;
-}
-
-PyObject*
-dear_imgui_get_texture_id_from_bindgroup(PyObject* self, PyObject* args, PyObject* kwargs)
-{
-
-    PyObject* ptPythonDevice = nullptr;
-    plBindGroupHandle tBGHandle = {0};
-
-    static const char* apcKeywords[] = {
-        "device",
-        "bindgroup",
-        NULL,
-    };
-
-	if (!pl_parse_args("OI", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
-        &ptPythonDevice, &tBGHandle.uData))
-		return NULL;
-
-    plDevice* ptDevice = (plDevice*)PyCapsule_GetPointer(ptPythonDevice, "plDevice");
-
-    void* ptTexture = pl_dear_imgui_get_texture_id_from_bindgroup(ptDevice, tBGHandle);
-    
-    return PyCapsule_New(ptTexture, "void", NULL);
 }
 
 PyObject*
@@ -314,9 +290,9 @@ Image(PyObject* self, PyObject* args, PyObject* kwargs)
 
     void* ptTexture = (plDevice*)PyCapsule_GetPointer(ptPyTexture, "void");
 
-    ImTextureRef tTexture = ImTextureRef(ptTexture);
+    // ImTextureRef tTexture = ImTextureRef(ptTexture);
 
-    ImGui::Image(tTexture, tSize, tUV0, tUV1);
+    // ImGui::Image(tTexture, tSize, tUV0, tUV1);
     Py_RETURN_NONE;
 }
 
@@ -4124,7 +4100,6 @@ static PyMethodDef gatplDearImGuiICommands[] =
     {"new_frame", (PyCFunction)dear_imgui_new_frame, METH_VARARGS | METH_KEYWORDS | METH_STATIC, NULL},
     {"render", (PyCFunction)dear_imgui_render, METH_VARARGS | METH_KEYWORDS | METH_STATIC, NULL},
     {"cleanup", (PyCFunction)dear_imgui_cleanup, METH_VARARGS | METH_KEYWORDS | METH_STATIC, NULL},
-    {"get_texture_id_from_bindgroup", (PyCFunction)dear_imgui_get_texture_id_from_bindgroup, METH_VARARGS | METH_KEYWORDS | METH_STATIC, NULL},
     {NULL, NULL, 0, NULL}
 };
 

@@ -43,7 +43,6 @@ with pl.project("pilotlight_python"):
         "../../pilotlight/src",
         "../../pilotlight/shaders",
         "../../pilotlight/thirdparty/stb",
-        "../../pilotlight/thirdparty/glfw/include/",
         "../../pilotlight/thirdparty/imgui/",
         "../../pilotlight/thirdparty/cgltf",
         "../dependencies/cpython/",
@@ -90,71 +89,6 @@ with pl.project("pilotlight_python"):
     pl.add_profile(configuration_filter=["debug"], definitions=["_DEBUG", "PL_CONFIG_DEBUG"])
     
     #-----------------------------------------------------------------------------
-    # [SECTION] glfw
-    #-----------------------------------------------------------------------------
-
-    with pl.target("glfw", pl.TargetType.STATIC_LIBRARY, False, False):
-
-        pl.add_source_files("../../pilotlight/thirdparty/glfw/src/glfw_unity.c")
-        pl.add_source_files("../../pilotlight/thirdparty/glfw/src/null_window.c")
-
-        with pl.configuration("debug"):
-
-            pl.set_output_binary("glfwd")
-
-            # win32
-            with pl.platform("Windows"):
-                with pl.compiler("msvc"):
-                    pl.add_include_directories("%VULKAN_SDK%\\Include")
-                    pl.add_definitions("UNICODE", "_UNICODE", "_CRT_SECURE_NO_WARNINGS", "_GLFW_VULKAN_STATIC", "_GLFW_WIN32", "_DEBUG")
-                    pl.add_compiler_flags("-std:c11", "-Od", "-MDd", "-Zi", "-permissive", "-wd4244")
-            
-            # linux
-            with pl.platform("Linux"):
-                with pl.compiler("gcc"):
-                    pl.add_definitions("_GLFW_VULKAN_STATIC", "_GLFW_X11")
-                    pl.add_include_directories('$VULKAN_SDK/include', '/usr/include/vulkan', '/usr/include/vulkan')
-                    pl.add_dynamic_link_libraries("xcb", "X11", "X11-xcb", "xkbcommon", "pthread", "xcb-cursor", "vulkan")
-                    pl.add_link_directories('$VULKAN_SDK/lib')
-                    pl.add_compiler_flags("-std=gnu99")
-                    pl.add_source_files("../../pilotlight/thirdparty/glfw/src/posix_poll.c")
-
-            # apple
-            with pl.platform("Darwin"):
-                with pl.compiler("clang"):
-                    pl.add_definitions("_GLFW_VULKAN_STATIC", "_GLFW_COCOA")
-                    pl.add_compiler_flags("-Wno-deprecated-declarations", "-std=c99", "-fmodules", "-ObjC")
-                    pl.add_link_frameworks("Cocoa", "IOKit", "CoreFoundation")
-
-        with pl.configuration("deploy"):
-
-            pl.set_output_binary("glfw")
-
-            # win32
-            with pl.platform("Windows"):
-                with pl.compiler("msvc"):
-                    pl.add_include_directories("%VULKAN_SDK%\\Include")
-                    pl.add_definitions("UNICODE", "_UNICODE", "_CRT_SECURE_NO_WARNINGS", "_GLFW_VULKAN_STATIC", "_GLFW_WIN32")
-                    pl.add_compiler_flags("-std:c11", "-O2", "-MD", "-Zi", "-permissive", "-wd4244")
-
-            # linux
-            with pl.platform("Linux"):
-                with pl.compiler("gcc"):
-                    pl.add_definitions("_GLFW_VULKAN_STATIC", "_GLFW_X11")
-                    pl.add_include_directories('$VULKAN_SDK/include', '/usr/include/vulkan', '/usr/include/vulkan')
-                    pl.add_dynamic_link_libraries("xcb", "X11", "X11-xcb", "xkbcommon", "pthread", "xcb-cursor", "vulkan")
-                    pl.add_link_directories('$VULKAN_SDK/lib')
-                    pl.add_compiler_flags("-std=gnu99")
-                    pl.add_source_files("../../pilotlight/thirdparty/glfw/src/posix_poll.c")
-
-            # apple
-            with pl.platform("Darwin"):
-                with pl.compiler("clang"):
-                    pl.add_definitions("_GLFW_VULKAN_STATIC", "_GLFW_COCOA")
-                    pl.add_compiler_flags("-std=c99", "-fmodules", "-ObjC", "-Wno-deprecated-declarations")
-                    pl.add_link_frameworks("Cocoa", "IOKit", "CoreFoundation")
-
-    #-----------------------------------------------------------------------------
     # [SECTION] imgui & implot
     #-----------------------------------------------------------------------------
 
@@ -167,7 +101,6 @@ with pl.project("pilotlight_python"):
         with pl.configuration("debug"):
 
             pl.set_output_binary("dearimguid")
-            pl.add_static_link_libraries("glfwd")
 
             # win32
             with pl.platform("Windows"):
@@ -189,7 +122,6 @@ with pl.project("pilotlight_python"):
         with pl.configuration("deploy"):
 
             pl.set_output_binary("dearimgui")
-            pl.add_static_link_libraries("glfw")
 
             # win32
             with pl.platform("Windows"):
@@ -231,8 +163,11 @@ with pl.project("pilotlight_python"):
             # linux
             with pl.platform("Linux"):
                 with pl.compiler("gcc"):
-                    pl.add_source_files("../../pilotlight/extensions/pl_platform_linux_ext.c")
-                    pl.add_dynamic_link_libraries("pthread")
+                    pl.add_source_files("../../pilotlight/extensions/pl_platform_x11_ext.c")
+                    pl.add_dynamic_link_libraries("xcb", "X11", "X11-xcb", "xkbcommon", "xcb-cursor", "xcb-xfixes",
+                                                  "xcb-keysyms", "pthread")
+                    pl.add_compiler_flags("-std=gnu11", "-fPIC", "--debug", "-g")
+                    pl.add_linker_flags("-ldl", "-lm")
 
             # mac os
             with pl.platform("Darwin"):
@@ -252,8 +187,11 @@ with pl.project("pilotlight_python"):
             # linux
             with pl.platform("Linux"):
                 with pl.compiler("gcc"):
-                    pl.add_source_files("../../pilotlight/extensions/pl_platform_linux_ext.c")
-                    pl.add_dynamic_link_libraries("pthread")
+                    pl.add_source_files("../../pilotlight/extensions/pl_platform_x11_ext.c")
+                    pl.add_dynamic_link_libraries("xcb", "X11", "X11-xcb", "xkbcommon", "xcb-cursor", "xcb-xfixes",
+                                                  "xcb-keysyms", "pthread")
+                    pl.add_compiler_flags("-std=gnu11", "-fPIC")
+                    pl.add_linker_flags("-ldl", "-lm")
 
             # mac os
             with pl.platform("Darwin"):
@@ -272,7 +210,7 @@ with pl.project("pilotlight_python"):
         
         with pl.configuration("debug"):
 
-            pl.add_static_link_libraries("dearimguid", "glfwd", "pl_platform_ext")
+            pl.add_static_link_libraries("dearimguid", "pl_platform_ext")
             pl.set_output_binary("pilotlight_main")
             
             # win32
@@ -302,7 +240,7 @@ with pl.project("pilotlight_python"):
 
         with pl.configuration("deploy"):
 
-            pl.add_static_link_libraries("dearimgui", "glfw", "pl_platform_ext")
+            pl.add_static_link_libraries("dearimgui", "pl_platform_ext")
             pl.set_output_binary("pilotlight_main")
 
             # win32
@@ -343,7 +281,7 @@ with pl.project("pilotlight_python"):
         with pl.configuration("debug"):
 
             pl.set_output_directory("../pilotlight")
-            pl.add_static_link_libraries("dearimguid", "glfwd", "pl_platform_ext")
+            pl.add_static_link_libraries("dearimguid")
             
             # win32
             with pl.platform("Windows"):
@@ -383,7 +321,7 @@ with pl.project("pilotlight_python"):
 
             pl.set_output_binary("imgui")
             pl.set_output_directory("../pilotlight")
-            pl.add_static_link_libraries("glfw", "pl_platform_ext", "dearimgui")
+            pl.add_static_link_libraries("dearimgui")
 
             # win32
             with pl.platform("Windows"):
@@ -427,7 +365,7 @@ with pl.project("pilotlight_python"):
         
         with pl.configuration("debug"):
 
-            pl.add_static_link_libraries("dearimguid", "glfwd")
+            pl.add_static_link_libraries("dearimguid")
             
             # win32
             with pl.platform("Windows"):
@@ -475,7 +413,7 @@ with pl.project("pilotlight_python"):
         with pl.configuration("deploy"):
 
             pl.set_output_binary("pilotlight")
-            pl.add_static_link_libraries("dearimgui", "glfw")
+            pl.add_static_link_libraries("dearimgui")
 
             # win32
             with pl.platform("Windows"):
