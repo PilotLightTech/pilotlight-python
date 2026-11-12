@@ -134,10 +134,16 @@ jobs:
 
     - name: Install Dependencies
       run: |
-        wget -qO- https://packages.lunarg.com/lunarg-signing-key-pub.asc | sudo tee /etc/apt/trusted.gpg.d/lunarg.asc
-        sudo wget -qO /etc/apt/sources.list.d/lunarg-vulkan-1.4.309-jammy.list https://packages.lunarg.com/vulkan/1.4.309/lunarg-vulkan-1.4.309-jammy.list
+        # LunarG no longer publishes Ubuntu packages (last was 1.4.309), use the
+        # tarball so all platforms build against the same SDK version
+        curl -sSL https://sdk.lunarg.com/sdk/download/1.4.350.0/linux/vulkansdk-linux-x86_64-1.4.350.0.tar.xz -o vulkansdk.tar.xz
+        mkdir -p $HOME/VulkanSDK
+        tar -xJf vulkansdk.tar.xz -C $HOME/VulkanSDK
+        echo "VULKAN_SDK=$HOME/VulkanSDK/1.4.350.0/x86_64" >> "$GITHUB_ENV"
         sudo apt update
-        sudo apt install vulkan-sdk
+        # the SDK tarball doesn't provide libvulkan.so to link against, use the
+        # distro's loader (ABI stable, the SDK's headers are still used)
+        sudo apt install libvulkan-dev
         sudo apt install libx11-dev
         sudo apt install libxkbcommon-x11-dev
         sudo apt install libx11-xcb-dev

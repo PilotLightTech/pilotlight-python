@@ -1,7 +1,6 @@
 import os
 import sys
 import shutil
-import glob
 
 if len(sys.argv) <= 1:
     print("Pilot Light - New Project Script");
@@ -12,9 +11,7 @@ if len(sys.argv) <= 1:
 target_directory = ""
 file_directory = os.path.dirname(os.path.abspath(__file__))
 
-newProject = True
-option_2d = True
-option_3d = False
+option_3d = False # 2D template unless -3d is passed
 operation = ""
 
 if len(sys.argv) > 1:
@@ -35,7 +32,7 @@ elif operation == "new":
             print("        -3d    Generate 3D Project template")
             exit()
         elif sys.argv[i] == "-2d":
-            option_2d = True
+            option_3d = False
         elif sys.argv[i] == "-3d":
             option_3d = True
         else:
@@ -58,15 +55,13 @@ elif operation == "new":
     os.mkdir(target_directory + "/scripts")
     os.mkdir(target_directory + "/docs")
     os.mkdir(target_directory + "/tests")
-    os.mkdir(target_directory + "/shader-temp")
 
-    shutil.copytree(file_directory + "/assets", target_directory + "/assets")
     shutil.copytree(file_directory + "/resources", target_directory + "/resources")
     shutil.copytree(file_directory + "/shaders", target_directory + "/shaders")
     shutil.copy(file_directory + "/data/template.gitignore", target_directory + "/.gitignore")
     shutil.copy(file_directory + "/data/README.md", target_directory + "/README.md")
 
-    if option_2d:
-        shutil.copy(file_directory + "/data/template_2d_app.py", target_directory + "/src/app.py")
-    elif option_3d:
+    if option_3d:
         shutil.copy(file_directory + "/data/template_3d_app.py", target_directory + "/src/app.py")
+    else:
+        shutil.copy(file_directory + "/data/template_2d_app.py", target_directory + "/src/app.py")

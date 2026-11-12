@@ -30,9 +30,9 @@ class App:
         # mount directories used by the shader extension
         file_directory = os.path.dirname(os.path.abspath(__file__))
         plVfsI.mount_directory("/shaders", file_directory + "/../shaders")
+        plFileI.create_directory(file_directory + "/../cache") # compiled shaders are cached here
+        plFileI.create_directory(file_directory + "/../cache/shaders")
         plVfsI.mount_directory("/cache", file_directory + "/../cache")
-        plVfsI.mount_directory("/shader-temp", file_directory + "/../shader-temp")
-        plVfsI.mount_directory("/assets", file_directory + "/../assets")
         plVfsI.mount_directory("/resources", file_directory + "/../resources")
 
         # Create window.
@@ -168,4 +168,4 @@ class App:
         plStarterI.end_frame()
 
 # let pilot light run application
-pl_run(App())
+pl_run(App())

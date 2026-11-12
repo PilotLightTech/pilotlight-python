@@ -90,7 +90,8 @@ with pl.project("pilotlight_python"):
 
     # configs
     pl.add_profile(configuration_filter=["debug"], definitions=["_DEBUG", "PL_CONFIG_DEBUG"])
-    pl.add_profile(configuration_filter=["deploy"], definitions=["NDEBUG", "PL_CONFIG_RELEASE"])
+    pl.add_profile(configuration_filter=["deploy"], definitions=["NDEBUG", "PL_CONFIG_RELEASE",
+                                                                 "PL_GLOBAL_LOG_LEVEL=PL_LOG_LEVEL_WARN"]) # quieter for users
 
     #-----------------------------------------------------------------------------
     # [SECTION] pilotlight module
@@ -247,9 +248,41 @@ elif plat.system() == "Darwin":
 elif plat.system() == "Linux":
     linux.generate_build(working_directory + '/' + "build.sh")
 
-# copy shaders, assets, & resources from pilot light into the python package
-for folder in ["shaders", "assets", "resources"]:
+# pl_build's linux & macos backends always name shared libraries "lib<name>.so",
+# but python can only import the extension module as "pilotlight.so"
+if plat.system() in ["Darwin", "Linux"]:
+    build_script = working_directory + '/' + "build.sh"
+    with open(build_script, "r") as file:
+        build_script_text = file.read()
+    build_script_text = build_script_text.replace('/pilotlight/libpilotlight.so"', '/pilotlight/pilotlight.so"')
+    with open(build_script, "w", newline="\n") as file:
+        file.write(build_script_text)
+
+# copy the shaders & resources the bindings use from pilot light into the python
+# package (these ship in the wheel & are copied into new projects, so keep them
+# to what is needed)
+package_files = {
+    "shaders": [
+        # draw extension (2D/3D drawing & UI)
+        "pl_draw_2d.vert",
+        "pl_draw_2d.frag",
+        "pl_draw_2d_sdf.frag",
+        "pl_draw_3d.vert",
+        "pl_draw_3d.frag",
+        "pl_draw_3d_line.vert",
+    ],
+    "resources": [
+        "Cousine-Regular.ttf", # SIL OFL 1.1 (see THIRD_PARTY_NOTICES.md)
+    ],
+}
+
+for folder in ["shaders", "assets", "resources"]: # (assets are no longer shipped)
     target_folder = working_directory + "/../pilotlight/" + folder
     if os.path.isdir(target_folder):
         shutil.rmtree(target_folder)
-    shutil.copytree(working_directory + "/../../pilotlight/" + folder, target_folder)
+
+for folder, files in package_files.items():
+    target_folder = working_directory + "/../pilotlight/" + folder
+    os.makedirs(target_folder)
+    for file in files:
+        shutil.copy2(working_directory + "/../../pilotlight/" + folder + "/" + file, target_folder)

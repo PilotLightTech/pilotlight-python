@@ -76,8 +76,7 @@ class App:
 
     def pl_app_load(self):
 
-        # (run from out/, see .vscode/launch.json; __file__ isn't set when the
-        #  pilotlight_python host runs the script)
+        # paths are relative to the working directory (out/, see .vscode/launch.json)
         package_dir = Path(pl.__file__).resolve().parent
         cache_dir = Path.cwd().resolve().parent / "cache"
 
@@ -86,7 +85,8 @@ class App:
             plFileI.create_directory(str(cache_dir) + sub_dir)
         plVfsI.mount_directory("/cache", str(cache_dir))
         plVfsI.mount_directory("/shaders", str(package_dir / "shaders"))
-        plVfsI.mount_directory("/resources", str(package_dir / "resources"))
+        # sprite_map.png isn't shipped with the package, use the pilot light repo's
+        plVfsI.mount_directory("/resources", str(Path.cwd().resolve().parent.parent / "pilotlight" / "resources"))
 
         # window
         window_desc = plWindowDesc()

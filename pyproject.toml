@@ -1,0 +1,12 @@
+[build-system]
+requires = ["setuptools>=77", "wheel"]
+build-backend = "setuptools.build_meta"
+
+# project metadata & package data live in setup.py (the wheel wraps a prebuilt,
+# platform specific extension module)
+#
+# build a wheel (after scripts/gen_build.py + src/build.* -c deploy):
+#   python -m build --wheel
+#
+# override the platform tag (i.e. macOS):
+#   python -m build --wheel -C--build-option=--plat-name=macosx_15_0_arm64

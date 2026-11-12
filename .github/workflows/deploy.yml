@@ -50,7 +50,7 @@ jobs:
         # ./VulkanSDK.exe --help
         ./VulkanSDK.exe --accept-licenses --default-answer --root D:/a/VulkanSDK --confirm-command install
         python -m pip install pl-build
-        python -m pip install --upgrade pip twine wheel setuptools
+        python -m pip install --upgrade pip build
         cd ..
         git clone https://github.com/PilotLightTech/pilotlight
         cd pilotlight-python
@@ -71,7 +71,16 @@ jobs:
       shell: cmd
       run: |
         cd %GITHUB_WORKSPACE%
-        python -m setup bdist_wheel --plat-name win_amd64 --dist-dir dist
+        python -m build --wheel --outdir dist
+
+    - name: Smoke Test Wheel
+      shell: pwsh
+      run: |
+        $env:VULKAN_SDK = "D:/a/VulkanSDK"
+        python -m pip install (Get-ChildItem "$env:GITHUB_WORKSPACE/dist/*.whl").FullName
+        cd $env:RUNNER_TEMP
+        python "$env:GITHUB_WORKSPACE/scripts/smoke_test.py"
+        if ($LASTEXITCODE -ne 0) { exit 1 }
 
     - name: Upload Windows ${{ matrix.python-version }} Wheel
       uses: actions/upload-artifact@v4
@@ -109,10 +118,16 @@ jobs:
 
     - name: Install Dependencies
       run: |
-        wget -qO- https://packages.lunarg.com/lunarg-signing-key-pub.asc | sudo tee /etc/apt/trusted.gpg.d/lunarg.asc
-        sudo wget -qO /etc/apt/sources.list.d/lunarg-vulkan-1.4.309-jammy.list https://packages.lunarg.com/vulkan/1.4.309/lunarg-vulkan-1.4.309-jammy.list
+        # LunarG no longer publishes Ubuntu packages (last was 1.4.309), use the
+        # tarball so all platforms build against the same SDK version
+        curl -sSL https://sdk.lunarg.com/sdk/download/1.4.350.0/linux/vulkansdk-linux-x86_64-1.4.350.0.tar.xz -o vulkansdk.tar.xz
+        mkdir -p $HOME/VulkanSDK
+        tar -xJf vulkansdk.tar.xz -C $HOME/VulkanSDK
+        echo "VULKAN_SDK=$HOME/VulkanSDK/1.4.350.0/x86_64" >> "$GITHUB_ENV"
         sudo apt update
-        sudo apt install vulkan-sdk
+        # the SDK tarball doesn't provide libvulkan.so to link against, use the
+        # distro's loader (ABI stable, the SDK's headers are still used)
+        sudo apt install libvulkan-dev
         sudo apt install libx11-dev
         sudo apt install libxkbcommon-x11-dev
         sudo apt install libx11-xcb-dev
@@ -144,14 +159,30 @@ jobs:
     - name: Build Wheel
       run: |
         cd $GITHUB_WORKSPACE
-        python -m pip install --upgrade pip twine wheel setuptools
-        python -m setup bdist_wheel --plat-name manylinux1_x86_64 --dist-dir dist
+        python -m pip install --upgrade pip build auditwheel patchelf
+        python -m build --wheel --outdir dist
+
+        # tag with the real manylinux (glibc) level & check for unexpected
+        # dependencies. The Vulkan loader & X11/xcb libraries come from the
+        # user's system/driver, so they are excluded rather than bundled.
+        auditwheel repair dist/*.whl --wheel-dir wheelhouse \
+          --exclude 'libvulkan.so.1' \
+          --exclude 'libxcb*' \
+          --exclude 'libX11*' \
+          --exclude 'libxkbcommon*'
+        auditwheel show wheelhouse/*.whl
+
+    - name: Smoke Test Wheel
+      run: |
+        python -m pip install $GITHUB_WORKSPACE/wheelhouse/*.whl
+        cd $RUNNER_TEMP
+        python $GITHUB_WORKSPACE/scripts/smoke_test.py
 
     - name: Upload Linux ${{ matrix.python-version }} Wheel
       uses: actions/upload-artifact@v4
       with:
         name: linuxbuild${{ matrix.python-version }}
-        path: ${{ github.workspace }}/dist/*.whl
+        path: ${{ github.workspace }}/wheelhouse/*.whl
         overwrite: true
 
   build-apple-wheels:
@@ -159,6 +190,8 @@ jobs:
     runs-on: macos-26
     env:
       CXX: g++-10
+      # oldest macOS the wheel supports (must match the wheel's platform tag below)
+      MACOSX_DEPLOYMENT_TARGET: "15.0"
     strategy:
       matrix:
         python-version: ["3.14"]
@@ -209,8 +242,14 @@ jobs:
     - name: Build Wheel
       run: |
         cd $GITHUB_WORKSPACE
-        python -m pip install --upgrade pip twine wheel setuptools
-        python -m setup bdist_wheel --plat-name macosx_15_0_arm64 --dist-dir dist
+        python -m pip install --upgrade pip build
+        python -m build --wheel --outdir dist -C--build-option=--plat-name=macosx_15_0_arm64
+
+    - name: Smoke Test Wheel
+      run: |
+        python -m pip install $GITHUB_WORKSPACE/dist/*.whl
+        cd $RUNNER_TEMP
+        python $GITHUB_WORKSPACE/scripts/smoke_test.py
 
     - name: Upload Mac ${{ matrix.python-version }} Wheel
       uses: actions/upload-artifact@v4

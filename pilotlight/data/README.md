@@ -15,9 +15,10 @@ TBD
 ## Folder Structure
 * <ins>docs</ins> - Contains documentation for the project.
 * <ins>scripts</ins> - Contains helper scripts for various things.
+* <ins>resources</ins> - Contains fonts & other runtime resources.
 * <ins>shaders</ins> - Contains shader code.
 * <ins>src</ins> - Contains source code for this project.
 * <ins>tests</ins> - Contains tests.
 
 ## License
-TBD
+TBD

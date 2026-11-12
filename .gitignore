@@ -3,8 +3,13 @@
 .vs/
 .idea/
 out/
-shader-temp/
 cache/
+
+# packaging
+build/
+dist/
+wheelhouse/
+*.egg-info/
 
 # python
 examples/__pycache__/
@@ -19,7 +24,6 @@ pilotlight/*.so
 pilotlight/*.rdi
 pilotlight/*.dSYM
 pilotlight/shaders/
-pilotlight/assets/
 pilotlight/resources/
 
 # debug files
@@ -31,4 +35,4 @@ src/build.bat
 src/build.sh
 
 # misc
-.DS_Store
+.DS_Store

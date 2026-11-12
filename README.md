@@ -54,6 +54,19 @@ To upgrade an existing installation:
 python -m pip install --upgrade pilotlight
 ```
 
+### Requirements
+
+Wheels are published for CPython 3.14 on:
+
+* **Windows** (x64) — requires a GPU driver with Vulkan support.
+* **Linux** (x86_64, glibc 2.35+) — requires a GPU driver with Vulkan support and X11. The Vulkan loader and X11/xcb libraries are not bundled; on Debian/Ubuntu they can be installed with:
+
+  ```bash
+  sudo apt install libvulkan1 libx11-6 libx11-xcb1 libxcb1 libxcb-cursor0 libxcb-xfixes0 libxcb-keysyms1 libxkbcommon0
+  ```
+
+* **macOS** (Apple Silicon, macOS 15+) — uses Metal, no additional dependencies.
+
 ## Quick Start - Project Generator
 
 The project generator is the recommended starting point for new applications:
@@ -67,6 +80,8 @@ For example:
 ```bash
 python -m pilotlight new MyGame -2d
 ```
+
+Use `-3d` for the 3D template (the default is `-2d`).
 
 This creates a new `MyGame` directory containing the files and configuration needed to get started.
 
@@ -87,7 +102,7 @@ python src/app.py
 
 ## Using the Python API
 
-More complete examples are available in the generated projects and the repository examples. Documentation is lacking at the moment but will come soon.
+The generated projects are the best starting point for now; the repository's `sandbox/app.py` shows more of the API (3D drawing, UI, textures, and 2D drawing). Documentation is lacking at the moment but will come soon.
 
 > The Python API is still under active development. Some names and interfaces may change between releases until the package reaches a stable version.
 > 
@@ -106,4 +121,4 @@ Bug reports, documentation improvements, examples, and other contributions are w
 
 ## License
 
-**pilotlight-python** is licensed under the [MIT License](LICENSE), matching the core Pilot Light framework.
+**pilotlight-python** is licensed under the [MIT License](LICENSE), matching the core Pilot Light framework. Third party components bundled with or compiled into the published wheels are listed in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
