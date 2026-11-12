@@ -23,7 +23,6 @@ shader_initialize(PyObject* self, PyObject* args)
 {
     PyObject* ptFlags = PyObject_GetAttrString(args, "eFlags");
     PyObject* ptOptimizationLevel = PyObject_GetAttrString(args, "eOptimizationLevel");
-    PyObject* ptCacheOutputDirectory = PyObject_GetAttrString(args, "pcCacheOutputDirectory");
     PyObject* apcIncludeDirectories = PyObject_GetAttrString(args, "apcIncludeDirectories");
     PyObject* apcDirectories = PyObject_GetAttrString(args, "apcDirectories");
     PyObject* ptMacroDefinitions = PyObject_GetAttrString(args, "ptMacroDefinitions");
@@ -33,7 +32,6 @@ shader_initialize(PyObject* self, PyObject* args)
 
     PyLong_AsInt32(ptFlags, &tOptions.eFlags);
     PyLong_AsInt32(ptOptimizationLevel, &tOptions.eOptimizationLevel);
-    tOptions.pcCacheOutputDirectory = PyUnicode_AsUTF8(ptCacheOutputDirectory);
 
     Py_ssize_t szIncludeCount = PyList_Size(apcIncludeDirectories);
     for (Py_ssize_t i = 0; i < szIncludeCount; ++i)
@@ -91,14 +89,12 @@ shader_load_glsl(PyObject* self, PyObject* args, PyObject* kwargs)
     {
         PyObject* ptFlags = PyObject_GetAttrString(ptOptions, "eFlags");
         PyObject* ptOptimizationLevel = PyObject_GetAttrString(ptOptions, "eOptimizationLevel");
-        PyObject* ptCacheOutputDirectory = PyObject_GetAttrString(ptOptions, "pcCacheOutputDirectory");
         PyObject* apcIncludeDirectories = PyObject_GetAttrString(ptOptions, "apcIncludeDirectories");
         PyObject* apcDirectories = PyObject_GetAttrString(ptOptions, "apcDirectories");
         PyObject* ptMacroDefinitions = PyObject_GetAttrString(ptOptions, "ptMacroDefinitions");
 
         PyLong_AsInt32(ptFlags, &tOptions.eFlags);
         PyLong_AsInt32(ptOptimizationLevel, &tOptions.eOptimizationLevel);
-        tOptions.pcCacheOutputDirectory = PyUnicode_AsUTF8(ptCacheOutputDirectory);
 
         Py_ssize_t szIncludeCount = PyList_Size(apcIncludeDirectories);
         for (Py_ssize_t i = 0; i < szIncludeCount; ++i)
@@ -149,14 +145,12 @@ shader_compile_glsl(PyObject* self, PyObject* args, PyObject* kwargs)
     {
         PyObject* ptFlags = PyObject_GetAttrString(ptOptions, "eFlags");
         PyObject* ptOptimizationLevel = PyObject_GetAttrString(ptOptions, "eOptimizationLevel");
-        PyObject* ptCacheOutputDirectory = PyObject_GetAttrString(ptOptions, "pcCacheOutputDirectory");
         PyObject* apcIncludeDirectories = PyObject_GetAttrString(ptOptions, "apcIncludeDirectories");
         PyObject* apcDirectories = PyObject_GetAttrString(ptOptions, "apcDirectories");
         PyObject* ptMacroDefinitions = PyObject_GetAttrString(ptOptions, "ptMacroDefinitions");
 
         PyLong_AsInt32(ptFlags, &tOptions.eFlags);
         PyLong_AsInt32(ptOptimizationLevel, &tOptions.eOptimizationLevel);
-        tOptions.pcCacheOutputDirectory = PyUnicode_AsUTF8(ptCacheOutputDirectory);
 
         Py_ssize_t szIncludeCount = PyList_Size(apcIncludeDirectories);
         for (Py_ssize_t i = 0; i < szIncludeCount; ++i)

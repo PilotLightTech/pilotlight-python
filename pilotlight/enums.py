@@ -1,6 +1,5 @@
 from enum import IntEnum, IntFlag
 import pilotlight.pilotlight as pl
-import pilotlight.imgui as imgui
 
 ########################################################################################################################
 # [SECTION] enums
@@ -212,6 +211,17 @@ class plDrawFlag(IntFlag):
     PL_DRAW_FLAG_FRONT_FACE_CW=pl.PL_DRAW_FLAG_FRONT_FACE_CW
     PL_DRAW_FLAG_REVERSE_Z_DEPTH=pl.PL_DRAW_FLAG_REVERSE_Z_DEPTH
 
+class plDrawStrokeFlag(IntFlag):
+    PL_DRAW_STROKE_NONE=pl.PL_DRAW_STROKE_NONE
+    PL_DRAW_STROKE_CLOSED=pl.PL_DRAW_STROKE_CLOSED
+    PL_DRAW_STROKE_INSIDE=pl.PL_DRAW_STROKE_INSIDE
+    PL_DRAW_STROKE_OUTSIDE=pl.PL_DRAW_STROKE_OUTSIDE
+    PL_DRAW_STROKE_CENTER_BIASED=pl.PL_DRAW_STROKE_CENTER_BIASED
+    PL_DRAW_STROKE_CAP_SQUARE=pl.PL_DRAW_STROKE_CAP_SQUARE
+    PL_DRAW_STROKE_JOIN_MITER=pl.PL_DRAW_STROKE_JOIN_MITER
+    PL_DRAW_STROKE_NO_AA=pl.PL_DRAW_STROKE_NO_AA
+    PL_DRAW_STROKE_NO_AA_CAPS=pl.PL_DRAW_STROKE_NO_AA_CAPS
+
 class plDrawRectFlag(IntFlag):
     PL_DRAW_RECT_FLAG_NONE=pl.PL_DRAW_RECT_FLAG_NONE
     PL_DRAW_RECT_FLAG_ROUND_CORNERS_TOP_LEFT=pl.PL_DRAW_RECT_FLAG_ROUND_CORNERS_TOP_LEFT
@@ -225,259 +235,40 @@ class plDrawRectFlag(IntFlag):
     PL_DRAW_RECT_FLAG_ROUND_CORNERS_RIGHT=pl.PL_DRAW_RECT_FLAG_ROUND_CORNERS_RIGHT
     PL_DRAW_RECT_FLAG_ROUND_CORNERS_All=pl.PL_DRAW_RECT_FLAG_ROUND_CORNERS_All
 
-########################################################################################################################
-# [SECTION] Dear ImGui enums
-########################################################################################################################
+class plAssetEncoding(IntEnum):
+    PL_ASSET_ENCODING_TEXT=pl.PL_ASSET_ENCODING_TEXT
+    PL_ASSET_ENCODING_BINARY=pl.PL_ASSET_ENCODING_BINARY
+    PL_ASSET_ENCODING_AUTO=pl.PL_ASSET_ENCODING_AUTO
 
-class ImGuiWindowFlags(IntFlag):
-    NoTitleBar=imgui.ImGuiWindowFlags_NoTitleBar
-    NoResize=imgui.ImGuiWindowFlags_NoResize
-    NoMove=imgui.ImGuiWindowFlags_NoMove
-    NoScrollbar=imgui.ImGuiWindowFlags_NoScrollbar
-    NoScrollWithMouse=imgui.ImGuiWindowFlags_NoScrollWithMouse
-    NoCollapse=imgui.ImGuiWindowFlags_NoCollapse
-    AlwaysAutoResize=imgui.ImGuiWindowFlags_AlwaysAutoResize
-    NoBackground=imgui.ImGuiWindowFlags_NoBackground
-    NoSavedSettings=imgui.ImGuiWindowFlags_NoSavedSettings
-    NoMouseInputs=imgui.ImGuiWindowFlags_NoMouseInputs
-    MenuBar=imgui.ImGuiWindowFlags_MenuBar
-    HorizontalScrollbar=imgui.ImGuiWindowFlags_HorizontalScrollbar
-    NoFocusOnAppearing=imgui.ImGuiWindowFlags_NoFocusOnAppearing
-    NoBringToFrontOnFocus=imgui.ImGuiWindowFlags_NoBringToFrontOnFocus
-    AlwaysVerticalScrollbar=imgui.ImGuiWindowFlags_AlwaysVerticalScrollbar
-    AlwaysHorizontalScrollbar=imgui.ImGuiWindowFlags_AlwaysHorizontalScrollbar
-    NoNavInputs=imgui.ImGuiWindowFlags_NoNavInputs
-    NoNavFocus=imgui.ImGuiWindowFlags_NoNavFocus
-    UnsavedDocument=imgui.ImGuiWindowFlags_UnsavedDocument
-    NoDocking=imgui.ImGuiWindowFlags_NoDocking
-    NoNav=imgui.ImGuiWindowFlags_NoNav
-    NoDecoration=imgui.ImGuiWindowFlags_NoDecoration
-    NoInputs=imgui.ImGuiWindowFlags_NoInputs
+class plGltfImportFlags(IntFlag):
+    PL_GLTF_IMPORT_FLAGS_NONE=pl.PL_GLTF_IMPORT_FLAGS_NONE
+    PL_GLTF_IMPORT_FLAGS_IMPORT_MESHES=pl.PL_GLTF_IMPORT_FLAGS_IMPORT_MESHES
+    PL_GLTF_IMPORT_FLAGS_IMPORT_MATERIALS=pl.PL_GLTF_IMPORT_FLAGS_IMPORT_MATERIALS
+    PL_GLTF_IMPORT_FLAGS_IMPORT_TEXTURES=pl.PL_GLTF_IMPORT_FLAGS_IMPORT_TEXTURES
+    PL_GLTF_IMPORT_FLAGS_IMPORT_ANIMATIONS=pl.PL_GLTF_IMPORT_FLAGS_IMPORT_ANIMATIONS
+    PL_GLTF_IMPORT_FLAGS_IMPORT_SKELETONS=pl.PL_GLTF_IMPORT_FLAGS_IMPORT_SKELETONS
+    PL_GLTF_IMPORT_FLAGS_IMPORT_SCENES=pl.PL_GLTF_IMPORT_FLAGS_IMPORT_SCENES
+    PL_GLTF_IMPORT_FLAGS_IMPORT_SKINS=pl.PL_GLTF_IMPORT_FLAGS_IMPORT_SKINS
+    PL_GLTF_IMPORT_FLAGS_IMPORT_ALL_ASSETS=pl.PL_GLTF_IMPORT_FLAGS_IMPORT_ALL_ASSETS
 
-class ImGuiSliderFlags(IntFlag):
-    Logarithmic=imgui.ImGuiSliderFlags_Logarithmic
-    NoRoundToFormat=imgui.ImGuiSliderFlags_NoRoundToFormat
-    NoInput=imgui.ImGuiSliderFlags_NoInput
-    WrapAround=imgui.ImGuiSliderFlags_WrapAround
-    ClampOnInput=imgui.ImGuiSliderFlags_ClampOnInput
-    ClampZeroRange=imgui.ImGuiSliderFlags_ClampZeroRange
-    NoSpeedTweaks=imgui.ImGuiSliderFlags_NoSpeedTweaks
-    ColorMarkers=imgui.ImGuiSliderFlags_ColorMarkers
-    AlwaysClamp=imgui.ImGuiSliderFlags_AlwaysClamp
+class plDirectoryEntryType(IntEnum):
+    PL_DIRECTORY_ENTRY_TYPE_UNKNOWN=pl.PL_DIRECTORY_ENTRY_TYPE_UNKNOWN
+    PL_DIRECTORY_ENTRY_TYPE_DIRECTORY=pl.PL_DIRECTORY_ENTRY_TYPE_DIRECTORY
+    PL_DIRECTORY_ENTRY_TYPE_FILE=pl.PL_DIRECTORY_ENTRY_TYPE_FILE
+    PL_DIRECTORY_ENTRY_TYPE_PIPE=pl.PL_DIRECTORY_ENTRY_TYPE_PIPE
+    PL_DIRECTORY_ENTRY_TYPE_LINK=pl.PL_DIRECTORY_ENTRY_TYPE_LINK
+    PL_DIRECTORY_ENTRY_TYPE_SOCKET=pl.PL_DIRECTORY_ENTRY_TYPE_SOCKET
+    PL_DIRECTORY_ENTRY_TYPE_BLOCK_DEVICE=pl.PL_DIRECTORY_ENTRY_TYPE_BLOCK_DEVICE
+    PL_DIRECTORY_ENTRY_TYPE_CHARACTER_DEVICE=pl.PL_DIRECTORY_ENTRY_TYPE_CHARACTER_DEVICE
 
-class ImGuiInputTextFlags(IntFlag):
-    CharsDecimal=imgui.ImGuiInputTextFlags_CharsDecimal
-    CharsHexadecimal=imgui.ImGuiInputTextFlags_CharsHexadecimal
-    CharsScientific=imgui.ImGuiInputTextFlags_CharsScientific
-    CharsUppercase=imgui.ImGuiInputTextFlags_CharsUppercase
-    CharsNoBlank=imgui.ImGuiInputTextFlags_CharsNoBlank
-    AllowTabInput=imgui.ImGuiInputTextFlags_AllowTabInput
-    EnterReturnsTrue=imgui.ImGuiInputTextFlags_EnterReturnsTrue
-    EscapeClearsAll=imgui.ImGuiInputTextFlags_EscapeClearsAll
-    CtrlEnterForNewLine=imgui.ImGuiInputTextFlags_CtrlEnterForNewLine
-    ReadOnly=imgui.ImGuiInputTextFlags_ReadOnly
-    Password=imgui.ImGuiInputTextFlags_Password
-    AlwaysOverwrite=imgui.ImGuiInputTextFlags_AlwaysOverwrite
-    AutoSelectAll=imgui.ImGuiInputTextFlags_AutoSelectAll
-    ParseEmptyRefVal=imgui.ImGuiInputTextFlags_ParseEmptyRefVal
-    DisplayEmptyRefVal=imgui.ImGuiInputTextFlags_DisplayEmptyRefVal
-    NoHorizontalScroll=imgui.ImGuiInputTextFlags_NoHorizontalScroll
-    NoUndoRedo=imgui.ImGuiInputTextFlags_NoUndoRedo
-    ElideLeft=imgui.ImGuiInputTextFlags_ElideLeft
-    CallbackCompletion=imgui.ImGuiInputTextFlags_CallbackCompletion
-    CallbackHistory=imgui.ImGuiInputTextFlags_CallbackHistory
-    CallbackAlways=imgui.ImGuiInputTextFlags_CallbackAlways
-    CallbackCharFilter=imgui.ImGuiInputTextFlags_CallbackCharFilter
-    CallbackResize=imgui.ImGuiInputTextFlags_CallbackResize
-    CallbackEdit=imgui.ImGuiInputTextFlags_CallbackEdit
-    WordWrap=imgui.ImGuiInputTextFlags_WordWrap
+class plUiCondition(IntFlag):
+    PL_UI_COND_NONE=pl.PL_UI_COND_NONE
+    PL_UI_COND_ALWAYS=pl.PL_UI_COND_ALWAYS
+    PL_UI_COND_ONCE=pl.PL_UI_COND_ONCE
+    PL_UI_COND_APPEARING=pl.PL_UI_COND_APPEARING
 
-class ImGuiMouseButton(IntEnum):
-    Left=imgui.ImGuiMouseButton_Left
-    Right=imgui.ImGuiMouseButton_Right
-    Middle=imgui.ImGuiMouseButton_Middle
-    COUNT=imgui.ImGuiMouseButton_COUNT
-
-class ImGuiMouseCursor(IntEnum):
-    Arrow=imgui.ImGuiMouseCursor_Arrow
-    TextInput=imgui.ImGuiMouseCursor_TextInput
-    ResizeAll=imgui.ImGuiMouseCursor_ResizeAll
-    ResizeNS=imgui.ImGuiMouseCursor_ResizeNS
-    ResizeEW=imgui.ImGuiMouseCursor_ResizeEW
-    ResizeNESW=imgui.ImGuiMouseCursor_ResizeNESW
-    ResizeNWSE=imgui.ImGuiMouseCursor_ResizeNWSE
-    Hand=imgui.ImGuiMouseCursor_Hand
-    Wait=imgui.ImGuiMouseCursor_Wait
-    Progress=imgui.ImGuiMouseCursor_Progress
-    NotAllowed=imgui.ImGuiMouseCursor_NotAllowed
-    COUNT=imgui.ImGuiMouseCursor_COUNT
-
-class ImGuiButtonFlags(IntFlag):
-    MouseButtonLeft=imgui.ImGuiButtonFlags_MouseButtonLeft
-    MouseButtonRight=imgui.ImGuiButtonFlags_MouseButtonRight
-    MouseButtonMiddle=imgui.ImGuiButtonFlags_MouseButtonMiddle
-    EnableNav=imgui.ImGuiButtonFlags_EnableNav
-    AllowOverlap=imgui.ImGuiButtonFlags_AllowOverlap
-
-class ImGuiDir(IntEnum):
-    Left=imgui.ImGuiDir_Left
-    Right=imgui.ImGuiDir_Right
-    Up=imgui.ImGuiDir_Up
-    Down=imgui.ImGuiDir_Down
-    COUNT=imgui.ImGuiDir_COUNT
-
-class ImGuiColorEditFlags(IntFlag):
-    NoAlpha=imgui.ImGuiColorEditFlags_NoAlpha
-    NoPicker=imgui.ImGuiColorEditFlags_NoPicker
-    NoOptions=imgui.ImGuiColorEditFlags_NoOptions
-    NoSmallPreview=imgui.ImGuiColorEditFlags_NoSmallPreview
-    NoInputs=imgui.ImGuiColorEditFlags_NoInputs
-    NoTooltip=imgui.ImGuiColorEditFlags_NoTooltip
-    NoLabel=imgui.ImGuiColorEditFlags_NoLabel
-    NoSidePreview=imgui.ImGuiColorEditFlags_NoSidePreview
-    NoDragDrop=imgui.ImGuiColorEditFlags_NoDragDrop
-    NoBorder=imgui.ImGuiColorEditFlags_NoBorder
-    NoColorMarkers=imgui.ImGuiColorEditFlags_NoColorMarkers
-    AlphaOpaque=imgui.ImGuiColorEditFlags_AlphaOpaque
-    AlphaNoBg=imgui.ImGuiColorEditFlags_AlphaNoBg
-    AlphaPreviewHalf=imgui.ImGuiColorEditFlags_AlphaPreviewHalf
-    AlphaBar=imgui.ImGuiColorEditFlags_AlphaBar
-    HDR=imgui.ImGuiColorEditFlags_HDR
-    DisplayRGB=imgui.ImGuiColorEditFlags_DisplayRGB
-    DisplayHSV=imgui.ImGuiColorEditFlags_DisplayHSV
-    DisplayHex=imgui.ImGuiColorEditFlags_DisplayHex
-    Uint8=imgui.ImGuiColorEditFlags_Uint8
-    Float=imgui.ImGuiColorEditFlags_Float
-    PickerHueBar=imgui.ImGuiColorEditFlags_PickerHueBar
-    PickerHueWheel=imgui.ImGuiColorEditFlags_PickerHueWheel
-    InputRGB=imgui.ImGuiColorEditFlags_InputRGB
-    InputHSV=imgui.ImGuiColorEditFlags_InputHSV
-
-class ImGuiHoveredFlags(IntFlag):
-    ChildWindows=imgui.ImGuiHoveredFlags_ChildWindows
-    RootWindow=imgui.ImGuiHoveredFlags_RootWindow
-    AnyWindow=imgui.ImGuiHoveredFlags_AnyWindow
-    NoPopupHierarchy=imgui.ImGuiHoveredFlags_NoPopupHierarchy
-    DockHierarchy=imgui.ImGuiHoveredFlags_DockHierarchy
-    AllowWhenBlockedByPopup=imgui.ImGuiHoveredFlags_AllowWhenBlockedByPopup
-    AllowWhenBlockedByActiveItem=imgui.ImGuiHoveredFlags_AllowWhenBlockedByActiveItem
-    AllowWhenOverlappedByItem=imgui.ImGuiHoveredFlags_AllowWhenOverlappedByItem
-    AllowWhenOverlappedByWindow=imgui.ImGuiHoveredFlags_AllowWhenOverlappedByWindow
-    AllowWhenDisabled=imgui.ImGuiHoveredFlags_AllowWhenDisabled
-    NoNavOverride=imgui.ImGuiHoveredFlags_NoNavOverride
-    AllowWhenOverlapped=imgui.ImGuiHoveredFlags_AllowWhenOverlapped
-    RectOnly=imgui.ImGuiHoveredFlags_RectOnly
-    RootAndChildWindows=imgui.ImGuiHoveredFlags_RootAndChildWindows
-    ForTooltip=imgui.ImGuiHoveredFlags_ForTooltip
-    Stationary=imgui.ImGuiHoveredFlags_Stationary
-    DelayNone=imgui.ImGuiHoveredFlags_DelayNone
-    DelayShort=imgui.ImGuiHoveredFlags_DelayShort
-    DelayNormal=imgui.ImGuiHoveredFlags_DelayNormal
-    NoSharedDelay=imgui.ImGuiHoveredFlags_NoSharedDelay
-
-class ImGuiFocusedFlags(IntFlag):
-    ChildWindows=imgui.ImGuiFocusedFlags_ChildWindows
-    RootWindow=imgui.ImGuiFocusedFlags_RootWindow
-    AnyWindow=imgui.ImGuiFocusedFlags_AnyWindow
-    NoPopupHierarchy=imgui.ImGuiFocusedFlags_NoPopupHierarchy
-    DockHierarchy=imgui.ImGuiFocusedFlags_DockHierarchy
-    RootAndChildWindows=imgui.ImGuiFocusedFlags_RootAndChildWindows
-
-class ImGuiCond(IntFlag):
-    Always=imgui.ImGuiCond_Always
-    Once=imgui.ImGuiCond_Once
-    FirstUseEver=imgui.ImGuiCond_FirstUseEver
-    Appearing=imgui.ImGuiCond_Appearing
-
-class ImGuiPopupFlags(IntFlag):
-    MouseButtonLeft=imgui.ImGuiPopupFlags_MouseButtonLeft
-    MouseButtonRight=imgui.ImGuiPopupFlags_MouseButtonRight
-    MouseButtonMiddle=imgui.ImGuiPopupFlags_MouseButtonMiddle
-    NoReopen=imgui.ImGuiPopupFlags_NoReopen
-    NoOpenOverExistingPopup=imgui.ImGuiPopupFlags_NoOpenOverExistingPopup
-    NoOpenOverItems=imgui.ImGuiPopupFlags_NoOpenOverItems
-    AnyPopupId=imgui.ImGuiPopupFlags_AnyPopupId
-    AnyPopupLevel=imgui.ImGuiPopupFlags_AnyPopupLevel
-    AnyPopup=imgui.ImGuiPopupFlags_AnyPopup
-
-class ImGuiSelectableFlags(IntFlag):
-    NoAutoClosePopups=imgui.ImGuiSelectableFlags_NoAutoClosePopups
-    SpanAllColumns=imgui.ImGuiSelectableFlags_SpanAllColumns
-    AllowDoubleClick=imgui.ImGuiSelectableFlags_AllowDoubleClick
-    Disabled=imgui.ImGuiSelectableFlags_Disabled
-    AllowOverlap=imgui.ImGuiSelectableFlags_AllowOverlap
-    Highlight=imgui.ImGuiSelectableFlags_Highlight
-    SelectOnNav=imgui.ImGuiSelectableFlags_SelectOnNav
-
-class ImGuiTabBarFlags(IntFlag):
-    Reorderable=imgui.ImGuiTabBarFlags_Reorderable
-    AutoSelectNewTabs=imgui.ImGuiTabBarFlags_AutoSelectNewTabs
-    TabListPopupButton=imgui.ImGuiTabBarFlags_TabListPopupButton
-    NoCloseWithMiddleMouseButton=imgui.ImGuiTabBarFlags_NoCloseWithMiddleMouseButton
-    NoTabListScrollingButtons=imgui.ImGuiTabBarFlags_NoTabListScrollingButtons
-    NoTooltip=imgui.ImGuiTabBarFlags_NoTooltip
-    DrawSelectedOverline=imgui.ImGuiTabBarFlags_DrawSelectedOverline
-    FittingPolicyMixed=imgui.ImGuiTabBarFlags_FittingPolicyMixed
-    FittingPolicyShrink=imgui.ImGuiTabBarFlags_FittingPolicyShrink
-    FittingPolicyScroll=imgui.ImGuiTabBarFlags_FittingPolicyScroll
-
-class ImGuiItemFlags(IntFlag):
-    NoTabStop=imgui.ImGuiItemFlags_NoTabStop
-    NoNav=imgui.ImGuiItemFlags_NoNav
-    NoNavDefaultFocus=imgui.ImGuiItemFlags_NoNavDefaultFocus
-    ButtonRepeat=imgui.ImGuiItemFlags_ButtonRepeat
-    AutoClosePopups=imgui.ImGuiItemFlags_AutoClosePopups
-    AllowDuplicateId=imgui.ImGuiItemFlags_AllowDuplicateId
-    Disabled=imgui.ImGuiItemFlags_Disabled
-
-class ImGuiChildFlags(IntFlag):
-    Borders=imgui.ImGuiChildFlags_Borders
-    AlwaysUseWindowPadding=imgui.ImGuiChildFlags_AlwaysUseWindowPadding
-    ResizeX=imgui.ImGuiChildFlags_ResizeX
-    ResizeY=imgui.ImGuiChildFlags_ResizeY
-    AutoResizeX=imgui.ImGuiChildFlags_AutoResizeX
-    AutoResizeY=imgui.ImGuiChildFlags_AutoResizeY
-    AlwaysAutoResize=imgui.ImGuiChildFlags_AlwaysAutoResize
-    FrameStyle=imgui.ImGuiChildFlags_FrameStyle
-    NavFlattened=imgui.ImGuiChildFlags_NavFlattened
-
-class ImGuiTabItemFlags(IntFlag):
-    UnsavedDocument=imgui.ImGuiTabItemFlags_UnsavedDocument
-    SetSelected=imgui.ImGuiTabItemFlags_SetSelected
-    NoCloseWithMiddleMouseButton=imgui.ImGuiTabItemFlags_NoCloseWithMiddleMouseButton
-    NoPushId=imgui.ImGuiTabItemFlags_NoPushId
-    NoTooltip=imgui.ImGuiTabItemFlags_NoTooltip
-    NoReorder=imgui.ImGuiTabItemFlags_NoReorder
-    Leading=imgui.ImGuiTabItemFlags_Leading
-    Trailing=imgui.ImGuiTabItemFlags_Trailing
-    NoAssumedClosure=imgui.ImGuiTabItemFlags_NoAssumedClosure
-
-class ImGuiTreeNodeFlags(IntFlag):
-    Selected=imgui.ImGuiTreeNodeFlags_Selected
-    Framed=imgui.ImGuiTreeNodeFlags_Framed
-    AllowOverlap=imgui.ImGuiTreeNodeFlags_AllowOverlap
-    NoTreePushOnOpen=imgui.ImGuiTreeNodeFlags_NoTreePushOnOpen
-    NoAutoOpenOnLog=imgui.ImGuiTreeNodeFlags_NoAutoOpenOnLog
-    DefaultOpen=imgui.ImGuiTreeNodeFlags_DefaultOpen
-    OpenOnDoubleClick=imgui.ImGuiTreeNodeFlags_OpenOnDoubleClick
-    OpenOnArrow=imgui.ImGuiTreeNodeFlags_OpenOnArrow
-    Leaf=imgui.ImGuiTreeNodeFlags_Leaf
-    Bullet=imgui.ImGuiTreeNodeFlags_Bullet
-    FramePadding=imgui.ImGuiTreeNodeFlags_FramePadding
-    SpanAvailWidth=imgui.ImGuiTreeNodeFlags_SpanAvailWidth
-    SpanFullWidth=imgui.ImGuiTreeNodeFlags_SpanFullWidth
-    SpanLabelWidth=imgui.ImGuiTreeNodeFlags_SpanLabelWidth
-    SpanAllColumns=imgui.ImGuiTreeNodeFlags_SpanAllColumns
-    LabelSpanAllColumns=imgui.ImGuiTreeNodeFlags_LabelSpanAllColumns
-    NavLeftJumpsToParent=imgui.ImGuiTreeNodeFlags_NavLeftJumpsToParent
-    CollapsingHeader=imgui.ImGuiTreeNodeFlags_CollapsingHeader
-
-class ImGuiComboFlags(IntFlag):
-    PopupAlignLeft=imgui.ImGuiComboFlags_PopupAlignLeft
-    HeightSmall=imgui.ImGuiComboFlags_HeightSmall
-    HeightRegular=imgui.ImGuiComboFlags_HeightRegular
-    HeightLarge=imgui.ImGuiComboFlags_HeightLarge
-    HeightLargest=imgui.ImGuiComboFlags_HeightLargest
-    NoArrowButton=imgui.ImGuiComboFlags_NoArrowButton
-    NoPreview=imgui.ImGuiComboFlags_NoPreview
-    WidthFitPreview=imgui.ImGuiComboFlags_WidthFitPreview
+class plScriptFlag(IntFlag):
+    PL_SCRIPT_FLAG_NONE=pl.PL_SCRIPT_FLAG_NONE
+    PL_SCRIPT_FLAG_PLAYING=pl.PL_SCRIPT_FLAG_PLAYING
+    PL_SCRIPT_FLAG_PLAY_ONCE=pl.PL_SCRIPT_FLAG_PLAY_ONCE
+    PL_SCRIPT_FLAG_RELOADABLE=pl.PL_SCRIPT_FLAG_RELOADABLE

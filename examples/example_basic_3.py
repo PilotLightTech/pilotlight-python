@@ -4,7 +4,6 @@ from pathlib import Path
 # core
 import pilotlight.pilotlight as pl
 from pilotlight.pilotlight import *
-from pilotlight.imgui import *
 from pilotlight.enums import *
 from pilotlight.types import *
 
@@ -39,6 +38,7 @@ class App:
         plVfsI.mount_directory("/shaders", os.path.dirname(os.path.abspath(pl.__file__)) + "/shaders")
         plVfsI.mount_directory("/shader-temp", str(Path.cwd()) + "/../shader-temp")
         plVfsI.mount_directory("/assets", str(Path.cwd()) + "/../pilotlight/assets")
+        plVfsI.mount_directory("/resources", str(Path.cwd()) + "/../pilotlight/resources")
 
         # Create and show the OS window.
         window_desc = plWindowDesc()
@@ -61,7 +61,6 @@ class App:
         # This is required even for simple drawing examples because the
         # rendering path may still rely on shader compilation/setup.
         shader_options = plShaderOptions()
-        shader_options.pcCacheOutputDirectory = "/shader-temp/"
         shader_options.apcDirectories = ["/shaders/"]
         shader_options.apcIncludeDirectories = ["/shaders/"]
         shader_options.eFlags = (
@@ -78,12 +77,11 @@ class App:
         ptFontAtlas = plDrawI.get_current_font_atlas()
         self.ptFont = plDrawI.get_first_font(ptFontAtlas)
 
+        # the resource extension is initialized by the starter extension
+        # (PL_STARTER_FLAGS_RESOURCE_EXT is part of PL_STARTER_FLAGS_ALL_EXTENSIONS)
         self.ptDevice = plStarterI.get_device()
-        resourceManagerInit = plResourceManagerInit()
-        resourceManagerInit.ptDevice = self.ptDevice
-        plResourceI.initialize(resourceManagerInit)
 
-        self.texture_resource = plResourceI.load("/assets/core/textures/sprite_map.png", 0)
+        self.texture_resource = plResourceI.load("/resources/sprite_map.png", 0)
         self.texture_handle = plResourceI.get_texture(self.texture_resource)
         self.texture_bg = plDrawI.create_bind_group_for_texture(self.texture_handle)
 
@@ -94,7 +92,6 @@ class App:
         """
 
         plGraphicsI.flush_device(plStarterI.get_device())
-        plResourceI.cleanup()
         plStarterI.cleanup()
         
         plWindowI.destroy(self.ptWindow)
@@ -119,8 +116,6 @@ class App:
         # Begin the frame. If it returns False, skip rendering this frame.
         if not plStarterI.begin_frame():
             return
-        
-        plResourceI.new_frame()
 
         # Foreground fgLayer is a convenient draw list for 2D overlay-style
         # rendering.

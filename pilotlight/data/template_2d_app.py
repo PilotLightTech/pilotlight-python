@@ -9,15 +9,12 @@ from pathlib import Path
 # pilot light stuff
 import pilotlight.pilotlight as pl
 from pilotlight.pilotlight import *
-from pilotlight.imgui import *
 from pilotlight.enums import *
 from pilotlight.types import *
 
 class App:
 
     def __init__(self):
-        self.show_imgui_demo = False
-        self.show_implot_demo = False
         self.some_string_array = "pizza"
 
     # -------------------------------------------------------------------------
@@ -32,6 +29,7 @@ class App:
         plVfsI.mount_directory("/cache", file_directory + "/../cache")
         plVfsI.mount_directory("/shader-temp", file_directory + "/../shader-temp")
         plVfsI.mount_directory("/assets", file_directory + "/../assets")
+        plVfsI.mount_directory("/resources", file_directory + "/../resources")
 
         # create & show the OS window
         window_desc = plWindowDesc()
@@ -66,14 +64,13 @@ class App:
         tFontConfig.uHOverSampling = 1
         tFontConfig.uVOverSampling = 1
         tFontConfig.ptRanges = [tFontRange]
-        self.ptFont = plDrawI.add_font_from_file_ttf(self.ptFontAtlas, tFontConfig, "/assets/core/fonts/Cousine-Regular.ttf");
+        self.ptFont = plDrawI.add_font_from_file_ttf(self.ptFontAtlas, tFontConfig, "/resources/Cousine-Regular.ttf");
 
         self.drawlist = plDrawI.request_2d_drawlist()
         self.ptFGLayer = plDrawI.request_2d_layer(self.drawlist)
 
         # shader system
         shader_options = plShaderOptions()
-        shader_options.pcCacheOutputDirectory = "/shader-temp/"
         shader_options.apcDirectories = ["/shaders/"]
         shader_options.apcIncludeDirectories = ["/shaders/"]
         shader_options.eFlags = plShaderFlags.PL_SHADER_FLAGS_AUTO_OUTPUT
@@ -87,13 +84,8 @@ class App:
         plDrawI.build_font_atlas(ptCmdBuffer, self.ptFontAtlas) # actually record
         plStarterI.return_raw_command_buffer(ptCmdBuffer) # will submit & wait
 
-        tRenderAttachmentInfo = plRenderAttachmentInfo()
-        plStarterI.get_render_attachment_info(tRenderAttachmentInfo) # out parameter
-        plDearImGuiI.initialize(plStarterI.get_device(), plStarterI.get_swapchain(), tRenderAttachmentInfo)
-
     def pl_app_shutdown(self): # called on shutdown
         plGraphicsI.flush_device(plStarterI.get_device())
-        plDearImGuiI.cleanup()
         plDrawI.return_2d_layer(self.ptFGLayer)
         plDrawI.return_2d_drawlist(self.drawlist)
         plDrawI.cleanup_font_atlas(self.ptFontAtlas)
@@ -110,13 +102,6 @@ class App:
             return
 
         plDrawI.new_frame()
-        plDearImGuiI.new_frame(plStarterI.get_device())
-
-        if self.show_imgui_demo:
-            self.show_imgui_demo = ImGui.ShowDemoWindow(self.show_imgui_demo)
-        
-        if self.show_implot_demo:
-            self.show_implot_demo = ImPlot.ShowDemoWindow(self.show_implot_demo)
 
         # outer frame
         plDrawI.add_rect(
@@ -143,30 +128,7 @@ class App:
             if plUiI.button("Add Message"):
                 plScreenLogI.add_message(1.0, "Logging from python!")
 
-            _, self.show_imgui_demo = plUiI.checkbox("Show ImGui Demo", self.show_imgui_demo)
-            _, self.show_implot_demo = plUiI.checkbox("Show ImPlot Demo", self.show_implot_demo)
-
             plUiI.end_window()
-
-        # dear imgui
-        if ImGui.BeginMainMenuBar():
-            if ImGui.BeginMenu("File"):
-                ImGui.EndMenu()
-            if ImGui.BeginMenu("Edit", False):
-                ImGui.EndMenu()
-            if ImGui.BeginMenu("Tools"):
-                _, self.show_imgui_demo = ImGui.MenuItem("Show ImGui Demo", "", self.show_imgui_demo)
-                _, self.show_implot_demo = ImGui.MenuItem("Show ImPlot Demo", "", self.show_implot_demo)
-                ImGui.EndMenu()
-            if ImGui.BeginMenu("Help"):
-                ImGui.MenuItemSimple("Check For Update")
-                ImGui.MenuItemSimple("About", "-a")
-                ImGui.EndMenu()
-            ImGui.EndMainMenuBar()
-        if ImGui.Begin("ImGui Window"):
-            if ImGui.Button("Press Me"):
-                print("Pressed Imgui Button")
-        ImGui.End()
 
         # begin render pass
         cmdBuffer = plStarterI.begin_main_pass()
@@ -177,7 +139,6 @@ class App:
         tRenderAttachmentInfo = plRenderAttachmentInfo()
         plStarterI.get_render_attachment_info(tRenderAttachmentInfo)
         plDrawI.submit_2d_drawlist(self.drawlist, cmdBuffer, tMainViewportSize.x, tMainViewportSize.y, plGraphicsI.get_swapchain_info(plStarterI.get_swapchain()).eSampleCount, tRenderAttachmentInfo)
-        plDearImGuiI.render(cmdBuffer)
 
         plStarterI.end_main_pass()
 

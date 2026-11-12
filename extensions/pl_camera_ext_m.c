@@ -1,5 +1,5 @@
 /*
-   pl_ecs_ext_m.c
+   pl_camera_ext_m.c
 */
 
 /*
@@ -91,10 +91,10 @@ pl__get_camera_ortho_desc(PyObject* ptPythonDesc, plCameraOrthographicDesc* ptDe
 }
 
 PyObject*
-camera_register_ecs_system(PyObject* self)
+camera_register_ecs_components(PyObject* self)
 {
  
-    gptCameraEcs->register_ecs_system();
+    gptCameraEcs->register_ecs_components();
     Py_RETURN_NONE;
 }
 
@@ -119,7 +119,9 @@ camera_ecs_run_ecs(PyObject* self, PyObject* args)
         &ptPyLibrary))
 		return NULL;
 
-    plComponentLibrary* ptCompLibrary = PyCapsule_GetPointer(ptPyLibrary, "plComponentLibrary");
+    plComponentLibrary* ptCompLibrary = pl_library_from_py(ptPyLibrary);
+    if(ptCompLibrary == NULL)
+        return NULL;
 
     gptCameraEcs->run_ecs(ptCompLibrary);
     Py_RETURN_NONE;
@@ -144,7 +146,9 @@ camera_ecs_create_perspective(PyObject* self, PyObject* args, PyObject* kwargs)
         &ptPyLibrary, &pcName, &ptPyDesc))
 		return NULL;
 
-    plComponentLibrary* ptCompLibrary = PyCapsule_GetPointer(ptPyLibrary, "plComponentLibrary");
+    plComponentLibrary* ptCompLibrary = pl_library_from_py(ptPyLibrary);
+    if(ptCompLibrary == NULL)
+        return NULL;
 
     plCameraPerspectiveDesc tDesc = {0};
     pl__get_camera_perspective_desc(ptPyDesc, &tDesc);
@@ -617,7 +621,7 @@ static PyMethodDef gatCommandsplCameraI[] =
     {"translate_local", (PyCFunction)camera_translate_local, METH_VARARGS | METH_KEYWORDS | METH_STATIC, NULL},
     {"rotate_euler", (PyCFunction)camera_rotate_euler, METH_VARARGS | METH_KEYWORDS | METH_STATIC, NULL},
     {"rotate_euler_local", (PyCFunction)camera_rotate_euler_local, METH_VARARGS | METH_KEYWORDS | METH_STATIC, NULL},
-    {"set_set_euler", (PyCFunction)camera_set_euler, METH_VARARGS | METH_KEYWORDS | METH_STATIC, NULL},
+    {"set_euler", (PyCFunction)camera_set_euler, METH_VARARGS | METH_KEYWORDS | METH_STATIC, NULL},
     {"set_y_fov", (PyCFunction)camera_set_y_fov, METH_VARARGS | METH_KEYWORDS | METH_STATIC, NULL},
     {"set_viewport", (PyCFunction)camera_set_viewport, METH_VARARGS | METH_KEYWORDS | METH_STATIC, NULL},
     {"set_clip_planes", (PyCFunction)camera_set_clip_planes, METH_VARARGS | METH_KEYWORDS | METH_STATIC, NULL},
@@ -629,7 +633,7 @@ static PyMethodDef gatCommandsplCameraI[] =
 
 static PyMethodDef gatCommandsplCameraEcsI[] =
 {
-    {"register_ecs_system", (PyCFunction)camera_register_ecs_system, METH_NOARGS | METH_STATIC, NULL},
+    {"register_ecs_components", (PyCFunction)camera_register_ecs_components, METH_NOARGS | METH_STATIC, NULL},
     {"create_perspective", (PyCFunction)camera_ecs_create_perspective, METH_VARARGS | METH_KEYWORDS | METH_STATIC, NULL},
     {"get_ecs_type_key", (PyCFunction)camera_get_ecs_type_key, METH_NOARGS | METH_STATIC, NULL},
     {"run_ecs", (PyCFunction)camera_ecs_run_ecs, METH_VARARGS | METH_STATIC, NULL},

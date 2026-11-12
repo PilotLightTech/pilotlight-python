@@ -22,6 +22,17 @@ Index of this file:
 
 plPythonIntConstantPair gatDrawIntPairs[] = {
 
+    // plDrawStrokeFlags
+    PL_ADD_INT_CONSTANT(PL_DRAW_STROKE_NONE),
+    PL_ADD_INT_CONSTANT(PL_DRAW_STROKE_CLOSED),
+    PL_ADD_INT_CONSTANT(PL_DRAW_STROKE_INSIDE),
+    PL_ADD_INT_CONSTANT(PL_DRAW_STROKE_OUTSIDE),
+    PL_ADD_INT_CONSTANT(PL_DRAW_STROKE_CENTER_BIASED),
+    PL_ADD_INT_CONSTANT(PL_DRAW_STROKE_CAP_SQUARE),
+    PL_ADD_INT_CONSTANT(PL_DRAW_STROKE_JOIN_MITER),
+    PL_ADD_INT_CONSTANT(PL_DRAW_STROKE_NO_AA),
+    PL_ADD_INT_CONSTANT(PL_DRAW_STROKE_NO_AA_CAPS),
+
     // plDrawFlags
     PL_ADD_INT_CONSTANT(PL_DRAW_FLAG_NONE),
     PL_ADD_INT_CONSTANT(PL_DRAW_FLAG_DEPTH_TEST),
@@ -64,8 +75,9 @@ pl__get_draw_text_options(PyObject* ptPythonOptions, plDrawTextOptions* ptOption
 
     ptOptionsOut->ptFont = NULL;
     PyObject* ptPythonOptionFont = PyObject_GetAttrString(ptPythonOptions, "ptFont");
-    ptOptionsOut->ptFont = PyCapsule_GetPointer(ptPythonOptionFont, "plFont");
-    Py_DECREF(ptPythonOptionFont);
+    if(ptPythonOptionFont && ptPythonOptionFont != Py_None)
+        ptOptionsOut->ptFont = PyCapsule_GetPointer(ptPythonOptionFont, "plFont");
+    Py_XDECREF(ptPythonOptionFont);
 }
 
 static inline void
@@ -86,6 +98,15 @@ pl__get_draw_line_options(PyObject* ptPythonOptions, plDrawLineOptions* ptOption
     PyObject* ptPythonOptionThickness = PyObject_GetAttrString(ptPythonOptions, "fThickness");
     ptOptionsOut->fThickness = (float)PyFloat_AsDouble(ptPythonOptionThickness);
     Py_DECREF(ptPythonOptionThickness);
+
+    // optional (2D only, default: centered stroke)
+    ptOptionsOut->tFlags = 0;
+    if(PyObject_HasAttrString(ptPythonOptions, "tFlags"))
+    {
+        PyObject* ptPythonOptionFlags = PyObject_GetAttrString(ptPythonOptions, "tFlags");
+        PyLong_AsInt32(ptPythonOptionFlags, &ptOptionsOut->tFlags);
+        Py_DECREF(ptPythonOptionFlags);
+    }
 }
 
 static inline void
@@ -587,7 +608,7 @@ draw_add_text(PyObject* self, PyObject* args)
 
     pl_vec2_from_py(ptPythonP0, &tP0);
 
-    gptDraw->add_text(ptLayer, tP0, pcText, tOptions);
+    gptDraw->add_text(ptLayer, tP0, tOptions, "%s", pcText);
     Py_RETURN_NONE;
 }
 
@@ -612,7 +633,7 @@ draw_add_text_clipped(PyObject* self, PyObject* args)
         NULL,
     };
 
-	if (!pl_parse_args("OOsO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+	if (!pl_parse_args("OOsOOO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
         &ptPythonLayer, &ptPythonP0, &pcText, &ptPythonP1, &ptPythonP2, &ptPythonOptions))
 		return NULL;
 
@@ -626,10 +647,13 @@ draw_add_text_clipped(PyObject* self, PyObject* args)
     plVec2 tP2 = {0};
 
     pl_vec2_from_py(ptPythonP0, &tP0);
-    pl_vec2_from_py(ptPythonP0, &tP1);
-    pl_vec2_from_py(ptPythonP0, &tP2);
+    pl_vec2_from_py(ptPythonP1, &tP1);
+    pl_vec2_from_py(ptPythonP2, &tP2);
 
-    gptDraw->add_text_clipped(ptLayer, tP0, pcText, tP1, tP2, tOptions);
+    // clipping is now part of the text options
+    tOptions.tClipMin = tP1;
+    tOptions.tClipMax = tP2;
+    gptDraw->add_text(ptLayer, tP0, tOptions, "%s", pcText);
     Py_RETURN_NONE;
 }
 
@@ -2558,7 +2582,7 @@ draw_add_3d_text(PyObject* self, PyObject* args)
 
     pl_vec3_from_py(ptPythonP0, &tP0);
 
-    gptDraw->add_3d_text(ptDrawList, tP0, pcText, tOptions);
+    gptDraw->add_3d_text(ptDrawList, tP0, tOptions, "%s", pcText);
     Py_RETURN_NONE;
 }
 
@@ -2578,6 +2602,273 @@ draw_create_bind_group_for_texture(PyObject* self, PyObject* args)
 		return NULL;
     plBindGroupHandle tBGHandle = gptDraw->create_bind_group_for_texture(tHandle);
     return PyLong_FromUInt32(tBGHandle.uData);
+}
+
+
+//-----------------------------------------------------------------------------
+// [SECTION] paths & misc (plDrawI v4.2)
+//-----------------------------------------------------------------------------
+
+static inline plDrawLayer2D*
+pl__draw_layer_from_py(PyObject* ptPythonLayer)
+{
+    return (plDrawLayer2D*)PyCapsule_GetPointer(ptPythonLayer, "plDrawLayer2D");
+}
+
+PyObject*
+draw_path_clear(PyObject* self, PyObject* ptPythonLayer)
+{
+    plDrawLayer2D* ptLayer = pl__draw_layer_from_py(ptPythonLayer);
+    if(ptLayer == NULL)
+        return NULL;
+    gptDraw->path_clear(ptLayer);
+    Py_RETURN_NONE;
+}
+
+PyObject*
+draw_path_line_to(PyObject* self, PyObject* args)
+{
+    static const char* apcKeywords[] = {"layer", "p", NULL};
+    PyObject* ptPythonLayer = NULL;
+    PyObject* ptPythonP = NULL;
+	if (!pl_parse_args("OO", (const char**)apcKeywords, args, NULL, __FUNCTION__, &ptPythonLayer, &ptPythonP))
+		return NULL;
+    plDrawLayer2D* ptLayer = pl__draw_layer_from_py(ptPythonLayer);
+    if(ptLayer == NULL)
+        return NULL;
+    plVec2 tP = {0};
+    pl_vec2_from_py(ptPythonP, &tP);
+    gptDraw->path_line_to(ptLayer, tP);
+    Py_RETURN_NONE;
+}
+
+PyObject*
+draw_path_arc_to(PyObject* self, PyObject* args)
+{
+    static const char* apcKeywords[] = {"layer", "center", "radius", "angleMin", "angleMax", "segments", NULL};
+    PyObject* ptPythonLayer = NULL;
+    PyObject* ptPythonCenter = NULL;
+    float fRadius = 0.0f;
+    float fAngleMin = 0.0f;
+    float fAngleMax = 0.0f;
+    uint32_t uSegments = 0;
+	if (!pl_parse_args("OOfff|I", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+        &ptPythonLayer, &ptPythonCenter, &fRadius, &fAngleMin, &fAngleMax, &uSegments))
+		return NULL;
+    plDrawLayer2D* ptLayer = pl__draw_layer_from_py(ptPythonLayer);
+    if(ptLayer == NULL)
+        return NULL;
+    plVec2 tCenter = {0};
+    pl_vec2_from_py(ptPythonCenter, &tCenter);
+    gptDraw->path_arc_to(ptLayer, tCenter, fRadius, fAngleMin, fAngleMax, uSegments);
+    Py_RETURN_NONE;
+}
+
+PyObject*
+draw_path_ellipse_to(PyObject* self, PyObject* args)
+{
+    static const char* apcKeywords[] = {"layer", "center", "radii", "rotation", "angleMin", "angleMax", "segments", NULL};
+    PyObject* ptPythonLayer = NULL;
+    PyObject* ptPythonCenter = NULL;
+    PyObject* ptPythonRadii = NULL;
+    float fRotation = 0.0f;
+    float fAngleMin = 0.0f;
+    float fAngleMax = 0.0f;
+    uint32_t uSegments = 0;
+	if (!pl_parse_args("OOOfff|I", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+        &ptPythonLayer, &ptPythonCenter, &ptPythonRadii, &fRotation, &fAngleMin, &fAngleMax, &uSegments))
+		return NULL;
+    plDrawLayer2D* ptLayer = pl__draw_layer_from_py(ptPythonLayer);
+    if(ptLayer == NULL)
+        return NULL;
+    plVec2 tCenter = {0};
+    plVec2 tRadii = {0};
+    pl_vec2_from_py(ptPythonCenter, &tCenter);
+    pl_vec2_from_py(ptPythonRadii, &tRadii);
+    gptDraw->path_ellipse_to(ptLayer, tCenter, tRadii, fRotation, fAngleMin, fAngleMax, uSegments);
+    Py_RETURN_NONE;
+}
+
+PyObject*
+draw_path_bezier_quad_to(PyObject* self, PyObject* args)
+{
+    static const char* apcKeywords[] = {"layer", "control", "end", "segments", NULL};
+    PyObject* ptPythonLayer = NULL;
+    PyObject* ptPythonControl = NULL;
+    PyObject* ptPythonEnd = NULL;
+    uint32_t uSegments = 0;
+	if (!pl_parse_args("OOO|I", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+        &ptPythonLayer, &ptPythonControl, &ptPythonEnd, &uSegments))
+		return NULL;
+    plDrawLayer2D* ptLayer = pl__draw_layer_from_py(ptPythonLayer);
+    if(ptLayer == NULL)
+        return NULL;
+    plVec2 tControl = {0};
+    plVec2 tEnd = {0};
+    pl_vec2_from_py(ptPythonControl, &tControl);
+    pl_vec2_from_py(ptPythonEnd, &tEnd);
+    gptDraw->path_bezier_quad_to(ptLayer, tControl, tEnd, uSegments);
+    Py_RETURN_NONE;
+}
+
+PyObject*
+draw_path_bezier_cubic_to(PyObject* self, PyObject* args)
+{
+    static const char* apcKeywords[] = {"layer", "control0", "control1", "end", "segments", NULL};
+    PyObject* ptPythonLayer = NULL;
+    PyObject* ptPythonControl0 = NULL;
+    PyObject* ptPythonControl1 = NULL;
+    PyObject* ptPythonEnd = NULL;
+    uint32_t uSegments = 0;
+	if (!pl_parse_args("OOOO|I", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+        &ptPythonLayer, &ptPythonControl0, &ptPythonControl1, &ptPythonEnd, &uSegments))
+		return NULL;
+    plDrawLayer2D* ptLayer = pl__draw_layer_from_py(ptPythonLayer);
+    if(ptLayer == NULL)
+        return NULL;
+    plVec2 tControl0 = {0};
+    plVec2 tControl1 = {0};
+    plVec2 tEnd = {0};
+    pl_vec2_from_py(ptPythonControl0, &tControl0);
+    pl_vec2_from_py(ptPythonControl1, &tControl1);
+    pl_vec2_from_py(ptPythonEnd, &tEnd);
+    gptDraw->path_bezier_cubic_to(ptLayer, tControl0, tControl1, tEnd, uSegments);
+    Py_RETURN_NONE;
+}
+
+PyObject*
+draw_path_rect(PyObject* self, PyObject* args)
+{
+    static const char* apcKeywords[] = {"layer", "minP", "maxP", "radius", "cornerSegments", "flags", NULL};
+    PyObject* ptPythonLayer = NULL;
+    PyObject* ptPythonMin = NULL;
+    PyObject* ptPythonMax = NULL;
+    float fRadius = 0.0f;
+    uint32_t uSegments = 0;
+    int iFlags = 0;
+	if (!pl_parse_args("OOO|fIi", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+        &ptPythonLayer, &ptPythonMin, &ptPythonMax, &fRadius, &uSegments, &iFlags))
+		return NULL;
+    plDrawLayer2D* ptLayer = pl__draw_layer_from_py(ptPythonLayer);
+    if(ptLayer == NULL)
+        return NULL;
+    plVec2 tMin = {0};
+    plVec2 tMax = {0};
+    pl_vec2_from_py(ptPythonMin, &tMin);
+    pl_vec2_from_py(ptPythonMax, &tMax);
+    gptDraw->path_rect(ptLayer, tMin, tMax, fRadius, uSegments, iFlags);
+    Py_RETURN_NONE;
+}
+
+PyObject*
+draw_path_stroke(PyObject* self, PyObject* args)
+{
+    static const char* apcKeywords[] = {"layer", "options", NULL};
+    PyObject* ptPythonLayer = NULL;
+    PyObject* ptPythonOptions = NULL;
+	if (!pl_parse_args("OO", (const char**)apcKeywords, args, NULL, __FUNCTION__, &ptPythonLayer, &ptPythonOptions))
+		return NULL;
+    plDrawLayer2D* ptLayer = pl__draw_layer_from_py(ptPythonLayer);
+    if(ptLayer == NULL)
+        return NULL;
+    plDrawLineOptions tOptions = {0};
+    pl__get_draw_line_options(ptPythonOptions, &tOptions);
+    gptDraw->path_stroke(ptLayer, tOptions);
+    Py_RETURN_NONE;
+}
+
+PyObject*
+draw_path_fill_convex(PyObject* self, PyObject* args)
+{
+    static const char* apcKeywords[] = {"layer", "options", NULL};
+    PyObject* ptPythonLayer = NULL;
+    PyObject* ptPythonOptions = NULL;
+	if (!pl_parse_args("OO", (const char**)apcKeywords, args, NULL, __FUNCTION__, &ptPythonLayer, &ptPythonOptions))
+		return NULL;
+    plDrawLayer2D* ptLayer = pl__draw_layer_from_py(ptPythonLayer);
+    if(ptLayer == NULL)
+        return NULL;
+    plDrawSolidOptions tOptions = {0};
+    pl__get_draw_solid_options(ptPythonOptions, &tOptions);
+    gptDraw->path_fill_convex(ptLayer, tOptions);
+    Py_RETURN_NONE;
+}
+
+PyObject*
+draw_add_line_h(PyObject* self, PyObject* args)
+{
+    static const char* apcKeywords[] = {"layer", "x0", "x1", "y", "options", NULL};
+    PyObject* ptPythonLayer = NULL;
+    float fX0 = 0.0f;
+    float fX1 = 0.0f;
+    float fY = 0.0f;
+    PyObject* ptPythonOptions = NULL;
+	if (!pl_parse_args("OfffO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+        &ptPythonLayer, &fX0, &fX1, &fY, &ptPythonOptions))
+		return NULL;
+    plDrawLayer2D* ptLayer = pl__draw_layer_from_py(ptPythonLayer);
+    if(ptLayer == NULL)
+        return NULL;
+    plDrawLineOptions tOptions = {0};
+    pl__get_draw_line_options(ptPythonOptions, &tOptions);
+    gptDraw->add_line_h(ptLayer, fX0, fX1, fY, tOptions);
+    Py_RETURN_NONE;
+}
+
+PyObject*
+draw_add_line_v(PyObject* self, PyObject* args)
+{
+    static const char* apcKeywords[] = {"layer", "x", "y0", "y1", "options", NULL};
+    PyObject* ptPythonLayer = NULL;
+    float fX = 0.0f;
+    float fY0 = 0.0f;
+    float fY1 = 0.0f;
+    PyObject* ptPythonOptions = NULL;
+	if (!pl_parse_args("OfffO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+        &ptPythonLayer, &fX, &fY0, &fY1, &ptPythonOptions))
+		return NULL;
+    plDrawLayer2D* ptLayer = pl__draw_layer_from_py(ptPythonLayer);
+    if(ptLayer == NULL)
+        return NULL;
+    plDrawLineOptions tOptions = {0};
+    pl__get_draw_line_options(ptPythonOptions, &tOptions);
+    gptDraw->add_line_v(ptLayer, fX, fY0, fY1, tOptions);
+    Py_RETURN_NONE;
+}
+
+// uses add_image_rounded_ex so UVs & color are optional
+PyObject*
+draw_add_image_rounded(PyObject* self, PyObject* args)
+{
+    static const char* apcKeywords[] = {"layer", "textureID", "minP", "maxP", "radius", "segments", "flags", "minUV", "maxUV", "color", NULL};
+    PyObject* ptPythonLayer = NULL;
+    uint32_t uTextureId = 0;
+    PyObject* ptPythonMinP = NULL;
+    PyObject* ptPythonMaxP = NULL;
+    float fRadius = 0.0f;
+    uint32_t uSegments = 0;
+    int iFlags = 0;
+    PyObject* ptPythonMinUV = NULL;
+    PyObject* ptPythonMaxUV = NULL;
+    uint32_t uColor = PL_COLOR_32_WHITE;
+	if (!pl_parse_args("OIOOf|IiOOI", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+        &ptPythonLayer, &uTextureId, &ptPythonMinP, &ptPythonMaxP, &fRadius, &uSegments, &iFlags, &ptPythonMinUV, &ptPythonMaxUV, &uColor))
+		return NULL;
+    plDrawLayer2D* ptLayer = pl__draw_layer_from_py(ptPythonLayer);
+    if(ptLayer == NULL)
+        return NULL;
+    plVec2 tMinP = {0};
+    plVec2 tMaxP = {0};
+    plVec2 tMinUV = {0};
+    plVec2 tMaxUV = {1.0f, 1.0f};
+    pl_vec2_from_py(ptPythonMinP, &tMinP);
+    pl_vec2_from_py(ptPythonMaxP, &tMaxP);
+    if(ptPythonMinUV)
+        pl_vec2_from_py(ptPythonMinUV, &tMinUV);
+    if(ptPythonMaxUV)
+        pl_vec2_from_py(ptPythonMaxUV, &tMaxUV);
+    gptDraw->add_image_rounded_ex(ptLayer, uTextureId, tMinP, tMaxP, tMinUV, tMaxUV, uColor, fRadius, uSegments, iFlags);
+    Py_RETURN_NONE;
 }
 
 static PyMethodDef gatCommandsplDrawI[] =
@@ -2609,6 +2900,18 @@ static PyMethodDef gatCommandsplDrawI[] =
     {"add_triangle", (PyCFunction)draw_add_triangle, METH_VARARGS | METH_STATIC, NULL},
     {"add_line", (PyCFunction)draw_add_line, METH_VARARGS | METH_STATIC, NULL},
     {"add_image", (PyCFunction)draw_add_image, METH_VARARGS | METH_STATIC, NULL},
+    {"add_image_rounded", (PyCFunction)draw_add_image_rounded, METH_VARARGS | METH_STATIC, NULL},
+    {"add_line_h", (PyCFunction)draw_add_line_h, METH_VARARGS | METH_STATIC, NULL},
+    {"add_line_v", (PyCFunction)draw_add_line_v, METH_VARARGS | METH_STATIC, NULL},
+    {"path_clear", (PyCFunction)draw_path_clear, METH_O | METH_STATIC, NULL},
+    {"path_line_to", (PyCFunction)draw_path_line_to, METH_VARARGS | METH_STATIC, NULL},
+    {"path_arc_to", (PyCFunction)draw_path_arc_to, METH_VARARGS | METH_STATIC, NULL},
+    {"path_ellipse_to", (PyCFunction)draw_path_ellipse_to, METH_VARARGS | METH_STATIC, NULL},
+    {"path_bezier_quad_to", (PyCFunction)draw_path_bezier_quad_to, METH_VARARGS | METH_STATIC, NULL},
+    {"path_bezier_cubic_to", (PyCFunction)draw_path_bezier_cubic_to, METH_VARARGS | METH_STATIC, NULL},
+    {"path_rect", (PyCFunction)draw_path_rect, METH_VARARGS | METH_STATIC, NULL},
+    {"path_stroke", (PyCFunction)draw_path_stroke, METH_VARARGS | METH_STATIC, NULL},
+    {"path_fill_convex", (PyCFunction)draw_path_fill_convex, METH_VARARGS | METH_STATIC, NULL},
     {"add_image_quad", (PyCFunction)draw_add_image_quad, METH_VARARGS | METH_STATIC, NULL},
     {"add_lines", (PyCFunction)draw_add_lines, METH_VARARGS | METH_STATIC, NULL},
     {"add_rect", (PyCFunction)draw_add_rect, METH_VARARGS | METH_STATIC, NULL},

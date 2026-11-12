@@ -16,7 +16,6 @@ from pathlib import Path
 # pilot light stuff
 import pilotlight.pilotlight as pl
 from pilotlight.pilotlight import *
-from pilotlight.imgui import *
 from pilotlight.enums import *
 from pilotlight.types import *
 from pilotlight.pl_script_camera import pl_script_run
@@ -34,6 +33,7 @@ class App:
         plVfsI.mount_directory("/cache", file_directory + "/../cache")
         plVfsI.mount_directory("/shader-temp", file_directory + "/../shader-temp")
         plVfsI.mount_directory("/assets", file_directory + "/../assets")
+        plVfsI.mount_directory("/resources", file_directory + "/../resources")
 
         # Create window.
         window_desc = plWindowDesc()
@@ -52,12 +52,10 @@ class App:
         # we need to handle the shader extension since we need to find
         # the shaders provided with the python package
         starterInit.eFlags &= ~plStarterFlag.PL_STARTER_FLAGS_SHADER_EXT
-        starterInit.eFlags &= ~plStarterFlag.PL_STARTER_FLAGS_DRAW_EXT
         plStarterI.initialize(starterInit)
 
         # shader system
         shader_options = plShaderOptions()
-        shader_options.pcCacheOutputDirectory = "/shader-temp/"
         shader_options.apcDirectories = ["/shaders/"]
         shader_options.apcIncludeDirectories = ["/shaders/"]
         shader_options.eFlags = plShaderFlags.PL_SHADER_FLAGS_AUTO_OUTPUT

@@ -1,12 +1,13 @@
 /*
    pl_ecs_ext_m.c
+     * plEcsI
 */
 
 /*
 Index of this file:
 // [SECTION] includes
-// [SECTION] binding apis
-// [SECTION] implementations
+// [SECTION] plEcsI
+// [SECTION] method tables
 */
 
 //-----------------------------------------------------------------------------
@@ -16,41 +17,113 @@ Index of this file:
 #include "pilotlight.h"
 
 //-----------------------------------------------------------------------------
-// [SECTION] implementations
+// [SECTION] plEcsI
 //-----------------------------------------------------------------------------
 
-PyObject*
-ecs_initialize(PyObject* self)
+PL_PY_BIND_VOID(ecs_initialize,           gptEcs->initialize((plEcsInit){0}))
+PL_PY_BIND_VOID(ecs_finalize,             gptEcs->finalize())
+PL_PY_BIND_VOID(ecs_cleanup,              gptEcs->cleanup())
+PL_PY_BIND_VOID(ecs_register_asset_types, gptEcs->register_asset_types())
+PL_PY_BIND_KEY(ecs_get_asset_type_key,    gptEcs->get_asset_type_key())
+PL_PY_BIND_KEY(ecs_get_ecs_type_key_tag,  gptEcs->get_ecs_type_key_tag())
+PL_PY_BIND_LIBRARY(ecs_destroy_library,   gptEcs->destroy_library(ptLibrary))
+PL_PY_BIND_LIBRARY(ecs_clear_changes,     gptEcs->clear_changes(ptLibrary))
+
+static PyObject*
+ecs_create_library(PyObject* self, PyObject* unused)
 {
- 
-    gptECS->initialize((plEcsInit){0});
+    return pl_library_to_py(gptEcs->create_library());
+}
+
+static PyObject*
+ecs_create_entity(PyObject* self, PyObject* args, PyObject* kwargs)
+{
+    static const char* apcKeywords[] = {
+        "library",
+        "name",
+        NULL,
+    };
+
+    PyObject* ptPyLibrary = NULL;
+    const char* pcName = NULL;
+	if (!pl_parse_args("Os", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+        &ptPyLibrary, &pcName))
+		return NULL;
+
+    plComponentLibrary* ptLibrary = pl_library_from_py(ptPyLibrary);
+    if(ptLibrary == NULL)
+        return NULL;
+    plEntity tEntity = gptEcs->create_entity(ptLibrary, pcName);
+    return pl_entity_to_py(0, tEntity);
+}
+
+static PyObject*
+ecs_remove_entity(PyObject* self, PyObject* args, PyObject* kwargs)
+{
+    static const char* apcKeywords[] = {
+        "library",
+        "entity",
+        NULL,
+    };
+
+    PyObject* ptPyLibrary = NULL;
+    PyObject* ptPyEntity = NULL;
+	if (!pl_parse_args("OO", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+        &ptPyLibrary, &ptPyEntity))
+		return NULL;
+
+    plComponentLibrary* ptLibrary = pl_library_from_py(ptPyLibrary);
+    if(ptLibrary == NULL)
+        return NULL;
+    gptEcs->remove_entity(ptLibrary, pl_get_entity_from_python(ptPyEntity).tEntity);
     Py_RETURN_NONE;
 }
 
-PyObject*
-ecs_finalize(PyObject* self)
+static PyObject*
+ecs_is_entity_valid(PyObject* self, PyObject* args, PyObject* kwargs)
 {
- 
-    gptECS->finalize();
-    Py_RETURN_NONE;
+    static const char* apcKeywords[] = {
+        "library",
+        "entity",
+        NULL,
+    };
+
+    PyObject* ptPyLibrary = NULL;
+    PyObject* ptPyEntity = NULL;
+	if (!pl_parse_args("OO", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+        &ptPyLibrary, &ptPyEntity))
+		return NULL;
+
+    plComponentLibrary* ptLibrary = pl_library_from_py(ptPyLibrary);
+    if(ptLibrary == NULL)
+        return NULL;
+    return PyBool_FromLong(gptEcs->is_entity_valid(ptLibrary, pl_get_entity_from_python(ptPyEntity).tEntity));
 }
 
-PyObject*
-ecs_cleanup(PyObject* self)
+static PyObject*
+ecs_has_component(PyObject* self, PyObject* args, PyObject* kwargs)
 {
- 
-    gptECS->cleanup();
-    Py_RETURN_NONE;
+    static const char* apcKeywords[] = {
+        "library",
+        "key",
+        "entity",
+        NULL,
+    };
+
+    PyObject* ptPyLibrary = NULL;
+    uint32_t uEcsKey = 0;
+    PyObject* ptPyEntity = NULL;
+	if (!pl_parse_args("OIO", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+        &ptPyLibrary, &uEcsKey, &ptPyEntity))
+		return NULL;
+
+    plComponentLibrary* ptLibrary = pl_library_from_py(ptPyLibrary);
+    if(ptLibrary == NULL)
+        return NULL;
+    return PyBool_FromLong(gptEcs->has_component(ptLibrary, uEcsKey, pl_get_entity_from_python(ptPyEntity).tEntity));
 }
 
-PyObject*
-ecs_get_default_library(PyObject* self, PyObject* args, PyObject* kwargs)
-{
-    plComponentLibrary* ptCompLibrary = gptECS->get_default_library();
-    return PyCapsule_New(ptCompLibrary, "plComponentLibrary", NULL);
-}
-
-PyObject*
+static PyObject*
 ecs_get_component(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {
@@ -67,10 +140,16 @@ ecs_get_component(PyObject* self, PyObject* args, PyObject* kwargs)
         &ptPyLibrary, &uEcsKey, &ptPyEntity))
 		return NULL;
 
-    plComponentLibrary* ptCompLibrary = PyCapsule_GetPointer(ptPyLibrary, "plComponentLibrary");
+    plComponentLibrary* ptLibrary = pl_library_from_py(ptPyLibrary);
+    if(ptLibrary == NULL)
+        return NULL;
     plPythonEntity tPyEntity = pl_get_entity_from_python(ptPyEntity);
 
-    void* pComponent = gptECS->get_component(ptCompLibrary, uEcsKey, tPyEntity.tEntity);
+    void* pComponent = gptEcs->get_component(ptLibrary, uEcsKey, tPyEntity.tEntity);
+    if(pComponent == NULL)
+        Py_RETURN_NONE;
+
+    // only cameras are currently exposed as python types
     if(uEcsKey == gptCameraEcs->get_ecs_type_key())
     {
         pyplCamera* obj = (pyplCamera*)PyObject_CallObject(gptCameraType, NULL);
@@ -81,53 +160,110 @@ ecs_get_component(PyObject* self, PyObject* args, PyObject* kwargs)
     Py_RETURN_NONE;
 }
 
-PyObject*
-ecs_run_transform_update_system(PyObject* self, PyObject* args)
+// returns list of entities that have the component
+static PyObject*
+ecs_get_components(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {
         "library",
+        "key",
         NULL,
     };
 
     PyObject* ptPyLibrary = NULL;
-	if (!pl_parse_args("O", (const char**)apcKeywords, args, NULL, __FUNCTION__,
-        &ptPyLibrary))
+    uint32_t uEcsKey = 0;
+	if (!pl_parse_args("OI", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+        &ptPyLibrary, &uEcsKey))
 		return NULL;
 
-    plComponentLibrary* ptCompLibrary = PyCapsule_GetPointer(ptPyLibrary, "plComponentLibrary");
+    plComponentLibrary* ptLibrary = pl_library_from_py(ptPyLibrary);
+    if(ptLibrary == NULL)
+        return NULL;
 
-    gptECS->run_transform_update_system(ptCompLibrary);
-    Py_RETURN_NONE;
+    const plEntity* ptEntities = NULL;
+    const uint32_t uCount = gptEcs->get_components(ptLibrary, uEcsKey, NULL, &ptEntities);
+
+    PyObject* ptResult = PyList_New(uCount);
+    for(uint32_t i = 0; i < uCount; i++)
+        PyList_SetItem(ptResult, i, pl_entity_to_py(uEcsKey, ptEntities[i]));
+    return ptResult;
 }
 
-PyObject*
-ecs_run_hierarchy_update_system(PyObject* self, PyObject* args)
+// call between system updates; assets remain shared
+static PyObject*
+ecs_copy_component(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {
         "library",
+        "key",
+        "source",
+        "destination",
         NULL,
     };
 
     PyObject* ptPyLibrary = NULL;
-	if (!pl_parse_args("O", (const char**)apcKeywords, args, NULL, __FUNCTION__,
-        &ptPyLibrary))
+    uint32_t uEcsKey = 0;
+    PyObject* ptPySource = NULL;
+    PyObject* ptPyDestination = NULL;
+	if (!pl_parse_args("OIOO", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+        &ptPyLibrary, &uEcsKey, &ptPySource, &ptPyDestination))
 		return NULL;
 
-    plComponentLibrary* ptCompLibrary = PyCapsule_GetPointer(ptPyLibrary, "plComponentLibrary");
-
-    gptECS->run_hierarchy_update_system(ptCompLibrary);
-    Py_RETURN_NONE;
+    plComponentLibrary* ptLibrary = pl_library_from_py(ptPyLibrary);
+    if(ptLibrary == NULL)
+        return NULL;
+    return PyBool_FromLong(gptEcs->copy_component(ptLibrary, uEcsKey,
+        pl_get_entity_from_python(ptPySource).tEntity,
+        pl_get_entity_from_python(ptPyDestination).tEntity));
 }
+
+// does not clone children; returns invalid entity on failure
+static PyObject*
+ecs_clone_entity(PyObject* self, PyObject* args, PyObject* kwargs)
+{
+    static const char* apcKeywords[] = {
+        "library",
+        "source",
+        NULL,
+    };
+
+    PyObject* ptPyLibrary = NULL;
+    PyObject* ptPySource = NULL;
+	if (!pl_parse_args("OO", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+        &ptPyLibrary, &ptPySource))
+		return NULL;
+
+    plComponentLibrary* ptLibrary = pl_library_from_py(ptPyLibrary);
+    if(ptLibrary == NULL)
+        return NULL;
+    plPythonEntity tSource = pl_get_entity_from_python(ptPySource);
+    plEntity tEntity = gptEcs->clone_entity(ptLibrary, tSource.tEntity);
+    return pl_entity_to_py(tSource.tKey, tEntity);
+}
+
+//-----------------------------------------------------------------------------
+// [SECTION] method tables
+//-----------------------------------------------------------------------------
 
 static PyMethodDef gatCommandsplEcsI[] =
 {
-    {"initialize", (PyCFunction)ecs_initialize, METH_NOARGS | METH_STATIC, NULL},
-    {"finalize", (PyCFunction)ecs_finalize, METH_NOARGS | METH_STATIC, NULL},
-    {"cleanup", (PyCFunction)ecs_cleanup, METH_NOARGS | METH_STATIC, NULL},
-    {"get_default_library", (PyCFunction)ecs_get_default_library, METH_NOARGS | METH_STATIC, NULL},
-    {"get_component", (PyCFunction)ecs_get_component, METH_VARARGS | METH_KEYWORDS | METH_STATIC, NULL},
-    {"run_transform_update_system", (PyCFunction)ecs_run_transform_update_system, METH_VARARGS | METH_STATIC, NULL},
-    {"run_hierarchy_update_system", (PyCFunction)ecs_run_hierarchy_update_system, METH_VARARGS | METH_STATIC, NULL},
+    {"initialize",           (PyCFunction)ecs_initialize,           METH_NOARGS | METH_STATIC, NULL},
+    {"finalize",             (PyCFunction)ecs_finalize,             METH_NOARGS | METH_STATIC, NULL},
+    {"cleanup",              (PyCFunction)ecs_cleanup,              METH_NOARGS | METH_STATIC, NULL},
+    {"register_asset_types", (PyCFunction)ecs_register_asset_types, METH_NOARGS | METH_STATIC, NULL},
+    {"get_asset_type_key",   (PyCFunction)ecs_get_asset_type_key,   METH_NOARGS | METH_STATIC, NULL},
+    {"get_ecs_type_key_tag", (PyCFunction)ecs_get_ecs_type_key_tag, METH_NOARGS | METH_STATIC, NULL},
+    {"create_library",       (PyCFunction)ecs_create_library,       METH_NOARGS | METH_STATIC, NULL},
+    {"destroy_library",      (PyCFunction)ecs_destroy_library,      METH_O | METH_STATIC, NULL},
+    {"clear_changes",        (PyCFunction)ecs_clear_changes,        METH_O | METH_STATIC, NULL},
+    {"create_entity",        (PyCFunction)ecs_create_entity,        METH_VARARGS | METH_KEYWORDS | METH_STATIC, NULL},
+    {"remove_entity",        (PyCFunction)ecs_remove_entity,        METH_VARARGS | METH_KEYWORDS | METH_STATIC, NULL},
+    {"is_entity_valid",      (PyCFunction)ecs_is_entity_valid,      METH_VARARGS | METH_KEYWORDS | METH_STATIC, NULL},
+    {"has_component",        (PyCFunction)ecs_has_component,        METH_VARARGS | METH_KEYWORDS | METH_STATIC, NULL},
+    {"get_component",        (PyCFunction)ecs_get_component,        METH_VARARGS | METH_KEYWORDS | METH_STATIC, NULL},
+    {"get_components",       (PyCFunction)ecs_get_components,       METH_VARARGS | METH_KEYWORDS | METH_STATIC, NULL},
+    {"copy_component",       (PyCFunction)ecs_copy_component,       METH_VARARGS | METH_KEYWORDS | METH_STATIC, NULL},
+    {"clone_entity",         (PyCFunction)ecs_clone_entity,         METH_VARARGS | METH_KEYWORDS | METH_STATIC, NULL},
     {NULL, NULL, 0, NULL}
 };
 

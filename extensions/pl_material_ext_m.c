@@ -1,12 +1,13 @@
 /*
-   pl_ecs_ext_m.c
+   pl_material_ext_m.c
+     * plMaterialI
 */
 
 /*
 Index of this file:
 // [SECTION] includes
-// [SECTION] binding apis
 // [SECTION] implementations
+// [SECTION] method tables
 */
 
 //-----------------------------------------------------------------------------
@@ -19,17 +20,17 @@ Index of this file:
 // [SECTION] implementations
 //-----------------------------------------------------------------------------
 
-PyObject*
-material_register_ecs_system(PyObject* self)
-{
- 
-    gptMaterial->register_ecs_system();
-    Py_RETURN_NONE;
-}
+PL_PY_BIND_VOID(material_register_asset_types, gptMaterial->register_asset_types())
+PL_PY_BIND_KEY(material_get_asset_type_key,    gptMaterial->get_asset_type_key())
+
+//-----------------------------------------------------------------------------
+// [SECTION] method tables
+//-----------------------------------------------------------------------------
 
 static PyMethodDef gatCommandsplMaterialI[] =
 {
-    {"register_ecs_system", (PyCFunction)material_register_ecs_system, METH_NOARGS | METH_STATIC, NULL},
+    {"register_asset_types", (PyCFunction)material_register_asset_types, METH_NOARGS | METH_STATIC, NULL},
+    {"get_asset_type_key",   (PyCFunction)material_get_asset_type_key,   METH_NOARGS | METH_STATIC, NULL},
     {NULL, NULL, 0, NULL}
 };
 

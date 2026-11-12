@@ -1,5 +1,5 @@
 /*
-   pl_ecs_ext_m.c
+   pl_renderer_ext_m.c
 */
 
 /*
@@ -28,7 +28,7 @@ renderer_initialize(PyObject* self, PyObject* args, PyObject* kwargs)
         NULL,
     };
 
-    plRendererSettings tRenderSettings = {0};
+    plRendererInit tRenderInit = {0};
 
     PyObject* ptPyDevice = NULL;
     PyObject* ptPySwapchain = NULL;
@@ -36,27 +36,122 @@ renderer_initialize(PyObject* self, PyObject* args, PyObject* kwargs)
         &ptPyDevice, &ptPySwapchain))
 		return NULL;
 
-    tRenderSettings.ptDevice = PyCapsule_GetPointer(ptPyDevice, "plDevice");
-    tRenderSettings.ptSwapchain = PyCapsule_GetPointer(ptPySwapchain, "plSwapchain");
+    tRenderInit.ptDevice = PyCapsule_GetPointer(ptPyDevice, "plDevice");
+    tRenderInit.ptSwapchain = PyCapsule_GetPointer(ptPySwapchain, "plSwapchain");
 
-    gptRenderer->initialize(&tRenderSettings);
+    return PyBool_FromLong(gptRenderer->initialize(&tRenderInit));
+}
+
+PL_PY_BIND_VOID(renderer_cleanup,                 gptRenderer->cleanup())
+PL_PY_BIND_VOID(renderer_register_asset_types,    gptRenderer->register_asset_types())
+PL_PY_BIND_VOID(renderer_register_ecs_components, gptRenderer->register_ecs_components())
+
+PL_PY_BIND_KEY(renderer_get_asset_type_key_environment,     gptRenderer->get_asset_type_key_environment())
+PL_PY_BIND_KEY(renderer_get_asset_type_key_settings,        gptRenderer->get_asset_type_key_settings())
+PL_PY_BIND_KEY(renderer_get_ecs_type_key_object,            gptRenderer->get_ecs_type_key_object())
+PL_PY_BIND_KEY(renderer_get_ecs_type_key_light,             gptRenderer->get_ecs_type_key_light())
+PL_PY_BIND_KEY(renderer_get_ecs_type_key_environment_probe, gptRenderer->get_ecs_type_key_environment_probe())
+PL_PY_BIND_KEY(renderer_get_ecs_type_key_terrain,           gptRenderer->get_ecs_type_key_terrain())
+PL_PY_BIND_KEY(renderer_get_ecs_type_key_environment,       gptRenderer->get_ecs_type_key_environment())
+PL_PY_BIND_KEY(renderer_get_ecs_type_key_renderer,          gptRenderer->get_ecs_type_key_renderer())
+PL_PY_BIND_KEY(renderer_get_ecs_type_key_decal,             gptRenderer->get_ecs_type_key_decal())
+
+PL_PY_BIND_LIBRARY(renderer_run_light_update_system,             gptRenderer->run_light_update_system(ptLibrary))
+PL_PY_BIND_LIBRARY(renderer_run_object_update_system,            gptRenderer->run_object_update_system(ptLibrary))
+PL_PY_BIND_LIBRARY(renderer_run_environment_probe_update_system, gptRenderer->run_environment_probe_update_system(ptLibrary))
+
+PyObject*
+renderer_create_scene(PyObject* self, PyObject* unused)
+{
+    plSceneDesc tSceneDesc = {0};
+    plScene* ptScene = gptRenderer->create_scene(&tSceneDesc);
+    if(ptScene == NULL)
+        Py_RETURN_NONE;
+    return PyCapsule_New(ptScene, "plScene", NULL);
+}
+
+PyObject*
+renderer_destroy_scene(PyObject* self, PyObject* ptPyScene)
+{
+    plScene* ptScene = PyCapsule_GetPointer(ptPyScene, "plScene");
+    if(ptScene == NULL)
+        return NULL;
+    gptRenderer->destroy_scene(ptScene);
     Py_RETURN_NONE;
 }
 
 PyObject*
-renderer_cleanup(PyObject* self)
+renderer_load_component_library(PyObject* self, PyObject* args)
 {
- 
-    gptRenderer->cleanup();
+    static const char* apcKeywords[] = {
+        "scene",
+        "library",
+        NULL,
+    };
+
+    PyObject* ptPyScene = NULL;
+    PyObject* ptPyLibrary = NULL;
+	if (!pl_parse_args("OO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+        &ptPyScene, &ptPyLibrary))
+		return NULL;
+
+    plScene* ptScene = PyCapsule_GetPointer(ptPyScene, "plScene");
+    plComponentLibrary* ptLibrary = pl_library_from_py(ptPyLibrary);
+    if(ptScene == NULL || ptLibrary == NULL)
+        return NULL;
+    gptRenderer->load_component_library(ptScene, ptLibrary);
     Py_RETURN_NONE;
 }
 
 PyObject*
-renderer_ecs_register_system(PyObject* self)
+renderer_create_view(PyObject* self, PyObject* args)
 {
- 
-    gptRendererEcs->register_system();
+    static const char* apcKeywords[] = {
+        "scene",
+        "dims",
+        NULL,
+    };
+
+    PyObject* ptPyScene = NULL;
+    PyObject* ptPyDims = NULL;
+	if (!pl_parse_args("OO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+        &ptPyScene, &ptPyDims))
+		return NULL;
+
+    plScene* ptScene = PyCapsule_GetPointer(ptPyScene, "plScene");
+    if(ptScene == NULL)
+        return NULL;
+
+    plVec2 tDims = {0};
+    pl_vec2_from_py(ptPyDims, &tDims);
+
+    plViewDesc tViewDesc = {
+        .uWidth  = (uint32_t)tDims.x,
+        .uHeight = (uint32_t)tDims.y
+    };
+    plView* ptView = gptRenderer->create_view(ptScene, &tViewDesc);
+    if(ptView == NULL)
+        Py_RETURN_NONE;
+    return PyCapsule_New(ptView, "plView", NULL);
+}
+
+PyObject*
+renderer_destroy_view(PyObject* self, PyObject* ptPyView)
+{
+    plView* ptView = PyCapsule_GetPointer(ptPyView, "plView");
+    if(ptView == NULL)
+        return NULL;
+    gptRenderer->destroy_view(ptView);
     Py_RETURN_NONE;
+}
+
+PyObject*
+renderer_get_drawlist(PyObject* self, PyObject* ptPyView)
+{
+    plView* ptView = PyCapsule_GetPointer(ptPyView, "plView");
+    if(ptView == NULL)
+        return NULL;
+    return PyCapsule_New(gptRenderer->get_drawlist(ptView), "plDrawList3D", NULL);
 }
 
 PyObject*
@@ -152,33 +247,6 @@ renderer_prepare_view(PyObject* self, PyObject* args)
 }
 
 PyObject*
-renderer_load_test_world(PyObject* self, PyObject* args, PyObject* kwargs)
-{
-    static const char* apcKeywords[] = {
-        "path",
-        "library",
-        NULL,
-    };
-
-    const char* pcPath = NULL;
-    PyObject* ptPyLibrary = NULL;
-	if (!pl_parse_args("sO", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
-        &pcPath, &ptPyLibrary))
-		return NULL;
-
-    plTestWorldData tTestData = {0};
-    plComponentLibrary* ptLibrary = PyCapsule_GetPointer(ptPyLibrary, "plComponentLibrary");
-
-    bool bResult = gptRenderer->load_test_world(pcPath, ptLibrary, &tTestData);
-
-    PyObject* ptCapsuleScene = PyCapsule_New(tTestData.ptScene, "plScene", NULL);
-    PyObject* ptCapsuleView = PyCapsule_New(tTestData.ptView, "plView", NULL);
-
-    PyObject* ptCameraEntity = pl_entity_to_py(gptCameraEcs->get_ecs_type_key(), tTestData.tMainCamera);
-    return Py_BuildValue("(pOOO)", bResult, ptCameraEntity, ptCapsuleScene, ptCapsuleView);
-}
-
-PyObject*
 renderer_render_view(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {
@@ -197,8 +265,7 @@ renderer_render_view(PyObject* self, PyObject* args, PyObject* kwargs)
     plCamera* ptCamera = ((pyplCamera*)ptPyCamera)->ptCamera;
 
     plRenderViewDesc tViewDesc0 = {
-        .ptCamera = ptCamera,
-        .ptCullCamera = ptCamera
+        .ptCamera = ptCamera
     };
     gptRenderer->render_view(ptView, &tViewDesc0);
     Py_RETURN_NONE;
@@ -226,109 +293,40 @@ renderer_get_view_color_bind_group(PyObject* self, PyObject* args, PyObject* kwa
 PyObject*
 renderer_begin_frame(PyObject* self, PyObject* args)
 {
-    bool bResult = gptRenderer->begin_frame();
-    Py_RETURN_NONE;
-}
-
-PyObject*
-renderer_ecs_run_light_update_system(PyObject* self, PyObject* args)
-{
-    static const char* apcKeywords[] = {
-        "library",
-        NULL,
-    };
-
-    PyObject* ptPyLibrary = NULL;
-	if (!pl_parse_args("O", (const char**)apcKeywords, args, NULL, __FUNCTION__,
-        &ptPyLibrary))
-		return NULL;
-
-    plComponentLibrary* ptCompLibrary = PyCapsule_GetPointer(ptPyLibrary, "plComponentLibrary");
-
-    gptRendererEcs->run_light_update_system(ptCompLibrary);
-    Py_RETURN_NONE;
-}
-
-PyObject*
-renderer_ecs_run_skin_update_system(PyObject* self, PyObject* args)
-{
-    static const char* apcKeywords[] = {
-        "library",
-        NULL,
-    };
-
-    PyObject* ptPyLibrary = NULL;
-	if (!pl_parse_args("O", (const char**)apcKeywords, args, NULL, __FUNCTION__,
-        &ptPyLibrary))
-		return NULL;
-
-    plComponentLibrary* ptCompLibrary = PyCapsule_GetPointer(ptPyLibrary, "plComponentLibrary");
-
-    gptRendererEcs->run_skin_update_system(ptCompLibrary);
-    Py_RETURN_NONE;
-}
-
-PyObject*
-renderer_ecs_run_object_update_system(PyObject* self, PyObject* args)
-{
-    static const char* apcKeywords[] = {
-        "library",
-        NULL,
-    };
-
-    PyObject* ptPyLibrary = NULL;
-	if (!pl_parse_args("O", (const char**)apcKeywords, args, NULL, __FUNCTION__,
-        &ptPyLibrary))
-		return NULL;
-
-    plComponentLibrary* ptCompLibrary = PyCapsule_GetPointer(ptPyLibrary, "plComponentLibrary");
-
-    gptRendererEcs->run_object_update_system(ptCompLibrary);
-    Py_RETURN_NONE;
-}
-
-PyObject*
-renderer_ecs_run_environment_probe_update_system(PyObject* self, PyObject* args)
-{
-    static const char* apcKeywords[] = {
-        "library",
-        NULL,
-    };
-
-    PyObject* ptPyLibrary = NULL;
-	if (!pl_parse_args("O", (const char**)apcKeywords, args, NULL, __FUNCTION__,
-        &ptPyLibrary))
-		return NULL;
-
-    plComponentLibrary* ptCompLibrary = PyCapsule_GetPointer(ptPyLibrary, "plComponentLibrary");
-
-    gptRendererEcs->run_environment_probe_update_system(ptCompLibrary);
-    Py_RETURN_NONE;
+    return PyBool_FromLong(gptRenderer->begin_frame());
 }
 
 static PyMethodDef gatCommandsplRendererI[] =
 {
-    {"initialize", (PyCFunction)renderer_initialize, METH_VARARGS | METH_KEYWORDS | METH_STATIC, NULL},
-    {"load_test_world", (PyCFunction)renderer_load_test_world, METH_VARARGS | METH_KEYWORDS | METH_STATIC, NULL},
-    {"resize_view", (PyCFunction)renderer_resize_view, METH_VARARGS | METH_STATIC, NULL},
-    {"prepare_scene", (PyCFunction)renderer_prepare_scene, METH_VARARGS | METH_STATIC, NULL},
-    {"get_view_color_bind_group", (PyCFunction)renderer_get_view_color_bind_group, METH_VARARGS | METH_STATIC, NULL},
-    {"prepare_view", (PyCFunction)renderer_prepare_view, METH_VARARGS | METH_STATIC, NULL},
-    {"render_view", (PyCFunction)renderer_render_view, METH_VARARGS | METH_STATIC, NULL},
-    {"begin_frame", (PyCFunction)renderer_begin_frame, METH_NOARGS | METH_STATIC, NULL},
-    {"cleanup", (PyCFunction)renderer_cleanup, METH_NOARGS | METH_STATIC, NULL},
-    {NULL, NULL, 0, NULL}
-};
-
-static PyMethodDef gatCommandsplRendererEcsI[] =
-{
-    {"register_system", (PyCFunction)renderer_ecs_register_system, METH_NOARGS | METH_STATIC, NULL},
-    {"run_light_update_system", (PyCFunction)renderer_ecs_run_light_update_system, METH_VARARGS | METH_STATIC, NULL},
-    {"run_skin_update_system", (PyCFunction)renderer_ecs_run_skin_update_system, METH_VARARGS | METH_STATIC, NULL},
-    {"run_object_update_system", (PyCFunction)renderer_ecs_run_object_update_system, METH_VARARGS | METH_STATIC, NULL},
-    {"run_environment_probe_update_system", (PyCFunction)renderer_ecs_run_environment_probe_update_system, METH_VARARGS | METH_STATIC, NULL},
+    {"initialize",                          (PyCFunction)renderer_initialize,                METH_VARARGS | METH_KEYWORDS | METH_STATIC, NULL},
+    {"cleanup",                             (PyCFunction)renderer_cleanup,                   METH_NOARGS | METH_STATIC, NULL},
+    {"create_scene",                        (PyCFunction)renderer_create_scene,              METH_NOARGS | METH_STATIC, NULL},
+    {"destroy_scene",                       (PyCFunction)renderer_destroy_scene,             METH_O | METH_STATIC, NULL},
+    {"load_component_library",              (PyCFunction)renderer_load_component_library,    METH_VARARGS | METH_STATIC, NULL},
+    {"create_view",                         (PyCFunction)renderer_create_view,               METH_VARARGS | METH_STATIC, NULL},
+    {"destroy_view",                        (PyCFunction)renderer_destroy_view,              METH_O | METH_STATIC, NULL},
+    {"resize_view",                         (PyCFunction)renderer_resize_view,               METH_VARARGS | METH_STATIC, NULL},
+    {"get_view_color_bind_group",           (PyCFunction)renderer_get_view_color_bind_group, METH_VARARGS | METH_KEYWORDS | METH_STATIC, NULL},
+    {"get_drawlist",                        (PyCFunction)renderer_get_drawlist,              METH_O | METH_STATIC, NULL},
+    {"begin_frame",                         (PyCFunction)renderer_begin_frame,               METH_NOARGS | METH_STATIC, NULL},
+    {"prepare_scene",                       (PyCFunction)renderer_prepare_scene,             METH_VARARGS | METH_STATIC, NULL},
+    {"prepare_view",                        (PyCFunction)renderer_prepare_view,              METH_VARARGS | METH_STATIC, NULL},
+    {"render_view",                         (PyCFunction)renderer_render_view,               METH_VARARGS | METH_KEYWORDS | METH_STATIC, NULL},
+    {"register_asset_types",                (PyCFunction)renderer_register_asset_types,      METH_NOARGS | METH_STATIC, NULL},
+    {"register_ecs_components",             (PyCFunction)renderer_register_ecs_components,   METH_NOARGS | METH_STATIC, NULL},
+    {"get_asset_type_key_environment",      (PyCFunction)renderer_get_asset_type_key_environment,     METH_NOARGS | METH_STATIC, NULL},
+    {"get_asset_type_key_settings",         (PyCFunction)renderer_get_asset_type_key_settings,        METH_NOARGS | METH_STATIC, NULL},
+    {"get_ecs_type_key_object",             (PyCFunction)renderer_get_ecs_type_key_object,            METH_NOARGS | METH_STATIC, NULL},
+    {"get_ecs_type_key_light",              (PyCFunction)renderer_get_ecs_type_key_light,             METH_NOARGS | METH_STATIC, NULL},
+    {"get_ecs_type_key_environment_probe",  (PyCFunction)renderer_get_ecs_type_key_environment_probe, METH_NOARGS | METH_STATIC, NULL},
+    {"get_ecs_type_key_terrain",            (PyCFunction)renderer_get_ecs_type_key_terrain,           METH_NOARGS | METH_STATIC, NULL},
+    {"get_ecs_type_key_environment",        (PyCFunction)renderer_get_ecs_type_key_environment,       METH_NOARGS | METH_STATIC, NULL},
+    {"get_ecs_type_key_renderer",           (PyCFunction)renderer_get_ecs_type_key_renderer,          METH_NOARGS | METH_STATIC, NULL},
+    {"get_ecs_type_key_decal",              (PyCFunction)renderer_get_ecs_type_key_decal,             METH_NOARGS | METH_STATIC, NULL},
+    {"run_light_update_system",             (PyCFunction)renderer_run_light_update_system,             METH_O | METH_STATIC, NULL},
+    {"run_object_update_system",            (PyCFunction)renderer_run_object_update_system,            METH_O | METH_STATIC, NULL},
+    {"run_environment_probe_update_system", (PyCFunction)renderer_run_environment_probe_update_system, METH_O | METH_STATIC, NULL},
     {NULL, NULL, 0, NULL}
 };
 
 PL_NEW_PYTHON_API(plRendererI)
-PL_NEW_PYTHON_API(plRendererEcsI)

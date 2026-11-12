@@ -13,8 +13,6 @@ sandbox/__pycache__/
 pilotlight/__pycache__/
 pilotlight/pilotlight.pyd
 pilotlight/pilotlight_d.pyd
-pilotlight/imgui.pyd
-pilotlight/imgui_d.pyd
 pilotlight/*.pdb
 pilotlight/*.dll
 pilotlight/*.so
@@ -22,6 +20,7 @@ pilotlight/*.rdi
 pilotlight/*.dSYM
 pilotlight/shaders/
 pilotlight/assets/
+pilotlight/resources/
 
 # debug files
 src/*.pdb

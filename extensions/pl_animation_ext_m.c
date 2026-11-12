@@ -1,12 +1,13 @@
 /*
-   pl_ecs_ext_m.c
+   pl_animation_ext_m.c
+     * plAnimationI
 */
 
 /*
 Index of this file:
 // [SECTION] includes
-// [SECTION] binding apis
-// [SECTION] implementations
+// [SECTION] plAnimationI
+// [SECTION] method tables
 */
 
 //-----------------------------------------------------------------------------
@@ -16,18 +17,16 @@ Index of this file:
 #include "pilotlight.h"
 
 //-----------------------------------------------------------------------------
-// [SECTION] implementations
+// [SECTION] plAnimationI
 //-----------------------------------------------------------------------------
 
-PyObject*
-animation_register_ecs_system(PyObject* self)
-{
- 
-    gptAnimation->register_ecs_system();
-    Py_RETURN_NONE;
-}
+PL_PY_BIND_VOID(animation_register_ecs_components,   gptAnimation->register_ecs_components())
+PL_PY_BIND_VOID(animation_register_asset_types,      gptAnimation->register_asset_types())
+PL_PY_BIND_KEY(animation_get_asset_type_key,         gptAnimation->get_asset_type_key())
+PL_PY_BIND_KEY(animation_get_ecs_type_key_animation, gptAnimation->get_ecs_type_key_animation())
+PL_PY_BIND_KEY(animation_get_ecs_type_key_humanoid,  gptAnimation->get_ecs_type_key_humanoid())
 
-PyObject*
+static PyObject*
 animation_run_animation_update_system(PyObject* self, PyObject* args)
 {
     static const char* apcKeywords[] = {
@@ -42,36 +41,26 @@ animation_run_animation_update_system(PyObject* self, PyObject* args)
         &ptPyLibrary, &fDeltaTime))
 		return NULL;
 
-    plComponentLibrary* ptCompLibrary = PyCapsule_GetPointer(ptPyLibrary, "plComponentLibrary");
+    plComponentLibrary* ptLibrary = pl_library_from_py(ptPyLibrary);
+    if(ptLibrary == NULL)
+        return NULL;
 
-    gptAnimation->run_animation_update_system(ptCompLibrary, fDeltaTime);
+    gptAnimation->run_animation_update_system(ptLibrary, fDeltaTime);
     Py_RETURN_NONE;
 }
 
-PyObject*
-animation_run_inverse_kinematics_update_system(PyObject* self, PyObject* args)
-{
-    static const char* apcKeywords[] = {
-        "library",
-        NULL,
-    };
-
-    PyObject* ptPyLibrary = NULL;
-	if (!pl_parse_args("O", (const char**)apcKeywords, args, NULL, __FUNCTION__,
-        &ptPyLibrary))
-		return NULL;
-
-    plComponentLibrary* ptCompLibrary = PyCapsule_GetPointer(ptPyLibrary, "plComponentLibrary");
-
-    gptAnimation->run_inverse_kinematics_update_system(ptCompLibrary);
-    Py_RETURN_NONE;
-}
+//-----------------------------------------------------------------------------
+// [SECTION] method tables
+//-----------------------------------------------------------------------------
 
 static PyMethodDef gatCommandsplAnimationI[] =
 {
-    {"register_ecs_system", (PyCFunction)animation_register_ecs_system, METH_NOARGS | METH_STATIC, NULL},
+    {"register_ecs_components",     (PyCFunction)animation_register_ecs_components,     METH_NOARGS | METH_STATIC, NULL},
+    {"register_asset_types",        (PyCFunction)animation_register_asset_types,        METH_NOARGS | METH_STATIC, NULL},
+    {"get_asset_type_key",          (PyCFunction)animation_get_asset_type_key,          METH_NOARGS | METH_STATIC, NULL},
+    {"get_ecs_type_key_animation",  (PyCFunction)animation_get_ecs_type_key_animation,  METH_NOARGS | METH_STATIC, NULL},
+    {"get_ecs_type_key_humanoid",   (PyCFunction)animation_get_ecs_type_key_humanoid,   METH_NOARGS | METH_STATIC, NULL},
     {"run_animation_update_system", (PyCFunction)animation_run_animation_update_system, METH_VARARGS | METH_STATIC, NULL},
-    {"run_inverse_kinematics_update_system", (PyCFunction)animation_run_inverse_kinematics_update_system, METH_VARARGS | METH_STATIC, NULL},
     {NULL, NULL, 0, NULL}
 };
 

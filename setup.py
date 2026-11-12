@@ -73,19 +73,15 @@ def setup_package():
             "shaders/*.glsl",
             "shaders/*.frag",
             "shaders/*.vert",
-            "assets/core/environments/*.*",
-            "assets/core/fonts/*.*",
-            "assets/core/models/gltf/*.*",
-            "assets/core/models/stl/*.*",
-            "assets/core/scenes/*.*",
-            "assets/core/textures/*.*",
-            "data/*.*"
+            "shaders/*.h",
+            "shaders/*.pls",
+            "assets/*/*.*",
+            "resources/*.*"
             ]
     else:
         metadata['package_data']['pilotlight'] = [
             "__init__.py",
             "pilotlight.so",
-            "imgui.so",
             "*.py",
             "*.pyi",
             "shaders/*.inc",
@@ -93,13 +89,8 @@ def setup_package():
             "shaders/*.glsl",
             "shaders/*.frag",
             "shaders/*.vert",
-            "assets/core/environments/*.*",
-            "assets/core/fonts/*.*",
-            "assets/core/models/gltf/*.*",
-            "assets/core/models/stl/*.*",
-            "assets/core/scenes/*.*",
-            "assets/core/textures/*.*",
-            "data/*.*"
+            "assets/*/*.*",
+            "resources/*.*"
             ]
 
     if "--force" in sys.argv:

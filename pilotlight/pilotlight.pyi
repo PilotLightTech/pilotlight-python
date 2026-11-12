@@ -29,7 +29,7 @@
 # [SECTION] imports
 ########################################################################################################################
 
-from typing import List, Dict, Tuple, overload, NewType
+from typing import List, Dict, Tuple, overload, NewType, Callable
 from enum import IntEnum, IntFlag
 import pilotlight.pilotlight as pl
 from pilotlight.types import *
@@ -327,6 +327,38 @@ class plStatsI:
 # [SECTION] vfs api
 ########################################################################################################################
 
+class plFileI:
+    """physical file system helpers (paths are not vfs paths)"""
+
+    @staticmethod
+    def exists(path: str) -> bool:
+        ...
+
+    @staticmethod
+    def remove(path: str) -> bool:
+        ...
+
+    @staticmethod
+    def copy(source: str, destination: str) -> bool:
+        ...
+
+    @staticmethod
+    def directory_exists(path: str) -> bool:
+        ...
+
+    @staticmethod
+    def create_directory(path: str) -> bool:
+        """returns True if the directory exists after the call"""
+        ...
+
+    @staticmethod
+    def remove_directory(path: str) -> bool:
+        ...
+
+    @staticmethod
+    def get_directory_info(path: str) -> List[Tuple[str, plDirectoryEntryType]] | None:
+        ...
+
 class plVfsI:
 
     @staticmethod
@@ -364,6 +396,20 @@ class plGraphicsI:
     def get_swapchain_info(swapchain: plSwapchain) -> plSwapchainInfo:
         ...
 
+    @staticmethod
+    def get_backend_string() -> str:
+        ...
+
+    @staticmethod
+    def set_gpu_timing_enabled(device: plDevice, enabled: bool) -> None:
+        """takes effect at the next begin_frame; times push/pop debug group scopes"""
+        ...
+
+    @staticmethod
+    def get_gpu_timings(device: plDevice) -> dict:
+        """{'samples': [{'name', 'start', 'duration', 'depth'}], 'frame_index', 'duration', 'dropped_samples', 'supported', 'enabled', 'cpu'} (times in seconds)"""
+        ...
+
 ########################################################################################################################
 # [SECTION] shader api
 ########################################################################################################################
@@ -383,7 +429,7 @@ class plShaderI:
         ...
 
     @staticmethod
-    def compile_gls(shader, entry_func, **kwargs):
+    def compile_glsl(shader, entry_func, **kwargs):
         ...
 
     @staticmethod
@@ -561,6 +607,59 @@ class plDrawI:
         ...
 
     @staticmethod
+    def add_image_rounded(layer: plDrawLayer2D, textureID, minP: plVec2Like, maxP: plVec2Like, radius: float, segments: int = 0, flags: plDrawRectFlag = plDrawRectFlag.PL_DRAW_RECT_FLAG_NONE, minUV: plVec2Like = [0.0, 0.0], maxUV: plVec2Like = [1.0, 1.0], color: int = PL_COLOR_32_WHITE) -> None:
+        """segments=0 is adaptive; flags=0 rounds every corner"""
+        ...
+
+    @staticmethod
+    def add_line_h(layer: plDrawLayer2D, x0: float, x1: float, y: float, options: plDrawLineOptions) -> None:
+        ...
+
+    @staticmethod
+    def add_line_v(layer: plDrawLayer2D, x: float, y0: float, y1: float, options: plDrawLineOptions) -> None:
+        ...
+
+    @staticmethod
+    def path_clear(layer: plDrawLayer2D) -> None:
+        """paths belong to the layer; stroke/fill consumes the path"""
+        ...
+
+    @staticmethod
+    def path_line_to(layer: plDrawLayer2D, p: plVec2Like) -> None:
+        ...
+
+    @staticmethod
+    def path_arc_to(layer: plDrawLayer2D, center: plVec2Like, radius: float, angleMin: float, angleMax: float, segments: int = 0) -> None:
+        """angles are radians; segments=0 is adaptive"""
+        ...
+
+    @staticmethod
+    def path_ellipse_to(layer: plDrawLayer2D, center: plVec2Like, radii: plVec2Like, rotation: float, angleMin: float, angleMax: float, segments: int = 0) -> None:
+        ...
+
+    @staticmethod
+    def path_bezier_quad_to(layer: plDrawLayer2D, control: plVec2Like, end: plVec2Like, segments: int = 0) -> None:
+        ...
+
+    @staticmethod
+    def path_bezier_cubic_to(layer: plDrawLayer2D, control0: plVec2Like, control1: plVec2Like, end: plVec2Like, segments: int = 0) -> None:
+        ...
+
+    @staticmethod
+    def path_rect(layer: plDrawLayer2D, minP: plVec2Like, maxP: plVec2Like, radius: float = 0.0, cornerSegments: int = 0, flags: plDrawRectFlag = plDrawRectFlag.PL_DRAW_RECT_FLAG_NONE) -> None:
+        """appends a clockwise outline"""
+        ...
+
+    @staticmethod
+    def path_stroke(layer: plDrawLayer2D, options: plDrawLineOptions) -> None:
+        ...
+
+    @staticmethod
+    def path_fill_convex(layer: plDrawLayer2D, options: plDrawSolidOptions) -> None:
+        """convex only, either winding"""
+        ...
+
+    @staticmethod
     def add_image_quad(layer: plDrawLayer2D, textureID, p0: plVec2Like, p1: plVec2Like, p2: plVec2Like, p3: plVec2Like,
                        p0UV: plVec2Like = [0.0, 0.0], p1UV: plVec2Like = [0.0, 1.0], p2UV: plVec2Like = [1.0, 1.0],
                        p3UV: plVec2Like = [1.0, 0.0], color: int = PL_COLOR_32_WHITE):
@@ -714,6 +813,37 @@ class plScreenLogI:
 class plUiI:
 
     @staticmethod
+    def text(text: str) -> None:
+        ...
+
+    @staticmethod
+    def separator() -> None:
+        ...
+
+    @staticmethod
+    def slider_float(label: str, value: float, minValue: float, maxValue: float, flags: int = 0) -> Tuple[bool, float]:
+        """returns (changed, value)"""
+        ...
+
+    @staticmethod
+    def slider_int(label: str, value: int, minValue: int, maxValue: int, flags: int = 0) -> Tuple[bool, int]:
+        """returns (changed, value)"""
+        ...
+
+    @staticmethod
+    def radio_button(text: str, current: int, value: int) -> Tuple[bool, int]:
+        """returns (pressed, current selection)"""
+        ...
+
+    @staticmethod
+    def set_next_window_pos(pos: plVec2Like, condition: plUiCondition = plUiCondition.PL_UI_COND_ONCE) -> None:
+        ...
+
+    @staticmethod
+    def set_next_window_size(size: plVec2Like, condition: plUiCondition = plUiCondition.PL_UI_COND_ONCE) -> None:
+        ...
+
+    @staticmethod
     def begin_window(name : str, **kwargs):
         ...
 
@@ -760,11 +890,75 @@ class plEcsI:
         ...
 
     @staticmethod
-    def get_default_library():
+    def register_asset_types():
         ...
 
     @staticmethod
-    def get_component(library: plComponentLibrary, key, entity) -> plCamera:
+    def get_asset_type_key() -> int:
+        ...
+
+    @staticmethod
+    def get_ecs_type_key_tag() -> int:
+        ...
+
+    @staticmethod
+    def create_library() -> plComponentLibrary:
+        ...
+
+    @staticmethod
+    def destroy_library(library: plComponentLibrary):
+        ...
+
+    @staticmethod
+    def clear_changes(library: plComponentLibrary):
+        ...
+
+    @staticmethod
+    def create_entity(library: plComponentLibrary, name: str) -> plEntity:
+        ...
+
+    @staticmethod
+    def remove_entity(library: plComponentLibrary, entity: plEntity):
+        ...
+
+    @staticmethod
+    def is_entity_valid(library: plComponentLibrary, entity: plEntity) -> bool:
+        ...
+
+    @staticmethod
+    def has_component(library: plComponentLibrary, key: int, entity: plEntity) -> bool:
+        ...
+
+    @staticmethod
+    def get_component(library: plComponentLibrary, key: int, entity: plEntity) -> plCamera | None:
+        ...
+
+    @staticmethod
+    def get_components(library: plComponentLibrary, key: int) -> List[plEntity]:
+        ...
+
+    @staticmethod
+    def copy_component(library: plComponentLibrary, key: int, source: plEntity, destination: plEntity) -> bool:
+        """call between system updates; adds/replaces the component on destination"""
+        ...
+
+    @staticmethod
+    def clone_entity(library: plComponentLibrary, source: plEntity) -> plEntity:
+        """new local entity with a new ID; does not clone children"""
+        ...
+
+class plTransformI:
+
+    @staticmethod
+    def register_ecs_components():
+        ...
+
+    @staticmethod
+    def get_ecs_type_key_transform() -> int:
+        ...
+
+    @staticmethod
+    def get_ecs_type_key_hierarchy() -> int:
         ...
 
     @staticmethod
@@ -780,6 +974,24 @@ class plEcsI:
 ########################################################################################################################
 
 class plStarterI:
+
+    @staticmethod
+    def activate_msaa() -> None:
+        """queued until the next begin_frame"""
+        ...
+
+    @staticmethod
+    def deactivate_msaa() -> None:
+        """queued until the next begin_frame"""
+        ...
+
+    @staticmethod
+    def activate_vsync() -> None:
+        ...
+
+    @staticmethod
+    def deactivate_vsync() -> None:
+        ...
 
     @staticmethod
     def initialize(starterInit: plStarterInit):
@@ -938,25 +1150,77 @@ class plCameraI:
 class plAnimationI:
 
     @staticmethod
-    def register_ecs_system():
+    def register_ecs_components():
+        ...
+
+    @staticmethod
+    def register_asset_types():
+        ...
+
+    @staticmethod
+    def get_asset_type_key() -> int:
+        ...
+
+    @staticmethod
+    def get_ecs_type_key_animation() -> int:
+        ...
+
+    @staticmethod
+    def get_ecs_type_key_humanoid() -> int:
         ...
 
     @staticmethod
     def run_animation_update_system(library: plComponentLibrary, deltaTime: float):
         ...
 
+class plSkeletonI:
+
     @staticmethod
-    def run_inverse_kinematics_update_system(library: plComponentLibrary):
+    def register_asset_types():
+        ...
+
+    @staticmethod
+    def register_ecs_components():
+        ...
+
+    @staticmethod
+    def get_asset_type_key_skeleton() -> int:
+        ...
+
+    @staticmethod
+    def get_asset_type_key_skin() -> int:
+        ...
+
+    @staticmethod
+    def get_ecs_type_key_skin() -> int:
+        ...
+
+    @staticmethod
+    def run_skin_update_system(library: plComponentLibrary):
+        ...
+
+class plIkI:
+
+    @staticmethod
+    def register_ecs_components():
+        ...
+
+    @staticmethod
+    def get_ecs_type_key() -> int:
+        ...
+
+    @staticmethod
+    def run_ecs_update_system(library: plComponentLibrary):
         ...
 
 class plCameraEcsI:
 
     @staticmethod
-    def register_ecs_system():
+    def register_ecs_components():
         ...
 
     @staticmethod
-    def get_ecs_type_key():
+    def get_ecs_type_key() -> int:
         ...
 
     @staticmethod
@@ -970,13 +1234,41 @@ class plCameraEcsI:
 class plMaterialI:
 
     @staticmethod
-    def register_ecs_system():
+    def register_asset_types():
+        ...
+
+    @staticmethod
+    def get_asset_type_key() -> int:
+        ...
+
+class plTextureI:
+
+    @staticmethod
+    def register_asset_types():
+        ...
+
+    @staticmethod
+    def get_asset_type_key() -> int:
         ...
 
 class plMeshI:
 
     @staticmethod
-    def register_ecs_system():
+    def register_asset_types():
+        ...
+
+    @staticmethod
+    def get_asset_type_key() -> int:
+        ...
+
+class plTerrainI:
+
+    @staticmethod
+    def register_asset_types():
+        ...
+
+    @staticmethod
+    def get_asset_type_key() -> int:
         ...
 
 class plJobI:
@@ -985,32 +1277,14 @@ class plJobI:
     def initialize():
         ...
 
+    @staticmethod
+    def cleanup():
+        ...
+
 class plPhysicsI:
 
     @staticmethod
-    def register_ecs_system():
-        ...
-
-    @staticmethod
-    def update(deltaTime: float, library: plComponentLibrary):
-        ...
-
-class plScriptI:
-
-    @staticmethod
-    def register_ecs_system():
-        ...
-
-class plShaderVariantI:
-
-    @staticmethod
-    def initialize(device: plDevice):
-        ...
-
-class plRendererI:
-
-    @staticmethod
-    def initialize(device: plDevice, swapchain: plSwapchain, **kwargs):
+    def initialize():
         ...
 
     @staticmethod
@@ -1018,7 +1292,186 @@ class plRendererI:
         ...
 
     @staticmethod
-    def begin_frame():
+    def reset():
+        ...
+
+    @staticmethod
+    def register_ecs_components():
+        ...
+
+    @staticmethod
+    def wake_up_all():
+        ...
+
+    @staticmethod
+    def sleep_all():
+        ...
+
+    @staticmethod
+    def get_ecs_type_key_rigid_body_physics() -> int:
+        ...
+
+    @staticmethod
+    def get_ecs_type_key_force_field() -> int:
+        ...
+
+    @staticmethod
+    def update(deltaTime: float, library: plComponentLibrary, drawlist: plDrawList3D | None = None):
+        ...
+
+class plScriptI:
+
+    @staticmethod
+    def register_ecs_components():
+        ...
+
+    @staticmethod
+    def get_ecs_type_key() -> int:
+        ...
+
+    @staticmethod
+    def run_update_system(library: plComponentLibrary):
+        ...
+
+    @staticmethod
+    def register(name: str, run: Callable[[plComponentLibrary, plEntity], None], setup: Callable[[plComponentLibrary, plEntity], None] | None = None) -> None:
+        """register a python script explicitly. Otherwise a script named in a component is resolved to a python module
+        of that name (normal import, then pilotlight.<name>) providing run(library, entity) & optionally setup(library, entity)"""
+        ...
+
+    @staticmethod
+    def unregister(name: str) -> None:
+        ...
+
+    @staticmethod
+    def create(library: plComponentLibrary, script: str, flags: plScriptFlag = plScriptFlag.PL_SCRIPT_FLAG_PLAYING) -> plEntity:
+        """creates an entity with a script component"""
+        ...
+
+    @staticmethod
+    def attach(library: plComponentLibrary, script: str, entity: plEntity, flags: plScriptFlag = plScriptFlag.PL_SCRIPT_FLAG_PLAYING) -> None:
+        """adds a script component to an entity"""
+        ...
+
+    @staticmethod
+    def load(library: plComponentLibrary, entity: plEntity) -> None:
+        """(re)loads an entity's script"""
+        ...
+
+class plShaderLibraryI:
+
+    @staticmethod
+    def initialize(device: plDevice):
+        ...
+
+class plAssetI:
+
+    @staticmethod
+    def initialize():
+        ...
+
+    @staticmethod
+    def finalize():
+        ...
+
+    @staticmethod
+    def cleanup():
+        ...
+
+    @staticmethod
+    def clear_assets():
+        ...
+
+    @staticmethod
+    def clear_changes():
+        ...
+
+    @staticmethod
+    def load(path: str) -> plAssetHandle:
+        ...
+
+    @staticmethod
+    def find(path: str) -> plAssetHandle:
+        ...
+
+    @staticmethod
+    def save(handle: plAssetHandle, encoding: plAssetEncoding = plAssetEncoding.PL_ASSET_ENCODING_AUTO) -> bool:
+        ...
+
+    @staticmethod
+    def destroy(handle: plAssetHandle):
+        ...
+
+    @staticmethod
+    def reload(handle: plAssetHandle):
+        ...
+
+    @staticmethod
+    def is_valid(handle: plAssetHandle) -> bool:
+        ...
+
+    @staticmethod
+    def get_type_key(handle: plAssetHandle) -> int:
+        ...
+
+    @staticmethod
+    def get_path(handle: plAssetHandle) -> str | None:
+        ...
+
+    @staticmethod
+    def get_data(handle: plAssetHandle) -> plComponentLibrary | object | None:
+        ...
+
+class plGltfI:
+
+    @staticmethod
+    def import_file(path: str, flags: plGltfImportFlags = plGltfImportFlags.PL_GLTF_IMPORT_FLAGS_IMPORT_ALL_ASSETS) -> bool:
+        ...
+
+class plRendererI:
+
+    @staticmethod
+    def initialize(device: plDevice, swapchain: plSwapchain) -> bool:
+        ...
+
+    @staticmethod
+    def cleanup():
+        ...
+
+    @staticmethod
+    def create_scene() -> plScene:
+        ...
+
+    @staticmethod
+    def destroy_scene(scene: plScene):
+        ...
+
+    @staticmethod
+    def load_component_library(scene: plScene, library: plComponentLibrary):
+        ...
+
+    @staticmethod
+    def create_view(scene: plScene, dims: plVec2Like) -> plView:
+        ...
+
+    @staticmethod
+    def destroy_view(view: plView):
+        ...
+
+    @staticmethod
+    def resize_view(view: plView, dims: plVec2Like):
+        ...
+
+    @staticmethod
+    def get_view_color_bind_group(view: plView) -> Tuple[int, float, float]:
+        ...
+
+    @staticmethod
+    def get_drawlist(view: plView) -> plDrawList3D:
+        ...
+
+    @staticmethod
+    def begin_frame() -> bool:
         ...
 
     @staticmethod
@@ -1026,29 +1479,59 @@ class plRendererI:
         ...
 
     @staticmethod
-    def prepare_view(view: plView, camera):
+    def prepare_view(view: plView, camera: plCamera):
         ...
 
     @staticmethod
-    def render_view(view: plView, camera):
+    def render_view(view: plView, camera: plCamera):
         ...
 
     @staticmethod
-    def resize_view(view: plView, dims: plVec2Like):
+    def register_asset_types():
         ...
 
-class plRendererEcsI:
+    @staticmethod
+    def register_ecs_components():
+        ...
 
     @staticmethod
-    def register_system():
+    def get_asset_type_key_environment() -> int:
+        ...
+
+    @staticmethod
+    def get_asset_type_key_settings() -> int:
+        ...
+
+    @staticmethod
+    def get_ecs_type_key_object() -> int:
+        ...
+
+    @staticmethod
+    def get_ecs_type_key_light() -> int:
+        ...
+
+    @staticmethod
+    def get_ecs_type_key_environment_probe() -> int:
+        ...
+
+    @staticmethod
+    def get_ecs_type_key_terrain() -> int:
+        ...
+
+    @staticmethod
+    def get_ecs_type_key_environment() -> int:
+        ...
+
+    @staticmethod
+    def get_ecs_type_key_renderer() -> int:
+        ...
+
+    @staticmethod
+    def get_ecs_type_key_decal() -> int:
         ...
 
     @staticmethod
     def run_light_update_system(library: plComponentLibrary):
-        ...
-
-    @staticmethod
-    def run_skin_update_system(library: plComponentLibrary):
         ...
 
     @staticmethod

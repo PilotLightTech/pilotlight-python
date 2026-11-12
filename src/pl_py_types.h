@@ -105,7 +105,8 @@ static PyObject* pl_vec3_to_py(plVec3);
 static PyObject* pl_vec4_to_py(plVec4);
 static PyObject* pl_mat4_to_py(plMat4);
 
-static PyObject* pl_entity_to_py(plEcsTypeKey, plEntity);
+static PyObject* pl_entity_to_py (plEcsTypeKey, plEntity);
+static PyObject* pl_library_to_py(plComponentLibrary*); // capsule ("plComponentLibrary") or None
 
 //-----------------------------------------------------------------------------
 // [SECTION] type conversions to c
@@ -116,7 +117,8 @@ static bool pl_vec3_from_py(PyObject*, plVec3* out);
 static bool pl_vec4_from_py(PyObject*, plVec4* out);
 static bool pl_mat4_from_py(PyObject*, plMat4* out);
 
-plPythonEntity pl_get_entity_from_python(PyObject*);
+plPythonEntity             pl_get_entity_from_python(PyObject*);
+static plComponentLibrary* pl_library_from_py       (PyObject*); // NULL (with python error set) on failure
 
 // temporary arrays
 plVec2* pl_get_vec2_list_from_python(PyObject*, uint32_t*);

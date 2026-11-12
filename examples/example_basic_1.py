@@ -4,7 +4,6 @@ from pathlib import Path
 # core
 import pilotlight.pilotlight as pl
 from pilotlight.pilotlight import *
-from pilotlight.imgui import *
 from pilotlight.enums import *
 from pilotlight.types import *
 
@@ -40,6 +39,7 @@ class App:
         plVfsI.mount_directory("/shaders", os.path.dirname(os.path.abspath(pl.__file__)) + "/shaders")
         plVfsI.mount_directory("/shader-temp", str(Path.cwd()) + "/../shader-temp")
         plVfsI.mount_directory("/assets", str(Path.cwd()) + "/../pilotlight/assets")
+        plVfsI.mount_directory("/resources", str(Path.cwd()) + "/../pilotlight/resources")
 
         # Create and show the OS window.
         window_desc = plWindowDesc()
@@ -73,7 +73,7 @@ class App:
         tFontConfig.uHOverSampling = 1
         tFontConfig.uVOverSampling = 1
         tFontConfig.ptRanges = [tFontRange]
-        self.ptFont = plDrawI.add_font_from_file_ttf(self.ptFontAtlas, tFontConfig, "/assets/core/fonts/Cousine-Regular.ttf");
+        self.ptFont = plDrawI.add_font_from_file_ttf(self.ptFontAtlas, tFontConfig, "/resources/Cousine-Regular.ttf");
 
         self.drawlist = plDrawI.request_2d_drawlist()
         self.ptFGLayer = plDrawI.request_2d_layer(self.drawlist)
@@ -82,7 +82,6 @@ class App:
         # This is required even for simple drawing examples because the
         # rendering path may still rely on shader compilation/setup.
         shader_options = plShaderOptions()
-        shader_options.pcCacheOutputDirectory = "/shader-temp/"
         shader_options.apcDirectories = ["/shaders/"]
         shader_options.apcIncludeDirectories = ["/shaders/"]
         shader_options.eFlags = (

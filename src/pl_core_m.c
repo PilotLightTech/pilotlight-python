@@ -19,7 +19,6 @@ Index of this file:
 // [SECTION] binding apis
 //-----------------------------------------------------------------------------
 
-const plWindowI* ptWindows2;
 
 //-----------------------------------------------------------------------------
 // [SECTION] implementations
@@ -385,80 +384,6 @@ io_get_io(PyObject* self, PyObject* arg)
     return (PyObject*)obj;
 }
 
-PyObject*
-window_create(PyObject* self, PyObject* args, PyObject* kwargs)
-{
-
-    static const char* apcKeywords[] = {
-        "desc",
-        NULL,
-    };
-
-    
-    PyObject* ptPythonDesc = NULL;
-	if (!pl_parse_args("O", (const char**)apcKeywords, args, NULL, __FUNCTION__,
-        &ptPythonDesc))
-		return NULL;
-
-    plWindowDesc tWindowDesc = {0};
-
-    {
-        PyObject* ptPythonObject = PyObject_GetAttrString(ptPythonDesc, "tFlags");
-        PyLong_AsInt32(ptPythonObject, &tWindowDesc.tFlags);
-        Py_DECREF(ptPythonObject);
-    }
-
-    {
-        PyObject* ptPythonObject = PyObject_GetAttrString(ptPythonDesc, "iXPos");
-        PyLong_AsInt32(ptPythonObject, &tWindowDesc.iXPos);
-        Py_DECREF(ptPythonObject);
-    }
-
-    {
-        PyObject* ptPythonObject = PyObject_GetAttrString(ptPythonDesc, "iYPos");
-        PyLong_AsInt32(ptPythonObject, &tWindowDesc.iYPos);
-        Py_DECREF(ptPythonObject);
-    }
-
-    {
-        PyObject* ptPythonObject = PyObject_GetAttrString(ptPythonDesc, "uWidth");
-        PyLong_AsUInt32(ptPythonObject, &tWindowDesc.uWidth);
-        Py_DECREF(ptPythonObject);
-    }
-
-    {
-        PyObject* ptPythonObject = PyObject_GetAttrString(ptPythonDesc, "uHeight");
-        PyLong_AsUInt32(ptPythonObject, &tWindowDesc.uHeight);
-        Py_DECREF(ptPythonObject);
-    }
-
-    PyObject* ptPythonObject = PyObject_GetAttrString(ptPythonDesc, "pcTitle");
-    tWindowDesc.pcTitle = PyUnicode_AsUTF8(ptPythonObject);
-    
-    plWindow* ptWindow = NULL;
-    plWindowResult tResult = ptWindows2->create(tWindowDesc, &ptWindow);
-    Py_DECREF(ptPythonObject); // must stay alive until window is created for title
-    PyObject* ptCapsule = PyCapsule_New(ptWindow, "plWindow", NULL);
-    return Py_BuildValue("(iO)", tResult, ptCapsule);
-}
-
-PyObject*
-window_show(PyObject* self, PyObject* args)
-{
-    plWindow* ptWindowPtr = PyCapsule_GetPointer(args, "plWindow");
-    ptWindows2->show(ptWindowPtr);
-    Py_RETURN_NONE;
-}
-
-PyObject*
-window_destroy(PyObject* self, PyObject* args)
-{
-
-    plWindow* ptWindowPtr = PyCapsule_GetPointer(args, "plWindow");
-    ptWindows2->destroy(ptWindowPtr);
-    Py_RETURN_NONE;
-}
-
 static PyMethodDef gatCommandsplIOI[] =
 {
     {"get_version_string", (PyCFunction)io_get_version_string, METH_NOARGS | METH_STATIC, NULL},
@@ -483,15 +408,6 @@ static PyMethodDef gatCommandsplIOI[] =
     {NULL, NULL, 0, NULL}
 };
 
-static PyMethodDef gatCommandsplWindowI[] =
-{
-    {"create", (PyCFunction)window_create, METH_VARARGS | METH_KEYWORDS | METH_STATIC, NULL},
-    {"show", (PyCFunction)window_show, METH_O | METH_STATIC, NULL},
-    {"destroy", (PyCFunction)window_destroy, METH_O | METH_STATIC, NULL},
-    {NULL, NULL, 0, NULL}
-};
-
-PL_NEW_PYTHON_API(plWindowI)
 PL_NEW_PYTHON_API(plIOI)
 
 plPythonIntConstantPair gatCoreIntPairs[] = {

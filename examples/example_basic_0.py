@@ -4,7 +4,6 @@ from pathlib import Path
 # core
 import pilotlight.pilotlight as pl
 from pilotlight.pilotlight import *
-from pilotlight.imgui import *
 from pilotlight.enums import *
 from pilotlight.types import *
 
@@ -60,7 +59,6 @@ class App:
         # This is required even for simple drawing examples because the
         # rendering path may still rely on shader compilation/setup.
         shader_options = plShaderOptions()
-        shader_options.pcCacheOutputDirectory = "/shader-temp/"
         shader_options.apcDirectories = ["/shaders/"]
         shader_options.apcIncludeDirectories = ["/shaders/"]
         shader_options.eFlags = (

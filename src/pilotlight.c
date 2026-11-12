@@ -21,7 +21,7 @@ Index of this file:
 #include "pl_vfs_ext_m.c"
 #include "pl_graphics_ext_m.c"
 #include "pl_shader_ext_m.c"
-#include "pl_shader_variant_ext_m.c"
+#include "pl_shader_library_ext_m.c"
 #include "pl_pak_ext_m.c"
 #include "pl_stats_ext_m.c"
 #include "pl_screen_log_ext_m.c"
@@ -35,6 +35,14 @@ Index of this file:
 #include "pl_renderer_ext_m.c"
 #include "pl_script_ext_m.c"
 #include "pl_job_ext_m.c"
+#include "pl_asset_ext_m.c"
+#include "pl_terrain_ext_m.c"
+#include "pl_platform_ext_m.c"
+#include "pl_gltf_ext_m.c"
+#include "pl_transform_ext_m.c"
+#include "pl_skeleton_ext_m.c"
+#include "pl_ik_ext_m.c"
+#include "pl_texture_ext_m.c"
 #include "pl_core_m.c"
 
 //-----------------------------------------------------------------------------
@@ -83,73 +91,38 @@ pl_parse_args(char* formatstring, const char** keywords, PyObject* args, PyObjec
 // [SECTION] python module prep
 //-----------------------------------------------------------------------------
 
+// defined in pl_main.c
 const plApiRegistryI* pl__python_load(void);
-void pl__python_setup(void);
-int pl__python_pre_update(void);
-int pl__python_shutdown(void);
-
-void pl_load_platform_ext(plApiRegistryI* ptApiRegistry, bool bReload);
+void                  pl__python_setup(void);
+int                   pl__python_run(PyObject* ptApp);
+void                  pl__python_shutdown(void);
 
 PyObject*
-pl_python_run(PyObject* self, PyObject* arg)
+pl_python_run(PyObject* self, PyObject* ptApp)
 {
-
-    const plApiRegistryI* ptApiRegistry = pl__python_load();
-    pl__python_setup();
-    
-    pl_load_ext((plApiRegistryI*)ptApiRegistry, false);
-    pl_load_platform_ext((plApiRegistryI*)ptApiRegistry, false);
-    plIO* ptIO = gptIOI->get_io();
-    ptWindows2 = pl_get_api_latest(ptApiRegistry, plWindowI);
-
-    PyObject* ptResult = PyObject_CallMethod(arg, "pl_app_load", NULL);
-
-    if(!ptResult)
+    // the app object must provide these methods
+    static const char* apcRequired[] = {"pl_app_load", "pl_app_update", "pl_app_resize", "pl_app_shutdown"};
+    for(uint32_t i = 0; i < PL_ARRAYSIZE(apcRequired); i++)
     {
-        PyErr_Print();   // <-- this will tell you why
-        Py_RETURN_NONE;
-    }
-
-    Py_DECREF(ptResult);
-
-    while (ptIO->bRunning)
-    {
-        int iResult = pl__python_pre_update();
-
-        if(iResult == 1)
+        if(!PyObject_HasAttrString(ptApp, apcRequired[i]))
         {
-            ptResult = PyObject_CallMethod(arg, "pl_app_resize", NULL);
-            if(!ptResult)
-            {
-                PyErr_Print();   // <-- this will tell you why
-                Py_RETURN_NONE;
-            }
-
-            Py_DECREF(ptResult);
-        }
-
-        if(!ptIO->bViewportMinimized)
-        {
-            ptResult = PyObject_CallMethod(arg, "pl_app_update", NULL);
-            if(!ptResult)
-            {
-                PyErr_Print();   // <-- this will tell you why
-                Py_RETURN_NONE;
-            }
-
-            Py_DECREF(ptResult);
+            PyErr_Format(PyExc_AttributeError, "pl_run(): app object is missing required method '%s'", apcRequired[i]);
+            return NULL;
         }
     }
 
-    ptResult = PyObject_CallMethod(arg, "pl_app_shutdown", NULL);
-    if(!ptResult)
+    if(pl__python_run(ptApp) != 0)
     {
-        PyErr_Print();   // <-- this will tell you why
-        Py_RETURN_NONE;
+        PyErr_SetString(PyExc_RuntimeError, "pl_run(): python app raised an exception (see traceback above)");
+        return NULL;
     }
-
-    pl__python_shutdown();
     Py_RETURN_NONE;
+}
+
+static void
+pl_python_module_free(void* pUnused)
+{
+    pl__python_shutdown();
 }
 
 static PyMethodDef gatCommands[] =
@@ -211,7 +184,24 @@ PyInit_pilotlight(void)
 
     for(uint32_t i = 0; i < PL_ARRAYSIZE(gatCameraIntPairs); i++)
         PyModule_AddIntConstant(ptModule, gatCameraIntPairs[i].pcName, gatCameraIntPairs[i].iValue);
-        
+
+    for(uint32_t i = 0; i < PL_ARRAYSIZE(gatAssetIntPairs); i++)
+        PyModule_AddIntConstant(ptModule, gatAssetIntPairs[i].pcName, gatAssetIntPairs[i].iValue);
+
+    for(uint32_t i = 0; i < PL_ARRAYSIZE(gatGltfIntPairs); i++)
+        PyModule_AddIntConstant(ptModule, gatGltfIntPairs[i].pcName, gatGltfIntPairs[i].iValue);
+
+    for(uint32_t i = 0; i < PL_ARRAYSIZE(gatScriptIntPairs); i++)
+        PyModule_AddIntConstant(ptModule, gatScriptIntPairs[i].pcName, gatScriptIntPairs[i].iValue);
+
+    for(uint32_t i = 0; i < PL_ARRAYSIZE(gatUiIntPairs); i++)
+        PyModule_AddIntConstant(ptModule, gatUiIntPairs[i].pcName, gatUiIntPairs[i].iValue);
+
+    for(uint32_t i = 0; i < PL_ARRAYSIZE(gatPlatformIntPairs); i++)
+        PyModule_AddIntConstant(ptModule, gatPlatformIntPairs[i].pcName, gatPlatformIntPairs[i].iValue);
+
+    // load core apis & extensions so APIs can be used before pl_run()
+    pl__python_setup();
     const plApiRegistryI* ptApiRegistry = pl__python_load();
 
     PyObject* ptApiRegistryCapsule = PyCapsule_New((void*)ptApiRegistry, "plApiRegistryI", NULL);
@@ -248,7 +238,7 @@ PyInit_pilotlight(void)
     PL_ADD_PYTHON_API(plStarterI);
     PL_ADD_PYTHON_API(plIOI);
     PL_ADD_PYTHON_API(plShaderI);
-    PL_ADD_PYTHON_API(plShaderVariantI);
+    PL_ADD_PYTHON_API(plShaderLibraryI);
     PL_ADD_PYTHON_API(plWindowI);
     PL_ADD_PYTHON_API(plScreenLogI);
     PL_ADD_PYTHON_API(plEcsI);
@@ -258,9 +248,16 @@ PyInit_pilotlight(void)
     PL_ADD_PYTHON_API(plPhysicsI);
     PL_ADD_PYTHON_API(plScriptI);
     PL_ADD_PYTHON_API(plRendererI);
-    PL_ADD_PYTHON_API(plRendererEcsI);
     PL_ADD_PYTHON_API(plResourceI);
     PL_ADD_PYTHON_API(plJobI);
+    PL_ADD_PYTHON_API(plTransformI);
+    PL_ADD_PYTHON_API(plSkeletonI);
+    PL_ADD_PYTHON_API(plIkI);
+    PL_ADD_PYTHON_API(plTextureI);
+    PL_ADD_PYTHON_API(plAssetI);
+    PL_ADD_PYTHON_API(plGltfI);
+    PL_ADD_PYTHON_API(plTerrainI);
+    PL_ADD_PYTHON_API(plFileI);
 
     return ptModule;
 }

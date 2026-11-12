@@ -203,8 +203,40 @@ plPythonIntConstantPair gatStarterIntPairs[] = {
     PL_ADD_INT_CONSTANT(PL_STARTER_FLAGS_ALL_EXTENSIONS)
 };
 
+PyObject*
+starter_activate_msaa(PyObject* self, PyObject* unused)
+{
+    gptStarter->activate_msaa();
+    Py_RETURN_NONE;
+}
+
+PyObject*
+starter_deactivate_msaa(PyObject* self, PyObject* unused)
+{
+    gptStarter->deactivate_msaa();
+    Py_RETURN_NONE;
+}
+
+PyObject*
+starter_activate_vsync(PyObject* self, PyObject* unused)
+{
+    gptStarter->activate_vsync();
+    Py_RETURN_NONE;
+}
+
+PyObject*
+starter_deactivate_vsync(PyObject* self, PyObject* unused)
+{
+    gptStarter->deactivate_vsync();
+    Py_RETURN_NONE;
+}
+
 static PyMethodDef gatCommandsplStarterI[] =
 {
+    {"activate_msaa", (PyCFunction)starter_activate_msaa, METH_NOARGS | METH_STATIC, NULL},
+    {"deactivate_msaa", (PyCFunction)starter_deactivate_msaa, METH_NOARGS | METH_STATIC, NULL},
+    {"activate_vsync", (PyCFunction)starter_activate_vsync, METH_NOARGS | METH_STATIC, NULL},
+    {"deactivate_vsync", (PyCFunction)starter_deactivate_vsync, METH_NOARGS | METH_STATIC, NULL},
     {"begin_frame", (PyCFunction)starter_begin_frame, METH_NOARGS | METH_STATIC, NULL},
     {"initialize", (PyCFunction)starter_initialize, METH_O | METH_STATIC, NULL},
     {"finalize", (PyCFunction)starter_finalize, METH_NOARGS | METH_STATIC, NULL},

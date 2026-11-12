@@ -1,12 +1,12 @@
 /*
-   pl_ecs_ext_m.c
+   pl_mesh_ext_m.c
 */
 
 /*
 Index of this file:
 // [SECTION] includes
-// [SECTION] binding apis
 // [SECTION] implementations
+// [SECTION] method tables
 */
 
 //-----------------------------------------------------------------------------
@@ -19,17 +19,18 @@ Index of this file:
 // [SECTION] implementations
 //-----------------------------------------------------------------------------
 
-PyObject*
-mesh_register_ecs_system(PyObject* self)
-{
- 
-    gptMesh->register_ecs_system();
-    Py_RETURN_NONE;
-}
+PL_PY_BIND_VOID(mesh_register_asset_types, gptMesh->register_asset_types())
+PL_PY_BIND_KEY(mesh_get_asset_type_key,    gptMesh->get_asset_type_key())
+
+//-----------------------------------------------------------------------------
+// [SECTION] method tables
+//-----------------------------------------------------------------------------
 
 static PyMethodDef gatCommandsplMeshI[] =
 {
-    {"register_ecs_system", (PyCFunction)mesh_register_ecs_system, METH_NOARGS | METH_STATIC, NULL},
+    {"register_asset_types", (PyCFunction)mesh_register_asset_types, METH_NOARGS | METH_STATIC, NULL},
+    {"get_asset_type_key",   (PyCFunction)mesh_get_asset_type_key,   METH_NOARGS | METH_STATIC, NULL},
     {NULL, NULL, 0, NULL}
 };
+
 PL_NEW_PYTHON_API(plMeshI)

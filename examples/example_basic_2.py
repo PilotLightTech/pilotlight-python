@@ -5,7 +5,6 @@ from pathlib import Path
 # core
 import pilotlight.pilotlight as pl
 from pilotlight.pilotlight import *
-from pilotlight.imgui import *
 from pilotlight.enums import *
 from pilotlight.types import *
 from pilotlight.pl_script_camera import pl_script_run
@@ -36,6 +35,7 @@ class App:
         plVfsI.mount_directory("/shaders", os.path.dirname(os.path.abspath(pl.__file__)) + "/shaders")
         plVfsI.mount_directory("/shader-temp", str(Path.cwd()) + "/../shader-temp")
         plVfsI.mount_directory("/assets", str(Path.cwd()) + "/../pilotlight/assets")
+        plVfsI.mount_directory("/resources", str(Path.cwd()) + "/../pilotlight/resources")
 
         # Create window.
         window_desc = plWindowDesc()
@@ -78,7 +78,7 @@ class App:
         self.ptFont = plDrawI.add_font_from_file_ttf(
             self.ptFontAtlas,
             tFontConfig,
-            "/assets/core/fonts/Cousine-Regular.ttf"
+            "/resources/Cousine-Regular.ttf"
         )
 
         # Persistent 3D drawlist.
@@ -86,7 +86,6 @@ class App:
 
         # Shader system.
         shader_options = plShaderOptions()
-        shader_options.pcCacheOutputDirectory = "/shader-temp/"
         shader_options.apcDirectories = ["/shaders/"]
         shader_options.apcIncludeDirectories = ["/shaders/"]
         shader_options.eFlags = (

@@ -61,6 +61,7 @@ elif operation == "new":
     os.mkdir(target_directory + "/shader-temp")
 
     shutil.copytree(file_directory + "/assets", target_directory + "/assets")
+    shutil.copytree(file_directory + "/resources", target_directory + "/resources")
     shutil.copytree(file_directory + "/shaders", target_directory + "/shaders")
     shutil.copy(file_directory + "/data/template.gitignore", target_directory + "/.gitignore")
     shutil.copy(file_directory + "/data/README.md", target_directory + "/README.md")

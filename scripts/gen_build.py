@@ -1,9 +1,10 @@
-# gen_examples.py
+# gen_build.py
 
 # Index of this file:
 # [SECTION] imports
 # [SECTION] project
-# [SECTION] examples
+# [SECTION] pilotlight module
+# [SECTION] sandbox executable
 # [SECTION] generate_scripts
 
 #-----------------------------------------------------------------------------
@@ -42,14 +43,15 @@ with pl.project("pilotlight_python"):
         "../../pilotlight/extensions",
         "../../pilotlight/src",
         "../../pilotlight/shaders",
-        "../../pilotlight/thirdparty/stb",
-        "../../pilotlight/thirdparty/glfw/include/",
-        "../../pilotlight/thirdparty/imgui/",
-        "../../pilotlight/thirdparty/cgltf",
         "../dependencies/cpython/",
         "../dependencies/cpython/Include/",
         "../dependencies/cpython/build/debug/"
     )
+
+    # platform defines (used by pilot light extensions)
+    pl.add_profile(platform_filter=["Windows"], definitions=["PL_PLATFORM_WINDOWS"])
+    pl.add_profile(platform_filter=["Linux"], definitions=["PL_PLATFORM_LINUX"])
+    pl.add_profile(platform_filter=["Darwin"], definitions=["PL_PLATFORM_APPLE"])
 
     # win32 or msvc only
     pl.add_profile(compiler_filter=["msvc"],
@@ -88,347 +90,38 @@ with pl.project("pilotlight_python"):
 
     # configs
     pl.add_profile(configuration_filter=["debug"], definitions=["_DEBUG", "PL_CONFIG_DEBUG"])
-    
-    #-----------------------------------------------------------------------------
-    # [SECTION] glfw
-    #-----------------------------------------------------------------------------
-
-    with pl.target("glfw", pl.TargetType.STATIC_LIBRARY, False, False):
-
-        pl.add_source_files("../../pilotlight/thirdparty/glfw/src/glfw_unity.c")
-        pl.add_source_files("../../pilotlight/thirdparty/glfw/src/null_window.c")
-
-        with pl.configuration("debug"):
-
-            pl.set_output_binary("glfwd")
-
-            # win32
-            with pl.platform("Windows"):
-                with pl.compiler("msvc"):
-                    pl.add_include_directories("%VULKAN_SDK%\\Include")
-                    pl.add_definitions("UNICODE", "_UNICODE", "_CRT_SECURE_NO_WARNINGS", "_GLFW_VULKAN_STATIC", "_GLFW_WIN32", "_DEBUG")
-                    pl.add_compiler_flags("-std:c11", "-Od", "-MDd", "-Zi", "-permissive", "-wd4244")
-            
-            # linux
-            with pl.platform("Linux"):
-                with pl.compiler("gcc"):
-                    pl.add_definitions("_GLFW_VULKAN_STATIC", "_GLFW_X11")
-                    pl.add_include_directories('$VULKAN_SDK/include', '/usr/include/vulkan', '/usr/include/vulkan')
-                    pl.add_dynamic_link_libraries("xcb", "X11", "X11-xcb", "xkbcommon", "pthread", "xcb-cursor", "vulkan")
-                    pl.add_link_directories('$VULKAN_SDK/lib')
-                    pl.add_compiler_flags("-std=gnu99")
-                    pl.add_source_files("../../pilotlight/thirdparty/glfw/src/posix_poll.c")
-
-            # apple
-            with pl.platform("Darwin"):
-                with pl.compiler("clang"):
-                    pl.add_definitions("_GLFW_VULKAN_STATIC", "_GLFW_COCOA")
-                    pl.add_compiler_flags("-Wno-deprecated-declarations", "-std=c99", "-fmodules", "-ObjC")
-                    pl.add_link_frameworks("Cocoa", "IOKit", "CoreFoundation")
-
-        with pl.configuration("deploy"):
-
-            pl.set_output_binary("glfw")
-
-            # win32
-            with pl.platform("Windows"):
-                with pl.compiler("msvc"):
-                    pl.add_include_directories("%VULKAN_SDK%\\Include")
-                    pl.add_definitions("UNICODE", "_UNICODE", "_CRT_SECURE_NO_WARNINGS", "_GLFW_VULKAN_STATIC", "_GLFW_WIN32")
-                    pl.add_compiler_flags("-std:c11", "-O2", "-MD", "-Zi", "-permissive", "-wd4244")
-
-            # linux
-            with pl.platform("Linux"):
-                with pl.compiler("gcc"):
-                    pl.add_definitions("_GLFW_VULKAN_STATIC", "_GLFW_X11")
-                    pl.add_include_directories('$VULKAN_SDK/include', '/usr/include/vulkan', '/usr/include/vulkan')
-                    pl.add_dynamic_link_libraries("xcb", "X11", "X11-xcb", "xkbcommon", "pthread", "xcb-cursor", "vulkan")
-                    pl.add_link_directories('$VULKAN_SDK/lib')
-                    pl.add_compiler_flags("-std=gnu99")
-                    pl.add_source_files("../../pilotlight/thirdparty/glfw/src/posix_poll.c")
-
-            # apple
-            with pl.platform("Darwin"):
-                with pl.compiler("clang"):
-                    pl.add_definitions("_GLFW_VULKAN_STATIC", "_GLFW_COCOA")
-                    pl.add_compiler_flags("-std=c99", "-fmodules", "-ObjC", "-Wno-deprecated-declarations")
-                    pl.add_link_frameworks("Cocoa", "IOKit", "CoreFoundation")
-
-    #-----------------------------------------------------------------------------
-    # [SECTION] imgui & implot
-    #-----------------------------------------------------------------------------
-
-    with pl.target("imgui", pl.TargetType.STATIC_LIBRARY, False, False):
-
-        # imgui & imgui
-        pl.add_source_files("../../pilotlight/thirdparty/imgui/imgui_unity.cpp")
-
-        # default config
-        with pl.configuration("debug"):
-
-            pl.set_output_binary("dearimguid")
-            pl.add_static_link_libraries("glfwd")
-
-            # win32
-            with pl.platform("Windows"):
-                with pl.compiler("msvc"):
-                    pl.add_compiler_flags("-std:c++14", "-Od", "-MDd", "-Zi", "-permissive")
-
-            # linux
-            with pl.platform("Linux"):
-                with pl.compiler("gcc"):
-                    pl.add_compiler_flags("-std=c++14")
-                    pl.add_linker_flags("-lstdc++")
-
-            # macos
-            with pl.platform("Darwin"):
-                with pl.compiler("clang"):
-                    pl.add_compiler_flags("-std=c++14", "-Warc-bridge-casts-disallowed-in-nonarc")
-                    pl.add_linker_flags("-lstdc++")
-
-        with pl.configuration("deploy"):
-
-            pl.set_output_binary("dearimgui")
-            pl.add_static_link_libraries("glfw")
-
-            # win32
-            with pl.platform("Windows"):
-                with pl.compiler("msvc"):
-                    pl.add_compiler_flags("-std:c++14", "-O2", "-MD", "-Zi", "-permissive")
-
-            # linux
-            with pl.platform("Linux"):
-                with pl.compiler("gcc"):
-                    pl.add_compiler_flags("-std=c++14")
-                    pl.add_linker_flags("-lstdc++")
-
-            # macos
-            with pl.platform("Darwin"):
-                with pl.compiler("clang"):
-                    pl.add_compiler_flags("-std=c++14", "-Warc-bridge-casts-disallowed-in-nonarc")
-                    pl.add_linker_flags("-lstdc++")
-
-    #-----------------------------------------------------------------------------
-    # [SECTION] pl_platform_ext
-    #-----------------------------------------------------------------------------
-
-    with pl.target("pl_platform_ext", pl.TargetType.STATIC_LIBRARY, False, False):
-            
-        pl.set_output_binary("pl_platform_ext")
-
-        with pl.configuration("debug"):
-
-            # win32
-            with pl.platform("Windows"):
-
-                pl.add_include_directories("../dependencies/cpython/PC/")
-
-                with pl.compiler("msvc"):
-                    pl.add_source_files("../../pilotlight/extensions/pl_platform_win32_ext.c")
-                    pl.add_static_link_libraries("ucrtd", "user32", "Ole32")
-                    pl.add_compiler_flags("-std:c11")
-
-            # linux
-            with pl.platform("Linux"):
-                with pl.compiler("gcc"):
-                    pl.add_source_files("../../pilotlight/extensions/pl_platform_linux_ext.c")
-                    pl.add_dynamic_link_libraries("pthread")
-
-            # mac os
-            with pl.platform("Darwin"):
-                with pl.compiler("clang"):
-                    pl.add_source_files("../../pilotlight/extensions/pl_platform_macos_ext.m")
-                    pl.add_linker_flags("-undefined dynamic_lookup")
-
-        with pl.configuration("deploy"):
-            
-            # win32
-            with pl.platform("Windows"):
-                with pl.compiler("msvc"):
-                    pl.add_source_files("../../pilotlight/extensions/pl_platform_win32_ext.c")
-                    pl.add_static_link_libraries("ucrt", "user32", "Ole32")
-                    pl.add_compiler_flags("-std:c11")
-
-            # linux
-            with pl.platform("Linux"):
-                with pl.compiler("gcc"):
-                    pl.add_source_files("../../pilotlight/extensions/pl_platform_linux_ext.c")
-                    pl.add_dynamic_link_libraries("pthread")
-
-            # mac os
-            with pl.platform("Darwin"):
-                with pl.compiler("clang"):
-                    pl.add_source_files("../../pilotlight/extensions/pl_platform_macos_ext.m")
-                    pl.add_linker_flags("-undefined dynamic_lookup")
-                    pl.add_compiler_flags("-Warc-bridge-casts-disallowed-in-nonarc", "-Wnullability-completeness")
-
-    #-----------------------------------------------------------------------------
-    # [SECTION] backend main
-    #-----------------------------------------------------------------------------
-    
-    with pl.target("pilotlight_main", pl.TargetType.STATIC_LIBRARY, False, False):
-
-        pl.add_source_files("pl_main.cpp")
-        
-        with pl.configuration("debug"):
-
-            pl.add_static_link_libraries("dearimguid", "glfwd", "pl_platform_ext")
-            pl.set_output_binary("pilotlight_main")
-            
-            # win32
-            with pl.platform("Windows"):
-                with pl.compiler("msvc"):
-                    pl.add_include_directories("%VULKAN_SDK%\\Include")
-                    pl.add_static_link_libraries("user32", "Shell32", "Ole32", "gdi32", "ucrtd")
-                    pl.add_link_directories("../dependencies/cpython/PCbuild/amd64/", '%VULKAN_SDK%\\Lib')
-                    pl.add_linker_flags("-nodefaultlib:LIBCMT", "-nodefaultlib:MSVCRT")
-                    pl.add_compiler_flags("-std:c11", "-Od", "-MDd", "-Zi")
-
-            # linux
-            with pl.platform("Linux"):
-                with pl.compiler("gcc"):
-                    pl.add_link_directories("../dependencies/cpython/build/debug/")
-
-            # mac os
-            with pl.platform("Darwin"):
-                with pl.compiler("clang"):
-                    pl.add_compiler_flags("-fmodules", "-ObjC++")
-                    pl.add_linker_flags("-undefined dynamic_lookup")
-                    pl.add_link_frameworks("Metal", "MetalKit", "Cocoa", "IOKit", "CoreVideo", "QuartzCore")
-                    pl.add_link_directories("../dependencies/cpython/build/debug/")
-                    pl.add_compiler_flags("-Wno-deprecated-declarations")
-                    pl.add_dynamic_link_libraries("python3.14d")
-
-
-        with pl.configuration("deploy"):
-
-            pl.add_static_link_libraries("dearimgui", "glfw", "pl_platform_ext")
-            pl.set_output_binary("pilotlight_main")
-
-            # win32
-            with pl.platform("Windows"):
-                with pl.compiler("msvc"):
-
-                    pl.add_include_directories("%PL_PYTHON_INCLUDES%")
-                    pl.add_link_directories("%PL_PYTHON_LIBS%")
-                    pl.add_include_directories("%VULKAN_SDK%\\Include")
-                    pl.add_static_link_libraries("vulkan-1")
-                    pl.add_static_link_libraries("user32", "Shell32", "Ole32", "gdi32", "ucrt")
-                    pl.add_link_directories('%VULKAN_SDK%\\Lib')
-                    pl.add_linker_flags("-nodefaultlib:LIBCMT")
-                    pl.add_compiler_flags("-std:c11", "-Od", "-MD", "-Zi")     
-
-            with pl.platform("Linux"):
-                with pl.compiler("gcc"):
-                    pl.add_include_directories("$PL_PYTHON_INCLUDES")
-
-            # mac os
-            with pl.platform("Darwin"):
-                with pl.compiler("clang"):
-                    pl.add_include_directories("$PL_PYTHON_INCLUDES")
-                    pl.add_link_directories('$VULKAN_SDK/lib')
-                    pl.add_compiler_flags("-fmodules", "-ObjC++")
-                    pl.add_linker_flags("-undefined dynamic_lookup")
-                    pl.add_link_frameworks("Metal", "MetalKit", "Cocoa", "IOKit", "CoreVideo", "QuartzCore")
-                    pl.add_compiler_flags("-Wno-deprecated-declarations")   
-
-    #-----------------------------------------------------------------------------
-    # [SECTION] imgui module
-    #-----------------------------------------------------------------------------
-    
-    with pl.target("pilotlight_imgui", pl.TargetType.DYNAMIC_LIBRARY, False):
-
-        pl.add_source_files("../extensions/pl_dearimgui_ext_m.cpp")
-        
-        with pl.configuration("debug"):
-
-            pl.set_output_directory("../pilotlight")
-            pl.add_static_link_libraries("dearimguid", "glfwd", "pl_platform_ext")
-            
-            # win32
-            with pl.platform("Windows"):
-                with pl.compiler("msvc"):
-                    pl.set_output_binary("imgui_d")
-                    pl.add_include_directories("../dependencies/cpython/PC/")
-                    pl.add_include_directories("%VULKAN_SDK%\\Include")
-                    pl.set_output_binary_extension(".pyd")
-                    pl.add_static_link_libraries("vulkan-1")
-                    pl.add_link_directories("../dependencies/cpython/PCbuild/amd64/", '%VULKAN_SDK%\\Lib')
-                    pl.add_linker_flags("-nodefaultlib:LIBCMT", "-nodefaultlib:MSVCRT")
-                    pl.add_compiler_flags("-std:c11", "-Od", "-MDd", "-Zi")
-
-            # linux
-            with pl.platform("Linux"):
-                with pl.compiler("gcc"):
-                    pl.set_output_binary("imgui")
-                    pl.add_include_directories('$VULKAN_SDK/include', '/usr/include/vulkan')
-                    pl.add_compiler_flags("-std=c++14")
-                    pl.add_linker_flags("-lstdc++")
-                    pl.add_dynamic_link_libraries("vulkan")
-                    pl.add_link_directories('$VULKAN_SDK/lib')
-
-            # mac os
-            with pl.platform("Darwin"):
-                with pl.compiler("clang"):
-                    pl.set_output_binary("imgui")
-                    pl.set_output_binary_extension(".so")
-                    pl.add_compiler_flags("-fmodules", "-ObjC++")
-                    pl.add_linker_flags("-undefined dynamic_lookup")
-                    pl.add_link_frameworks("Metal", "MetalKit", "Cocoa", "IOKit", "CoreVideo", "QuartzCore")
-                    pl.add_link_directories("../dependencies/cpython/build/debug/")
-                    pl.add_compiler_flags("-Wno-deprecated-declarations")
-                    pl.add_dynamic_link_libraries("python3.14d")
-
-        with pl.configuration("deploy"):
-
-            pl.set_output_binary("imgui")
-            pl.set_output_directory("../pilotlight")
-            pl.add_static_link_libraries("glfw", "pl_platform_ext", "dearimgui")
-
-            # win32
-            with pl.platform("Windows"):
-                with pl.compiler("msvc"):
-                    pl.add_include_directories("%PL_PYTHON_INCLUDES%", "%VULKAN_SDK%\\Include")
-                    pl.set_output_binary_extension(".pyd")
-                    pl.add_static_link_libraries("vulkan-1", "user32", "Shell32", "Ole32", "gdi32", "ucrt")
-                    pl.add_link_directories('%VULKAN_SDK%\\Lib', "%PL_PYTHON_LIBS%")
-                    pl.add_linker_flags("-nodefaultlib:LIBCMT")
-                    pl.add_compiler_flags("-std:c11", "-O2", "-MD", "-Zi")
-
-            with pl.platform("Linux"):
-                with pl.compiler("gcc"):
-                    pl.add_include_directories("$PL_PYTHON_INCLUDES", '$VULKAN_SDK/include', '/usr/include/vulkan')
-                    pl.add_compiler_flags("-std=c++14")
-                    pl.add_linker_flags("-lstdc++")
-                    pl.add_dynamic_link_libraries("vulkan")
-                    pl.add_link_directories('$VULKAN_SDK/lib')
-
-            # mac os
-            with pl.platform("Darwin"):
-                with pl.compiler("clang"):
-                    pl.add_include_directories("$PL_PYTHON_INCLUDES")
-                    pl.add_link_directories('$VULKAN_SDK/lib')
-                    pl.set_output_binary_extension(".so")
-                    pl.add_compiler_flags("-fmodules", "-ObjC++")
-                    pl.add_linker_flags("-undefined dynamic_lookup")
-                    pl.add_link_frameworks("Metal", "MetalKit", "Cocoa", "IOKit", "CoreVideo", "QuartzCore")
-                    pl.add_compiler_flags("-Wno-deprecated-declarations")
+    pl.add_profile(configuration_filter=["deploy"], definitions=["NDEBUG", "PL_CONFIG_RELEASE"])
 
     #-----------------------------------------------------------------------------
     # [SECTION] pilotlight module
     #-----------------------------------------------------------------------------
-    
-    with pl.target("pilotlight", pl.TargetType.DYNAMIC_LIBRARY, False):
 
-        pl.add_source_files("pilotlight.c")
+    def add_unix_shader_libraries(compiler):
+        # explicit archives avoid a runtime dependency on SDK shared libraries
+        # (matches pilot light's gen_dev.py)
+        libraries = ["shaderc_combined", "spirv-cross-c", "spirv-cross-core", "spirv-cross-cpp",
+                     "spirv-cross-glsl", "spirv-cross-hlsl", "spirv-cross-msl", "spirv-cross-reflect", "spirv-cross-util"]
+        if compiler == "gcc":
+            pl.add_linker_flags('${VULKAN_SDK:+-L$VULKAN_SDK/lib}')
+            pl.add_linker_flags(*["-l:lib" + library + ".a" for library in libraries])
+        else:
+            pl.add_linker_flags(*["${VULKAN_SDK:-/usr/local}/lib/lib" + library + ".a" for library in libraries])
+
+    # Everything is linked into a single python extension module:
+    #   * pilotlight.c         -> python bindings + pilot light unity extension
+    #   * pl_main.c            -> core apis (pl.c) + python driven main loop
+    #   * pl_platform_unit.c   -> platform extension (windows, input, files, threads)
+    #   * pl_graphics_unit.c   -> graphics extension
+    #   * pl_shader_unit.c     -> shader extension
+
+    with pl.target("pilotlight", pl.TargetType.DYNAMIC_LIBRARY, reloadable=False):
+
+        pl.add_source_files("pilotlight.c", "pl_main.c", "pl_platform_unit.c", "pl_graphics_unit.c", "pl_shader_unit.c")
         pl.set_output_binary("pilotlight")
         pl.set_output_directory("../pilotlight")
-        pl.add_static_link_libraries("pilotlight_main", "pl_platform_ext")
-        
+
         with pl.configuration("debug"):
 
-            pl.add_static_link_libraries("dearimguid", "glfwd")
-            
             # win32
             with pl.platform("Windows"):
                 with pl.compiler("msvc"):
@@ -452,30 +145,28 @@ with pl.project("pilotlight_python"):
             # linux
             with pl.platform("Linux"):
                 with pl.compiler("gcc"):
+                    pl.add_compiler_flags("-std=gnu11")
                     pl.add_include_directories('$VULKAN_SDK/include', '/usr/include/vulkan')
-                    pl.add_dynamic_link_libraries("vulkan")
-                    pl.add_linker_flags("-lstdc++")
-                    pl.add_static_link_libraries("shaderc_combined", "spirv-cross-c", "spirv-cross-core", "spirv-cross-cpp",
-                        "spirv-cross-glsl", "spirv-cross-hlsl", "spirv-cross-msl", "spirv-cross-reflect", "spirv-cross-util")
+                    pl.add_dynamic_link_libraries("xcb", "X11", "X11-xcb", "xkbcommon", "xcb-cursor", "xcb-xfixes",
+                                                  "xcb-keysyms", "pthread", "vulkan")
+                    add_unix_shader_libraries("gcc")
+                    pl.add_linker_flags("-lstdc++", "-lm", "-lpthread") # after the archives that need them
                     pl.add_link_directories("../dependencies/cpython/build/debug/", '$VULKAN_SDK/lib')
 
             # mac os
             with pl.platform("Darwin"):
                 with pl.compiler("clang"):
                     pl.add_compiler_flags("-std=c99", "-fmodules", "-ObjC")
-                    pl.add_linker_flags("-undefined dynamic_lookup")
+                    pl.add_linker_flags("-undefined dynamic_lookup", "-lstdc++")
                     pl.set_output_binary_extension(".so")
-                    pl.add_link_frameworks("Metal", "MetalKit", "Cocoa", "IOKit", "CoreVideo", "QuartzCore")
-                    pl.add_static_link_libraries("shaderc_combined", "spirv-cross-c", "spirv-cross-core", "spirv-cross-cpp",
-                        "spirv-cross-glsl", "spirv-cross-hlsl", "spirv-cross-msl", "spirv-cross-reflect", "spirv-cross-util")
-                    pl.add_link_directories("../dependencies/cpython/build/debug/")
+                    pl.add_link_frameworks("Metal", "MetalKit", "Cocoa", "IOKit", "CoreVideo", "QuartzCore", "Carbon")
+                    add_unix_shader_libraries("clang")
+                    pl.add_include_directories('$VULKAN_SDK/include')
+                    pl.add_link_directories("../dependencies/cpython/build/debug/", '$VULKAN_SDK/lib')
                     pl.add_compiler_flags("-Wno-deprecated-declarations")
                     pl.add_dynamic_link_libraries("python3.14d")
 
         with pl.configuration("deploy"):
-
-            pl.set_output_binary("pilotlight")
-            pl.add_static_link_libraries("dearimgui", "glfw")
 
             # win32
             with pl.platform("Windows"):
@@ -490,32 +181,34 @@ with pl.project("pilotlight_python"):
                     pl.add_linker_flags("-nodefaultlib:LIBCMT")
                     pl.add_compiler_flags("-std:c11", "-O2", "-MD", "-Zi")
 
+            # linux
             with pl.platform("Linux"):
                 with pl.compiler("gcc"):
+                    pl.add_compiler_flags("-std=gnu11", "-O2")
                     pl.add_include_directories("$PL_PYTHON_INCLUDES", '$VULKAN_SDK/include', '/usr/include/vulkan')
-                    pl.add_dynamic_link_libraries("vulkan")
-                    pl.add_static_link_libraries("shaderc_combined", "spirv-cross-c", "spirv-cross-core", "spirv-cross-cpp",
-                        "spirv-cross-glsl", "spirv-cross-hlsl", "spirv-cross-msl", "spirv-cross-reflect", "spirv-cross-util")
+                    pl.add_dynamic_link_libraries("xcb", "X11", "X11-xcb", "xkbcommon", "xcb-cursor", "xcb-xfixes",
+                                                  "xcb-keysyms", "pthread", "vulkan")
+                    add_unix_shader_libraries("gcc")
+                    pl.add_linker_flags("-lstdc++", "-lm", "-lpthread") # after the archives that need them
                     pl.add_link_directories('$VULKAN_SDK/lib')
 
             # mac os
             with pl.platform("Darwin"):
                 with pl.compiler("clang"):
-                    pl.add_include_directories("$PL_PYTHON_INCLUDES")
+                    pl.add_compiler_flags("-std=c99", "-fmodules", "-ObjC", "-O2")
+                    pl.add_include_directories("$PL_PYTHON_INCLUDES", '$VULKAN_SDK/include')
                     pl.add_link_directories('$VULKAN_SDK/lib')
                     pl.set_output_binary_extension(".so")
-                    pl.add_compiler_flags("-std=c99", "-fmodules", "-ObjC")
-                    pl.add_linker_flags("-undefined dynamic_lookup")
-                    pl.add_link_frameworks("Metal", "MetalKit", "Cocoa", "IOKit", "CoreVideo", "QuartzCore")
-                    pl.add_static_link_libraries("shaderc_combined", "spirv-cross-c", "spirv-cross-core", "spirv-cross-cpp",
-                        "spirv-cross-glsl", "spirv-cross-hlsl", "spirv-cross-msl", "spirv-cross-reflect", "spirv-cross-util")
+                    pl.add_linker_flags("-undefined dynamic_lookup", "-lstdc++")
+                    pl.add_link_frameworks("Metal", "MetalKit", "Cocoa", "IOKit", "CoreVideo", "QuartzCore", "Carbon")
+                    add_unix_shader_libraries("clang")
                     pl.add_compiler_flags("-Wno-deprecated-declarations")
 
     #-----------------------------------------------------------------------------
     # [SECTION] sandbox executable
     #-----------------------------------------------------------------------------
 
-    with pl.target("pilotlight_python", pl.TargetType.EXECUTABLE, False):
+    with pl.target("pilotlight_python", pl.TargetType.EXECUTABLE, reloadable=False):
 
         pl.add_source_files("../sandbox/main.c")
         pl.set_output_binary("pilotlight_python")
@@ -554,12 +247,9 @@ elif plat.system() == "Darwin":
 elif plat.system() == "Linux":
     linux.generate_build(working_directory + '/' + "build.sh")
 
-# copy shaders
-if os.path.isdir(working_directory + "/../pilotlight/shaders"):
-    shutil.rmtree(working_directory + "/../pilotlight/shaders")
-    shutil.rmtree(working_directory + "/../pilotlight/assets")
-
-
-shutil.copytree(working_directory + "/../../pilotlight/shaders", working_directory + "/../pilotlight/shaders")
-os.mkdir(working_directory + "/../pilotlight/assets")
-shutil.copytree(working_directory + "/../../pilotlight/assets/core", working_directory + "/../pilotlight/assets/core")
+# copy shaders, assets, & resources from pilot light into the python package
+for folder in ["shaders", "assets", "resources"]:
+    target_folder = working_directory + "/../pilotlight/" + folder
+    if os.path.isdir(target_folder):
+        shutil.rmtree(target_folder)
+    shutil.copytree(working_directory + "/../../pilotlight/" + folder, target_folder)

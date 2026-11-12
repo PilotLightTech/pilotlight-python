@@ -26,9 +26,17 @@ job_initialize(PyObject* self)
     Py_RETURN_NONE;
 }
 
+PyObject*
+job_cleanup(PyObject* self)
+{
+    gptJob->cleanup();
+    Py_RETURN_NONE;
+}
+
 static PyMethodDef gatCommandsplJobI[] =
 {
     {"initialize", (PyCFunction)job_initialize, METH_NOARGS | METH_STATIC, NULL},
+    {"cleanup", (PyCFunction)job_cleanup, METH_NOARGS | METH_STATIC, NULL},
     {NULL, NULL, 0, NULL}
 };
 

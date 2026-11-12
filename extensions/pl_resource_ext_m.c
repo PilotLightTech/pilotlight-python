@@ -1,5 +1,5 @@
 /*
-   pl_ecs_ext_m.c
+   pl_resource_ext_m.c
 */
 
 /*
@@ -59,6 +59,8 @@ resource_initialize(PyObject* self, PyObject* args)
 
     plResourceManagerInit tInit = {0};
 
+    // optional (default: 1024)
+    if(PyObject_HasAttrString(pyptInit, "uMaxTextureResolution"))
     {
         PyObject* ptPythonObject = PyObject_GetAttrString(pyptInit, "uMaxTextureResolution");
         PyLong_AsUInt32(ptPythonObject, &tInit.uMaxTextureResolution);
@@ -66,15 +68,13 @@ resource_initialize(PyObject* self, PyObject* args)
     }
 
     {
-        PyObject* ptPythonObject = PyObject_GetAttrString(pyptInit, "pcCacheDirectory");
-        tInit.pcCacheDirectory = PyUnicode_AsUTF8(ptPythonObject);
-        Py_DECREF(ptPythonObject);
-    }
-
-    {
         PyObject* ptPythonObject = PyObject_GetAttrString(pyptInit, "ptDevice");
+        if(ptPythonObject == NULL)
+            return NULL;
         tInit.ptDevice = PyCapsule_GetPointer(ptPythonObject, "plDevice");
         Py_DECREF(ptPythonObject);
+        if(tInit.ptDevice == NULL)
+            return NULL;
     }
 
     gptResource->initialize(tInit);

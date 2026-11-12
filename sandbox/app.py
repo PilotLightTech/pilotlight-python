@@ -1,15 +1,17 @@
 import os
-import math
+import sys
 from pathlib import Path
 
 # core
 import pilotlight.pilotlight as pl
 from pilotlight.pilotlight import *
 from pilotlight.enums import *
-from pilotlight.imgui import *
 from pilotlight.types import *
-from pilotlight.pl_script_camera import pl_script_run
 
+# scene to load (uses the core Pilot Light repo's assets, same as its sandbox)
+#   usage: python app.py [scene name]   (i.e. humanoid, helmet, terrain)
+SCENE_NAME = sys.argv[1] if len(sys.argv) > 1 else "terrain"
+SCENE_PATH = f"/assets/scenes/{SCENE_NAME}.plscene"
 
 class App:
 
@@ -17,26 +19,43 @@ class App:
         self.ptWindow = None
         self.bResize = False
         self.counter = None
-        self.test_bool = True
-        self.show_imgui_demo = False
-        self.show_implot_demo = False
         self.tMainCamera = None
+        self.ptLibrary = None
+        self.ptScene = None
+        self.ptView = None
+        self.tSceneHandle = None
         self.some_string_array = "pizza"
-        self.float_array = [1.0, 2.0, 3.0, 4.0]
 
     def pl_app_load(self):
 
-        plVfsI.mount_directory("/cache", str(Path.cwd()) + "/../cache")
-        plVfsI.mount_directory("/shaders", os.path.dirname(os.path.abspath(pl.__file__)) + "/shaders")
-        plVfsI.mount_directory("/shader-temp", str(Path.cwd()) + "/../shader-temp")
-        plVfsI.mount_directory("/assets", str(Path.cwd()) + "/../../pilotlight/assets")
-        plVfsI.mount_directory("/environments", str(Path.cwd()) + "/../../pilotlight/assets/development/environments")
-        plVfsI.mount_directory("/gltf-samples", str(Path.cwd()) + "/../../pilotlight/assets/gltf-samples/Models")
+        cwd = Path.cwd().resolve()
+        package_dir = Path(pl.__file__).resolve().parent
+        pilotlight_repo = str(cwd / "../../pilotlight")
+
+        # cache directories written to by various extensions
+        # (i.e. terrain chunk files go to /cache/terrain)
+        for cache_dir in ["", "/shaders", "/imports", "/textures", "/terrain"]:
+            plFileI.create_directory(str(cwd / "../cache") + cache_dir)
+        plVfsI.mount_directory("/cache", str(cwd / "../cache"))
+        plVfsI.mount_directory("/shaders", str(package_dir / "shaders"))
+        plVfsI.mount_directory("/shader-temp", str(cwd / "../shader-temp"))
+        plVfsI.mount_directory("/assets", str(package_dir / "assets"))
+        # plVfsI.mount_directory("/assets", pilotlight_repo + "/assets")
+        plVfsI.mount_directory("/resources", pilotlight_repo + "/resources")
+
+        # NOTE: the renderer extension currently loads its shaders from
+        #       "../shaders/" relative to the working directory (not through
+        #       the vfs), so run from a directory next to the package's shaders
+        os.chdir(package_dir / "data")
 
         plJobI.initialize()
 
         window_desc = plWindowDesc()
-        window_desc.pcTitle = "Python Example"
+        window_desc.pcTitle = "Python Sandbox"
+        window_desc.uWidth = 1500
+        window_desc.uHeight = 900
+        window_desc.iXPos = 50
+        window_desc.iYPos = 50
         _, self.ptWindow = plWindowI.create(window_desc)
         plWindowI.show(self.ptWindow)
 
@@ -45,63 +64,78 @@ class App:
         plStarterI.initialize(starterInit)
 
         shader_options = plShaderOptions()
-        shader_options.pcCacheOutputDirectory = "/shader-temp/"
         shader_options.apcDirectories = ["/shaders/"]
         shader_options.apcIncludeDirectories = ["/shaders/"]
-        shader_options.eFlags = plShaderFlags.PL_SHADER_FLAGS_AUTO_OUTPUT | plShaderFlags.PL_SHADER_FLAGS_INCLUDE_DEBUG | plShaderFlags.PL_SHADER_FLAGS_ALWAYS_COMPILE
+        shader_options.eFlags = plShaderFlags.PL_SHADER_FLAGS_AUTO_OUTPUT | plShaderFlags.PL_SHADER_FLAGS_INCLUDE_DEBUG
         plShaderI.initialize(shader_options)
 
         plStarterI.finalize()
 
-        tRenderAttachmentInfo = plRenderAttachmentInfo()
-        plStarterI.get_render_attachment_info(tRenderAttachmentInfo)
-        plDearImGuiI.initialize(plStarterI.get_device(), plStarterI.get_swapchain(), tRenderAttachmentInfo)
-
         self.counter = plStatsI.get_counter("python counter")
 
-        plShaderVariantI.initialize(plStarterI.get_device())
-
+        # systems required by the renderer
+        plShaderLibraryI.initialize(plStarterI.get_device())
         plRendererI.initialize(plStarterI.get_device(), plStarterI.get_swapchain())
-        
+        plPhysicsI.initialize()
 
+        # asset types
+        plAssetI.initialize()
+        plTextureI.register_asset_types()
+        plMaterialI.register_asset_types()
+        plAnimationI.register_asset_types()
+        plMeshI.register_asset_types()
+        plSkeletonI.register_asset_types()
+        plEcsI.register_asset_types()
+        plTerrainI.register_asset_types()
+        plRendererI.register_asset_types()
+        plAssetI.finalize()
+
+        # ecs components
         plEcsI.initialize()
-        plRendererEcsI.register_system()
-        plScriptI.register_ecs_system()
-        plCameraEcsI.register_ecs_system()
-        plAnimationI.register_ecs_system()
-        plMeshI.register_ecs_system()
-        plPhysicsI.register_ecs_system()
-        plMaterialI.register_ecs_system()
+        plIkI.register_ecs_components()
+        plSkeletonI.register_ecs_components()
+        plTransformI.register_ecs_components()
+        plRendererI.register_ecs_components()
+        plScriptI.register_ecs_components()
+        plAnimationI.register_ecs_components()
+        plCameraEcsI.register_ecs_components()
+        plPhysicsI.register_ecs_components()
         plEcsI.finalize()
-        self.ptComponentLibrary = plEcsI.get_default_library()
 
-        result, self.tMainCamera, self.ptScene, self.ptView = plRendererI.load_test_world("/assets/core/scenes/scene-humanoid.json", self.ptComponentLibrary)
+        # load scene (scenes are assets that hold a component library)
+        self.tSceneHandle = plAssetI.load(SCENE_PATH)
+        if plAssetI.is_valid(self.tSceneHandle):
+            io = plIOI.get_io()
+            self.ptLibrary = plAssetI.get_data(self.tSceneHandle)
+            self.ptScene = plRendererI.create_scene()
+            self.ptView = plRendererI.create_view(self.ptScene, io.tMainViewportSize)
+            plRendererI.load_component_library(self.ptScene, self.ptLibrary)
+            plEcsI.clear_changes(self.ptLibrary)
 
+            cameras = plEcsI.get_components(self.ptLibrary, plCameraEcsI.get_ecs_type_key())
+            if len(cameras) > 0:
+                self.tMainCamera = cameras[0]
+        else:
+            print(f"[python sandbox] failed to load '{SCENE_PATH}'")
+            print("[python sandbox] run the Pilot Light sandbox once so the scene's assets are imported")
 
         self.drawlist = plDrawI.request_2d_drawlist()
         self.ptFGLayer = plDrawI.request_2d_layer(self.drawlist)
 
-        self.texture_resource = plResourceI.load("/assets/core/textures/sprite_map.png", 0)
-        self.texture_handle = plResourceI.get_texture(self.texture_resource)
-        self.texture_bg = plDrawI.create_bind_group_for_texture(self.texture_handle)
-        self.texture_bg2 = plDearImGuiI.get_texture_id_from_bindgroup(plStarterI.get_device(), self.texture_bg)
-
-        ImGui.StyleColorsDark()
-
     def pl_app_shutdown(self):
         plGraphicsI.flush_device(plStarterI.get_device())
+        plJobI.cleanup()
+        plPhysicsI.cleanup()
+        if self.ptScene is not None:
+            plRendererI.destroy_view(self.ptView)
+            plRendererI.destroy_scene(self.ptScene)
+        plAssetI.cleanup()
         plEcsI.cleanup()
         plRendererI.cleanup()
-        plDearImGuiI.cleanup()
         plStarterI.cleanup()
         plWindowI.destroy(self.ptWindow)
 
     def pl_app_resize(self):
-
-        io = plIOI.get_io()
-        camera = plEcsI.get_component(self.ptComponentLibrary, plCameraEcsI.get_ecs_type_key(), self.tMainCamera)
-        plCameraI.set_viewport(camera, io.tMainViewportSize.x, io.tMainViewportSize.y)
-        plCameraI.update(camera)
         plStarterI.resize()
         self.bResize = True
 
@@ -111,35 +145,38 @@ class App:
 
         if not plStarterI.begin_frame():
             return
-        
-        plResourceI.new_frame()
+
         plRendererI.begin_frame()
 
         if self.bResize:
-            plRendererI.resize_view(self.ptView, io.tMainViewportSize)
+            if self.ptView is not None:
+                plRendererI.resize_view(self.ptView, io.tMainViewportSize)
             self.bResize = False
 
-        plDearImGuiI.new_frame(plStarterI.get_device())
+        if self.ptScene is not None and self.tMainCamera is not None:
 
-        if self.show_imgui_demo:
-            self.show_imgui_demo = ImGui.ShowDemoWindow(self.show_imgui_demo)
-        
-        if self.show_implot_demo:
-            self.show_implot_demo = ImPlot.ShowDemoWindow(self.show_implot_demo)
+            camera = plEcsI.get_component(self.ptLibrary, plCameraEcsI.get_ecs_type_key(), self.tMainCamera)
+            plCameraI.set_viewport(camera, io.tMainViewportSize.x, io.tMainViewportSize.y)
 
-        # script here
-        ptCamera = plEcsI.get_component(self.ptComponentLibrary, plCameraEcsI.get_ecs_type_key(), self.tMainCamera)
-        pl_script_run(ptCamera)
-        plAnimationI.run_animation_update_system(self.ptComponentLibrary, io.fDeltaTime)
-        plPhysicsI.update(io.fDeltaTime, self.ptComponentLibrary)
-        plEcsI.run_transform_update_system(self.ptComponentLibrary)
-        plEcsI.run_hierarchy_update_system(self.ptComponentLibrary)
-        plRendererEcsI.run_light_update_system(self.ptComponentLibrary)
-        plCameraEcsI.run_ecs(self.ptComponentLibrary)
-        plAnimationI.run_inverse_kinematics_update_system(self.ptComponentLibrary)
-        plRendererEcsI.run_skin_update_system(self.ptComponentLibrary)
-        plRendererEcsI.run_object_update_system(self.ptComponentLibrary)
-        plRendererEcsI.run_environment_probe_update_system(self.ptComponentLibrary)
+            # run ecs systems (order matters, camera controls are a script component in the scene)
+            plScriptI.run_update_system(self.ptLibrary)
+            plAnimationI.run_animation_update_system(self.ptLibrary, io.fDeltaTime)
+            plPhysicsI.update(io.fDeltaTime, self.ptLibrary, plRendererI.get_drawlist(self.ptView))
+            plTransformI.run_transform_update_system(self.ptLibrary)
+            plTransformI.run_hierarchy_update_system(self.ptLibrary)
+            plRendererI.run_light_update_system(self.ptLibrary)
+            plCameraEcsI.run_ecs(self.ptLibrary)
+            plIkI.run_ecs_update_system(self.ptLibrary)
+            plSkeletonI.run_skin_update_system(self.ptLibrary)
+            plRendererI.run_object_update_system(self.ptLibrary)
+            plRendererI.run_environment_probe_update_system(self.ptLibrary)
+
+            plRendererI.prepare_scene(self.ptScene, [camera])
+            plRendererI.prepare_view(self.ptView, camera)
+            plRendererI.render_view(self.ptView, camera)
+
+            uTexture, fU, fV = plRendererI.get_view_color_bind_group(self.ptView)
+            plDrawI.add_image(self.ptFGLayer, uTexture, plVec2(), io.tMainViewportSize, plVec2(), plVec2(fU, fV), PL_COLOR_32_WHITE)
 
         # drawing API
         fgLayer = plStarterI.get_foreground_layer()
@@ -163,54 +200,15 @@ class App:
             if plUiI.button("Add Message"):
                 plScreenLogI.add_message(1.0, "Logging from python!")
 
-            _, self.show_imgui_demo = plUiI.checkbox("Show ImGui Demo", self.show_imgui_demo)
-            _, self.show_implot_demo = plUiI.checkbox("Show ImPlot Demo", self.show_implot_demo)
-
             plUiI.end_window()
 
-        # dear imgui API
-        if ImGui.BeginMainMenuBar():
-            if ImGui.BeginMenu("File"):
-                ImGui.EndMenu()
-            if ImGui.BeginMenu("Edit", False):
-                ImGui.EndMenu()
-            if ImGui.BeginMenu("Tools"):
-                _, self.show_imgui_demo = ImGui.MenuItem("Show ImGui Demo", "", self.show_imgui_demo)
-                _, self.show_implot_demo = ImGui.MenuItem("Show ImPlot Demo", "", self.show_implot_demo)
-                ImGui.EndMenu()
-            if ImGui.BeginMenu("Help"):
-                ImGui.MenuItemSimple("Check For Update")
-                ImGui.MenuItemSimple("About", "-a")
-                ImGui.EndMenu()
-            ImGui.EndMainMenuBar()
-        if ImGui.Begin("ImGui Window"):
-            if ImGui.Button("Press Me"):
-                print("Pressed Imgui Button")
-            ImGui.DragFloat2("DragFloat2", self.float_array)
-        ImGui.End()
-
-        camera = plEcsI.get_component(self.ptComponentLibrary, plCameraEcsI.get_ecs_type_key(), self.tMainCamera)
-        plRendererI.prepare_scene(self.ptScene, [camera])
-        plRendererI.prepare_view(self.ptView, camera)
-        plRendererI.render_view(self.ptView, camera)
-
-        tUV = plVec2()
-        
-        uTexture, tUV.x, tUV.y = plRendererI.get_view_color_bind_group(self.ptView)
-        plDrawI.add_image(self.ptFGLayer, uTexture, plVec2(), io.tMainViewportSize, plVec2(), tUV, PL_COLOR_32_WHITE)
         plDrawI.submit_2d_layer(self.ptFGLayer)
 
-        if self.test_bool:
-            _, self.test_bool = ImGui.Begin("Testing", open=self.test_bool)
-            ImGui.Image(self.texture_bg2, [500, 500])
-            ImGui.End()
-
         cmdBuffer = plStarterI.begin_main_pass()
-        
+
         tRenderAttachmentInfo = plRenderAttachmentInfo()
         plStarterI.get_render_attachment_info(tRenderAttachmentInfo)
         plDrawI.submit_2d_drawlist(self.drawlist, cmdBuffer, io.tMainViewportSize.x, io.tMainViewportSize.y, plGraphicsI.get_swapchain_info(plStarterI.get_swapchain()).eSampleCount, tRenderAttachmentInfo)
-        plDearImGuiI.render(cmdBuffer)
 
         plStarterI.end_main_pass()
 

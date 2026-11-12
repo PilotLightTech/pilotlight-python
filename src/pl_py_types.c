@@ -752,6 +752,14 @@ pl_entity_to_py(plEcsTypeKey tKey, plEntity tEntity)
     return Py_BuildValue("(III)", tKey, tEntity.uIndex, tEntity.uGeneration);
 }
 
+static PyObject*
+pl_library_to_py(plComponentLibrary* ptLibrary)
+{
+    if(ptLibrary == NULL)
+        Py_RETURN_NONE;
+    return PyCapsule_New(ptLibrary, "plComponentLibrary", NULL);
+}
+
 //-----------------------------------------------------------------------------
 // [SECTION] type conversion to c
 //-----------------------------------------------------------------------------
@@ -922,6 +930,12 @@ pl_get_vec2_list_from_python(PyObject* ptObject, uint32_t* puCountOut)
     }
 
     return sbtList;
+}
+
+static plComponentLibrary*
+pl_library_from_py(PyObject* ptPyLibrary)
+{
+    return (plComponentLibrary*)PyCapsule_GetPointer(ptPyLibrary, "plComponentLibrary");
 }
 
 plPythonEntity

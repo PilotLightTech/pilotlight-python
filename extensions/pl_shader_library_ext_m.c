@@ -1,11 +1,10 @@
 /*
-   pl_ecs_ext_m.c
+   pl_shader_library_ext_m.c
 */
 
 /*
 Index of this file:
 // [SECTION] includes
-// [SECTION] binding apis
 // [SECTION] implementations
 */
 
@@ -20,7 +19,7 @@ Index of this file:
 //-----------------------------------------------------------------------------
 
 PyObject*
-shader_variant_initialize(PyObject* self, PyObject* args, PyObject* kwargs)
+shader_library_initialize(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static const char* apcKeywords[] = {
         "ptDevice",
@@ -32,18 +31,17 @@ shader_variant_initialize(PyObject* self, PyObject* args, PyObject* kwargs)
         &ptPyDevice))
 		return NULL;
 
-
-    const plShaderVariantInit tShaderVariantInit = {
+    const plShaderLibraryInit tShaderLibraryInit = {
         .ptDevice = PyCapsule_GetPointer(ptPyDevice, "plDevice")
     };
-    gptShaderVariant->initialize(tShaderVariantInit);
+    gptShaderLibrary->initialize(tShaderLibraryInit);
     Py_RETURN_NONE;
 }
 
-static PyMethodDef gatCommandsplShaderVariantI[] =
+static PyMethodDef gatCommandsplShaderLibraryI[] =
 {
-    {"initialize", (PyCFunction)shader_variant_initialize, METH_VARARGS | METH_KEYWORDS | METH_STATIC, NULL},
+    {"initialize", (PyCFunction)shader_library_initialize, METH_VARARGS | METH_KEYWORDS | METH_STATIC, NULL},
     {NULL, NULL, 0, NULL}
 };
 
-PL_NEW_PYTHON_API(plShaderVariantI)
+PL_NEW_PYTHON_API(plShaderLibraryI)

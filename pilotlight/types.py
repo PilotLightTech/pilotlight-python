@@ -22,6 +22,12 @@ plDoublePointer = NewType("plDoublePointer", object)
 plScene = NewType("plScene", object)
 plView = NewType("plView", object)
 
+# (ecs type key, entity index, entity generation)
+type plEntity = Tuple[int, int, int]
+
+# plAssetHandle.uData (64 bit integer)
+type plAssetHandle = int
+
 type plQuat = plVec4
 
 class plRenderAttachmentInfo:
@@ -42,7 +48,6 @@ class plShaderOptions:
         self.ptMacroDefinitions = []
         self.apcIncludeDirectories = []
         self.apcDirectories = []
-        self.pcCacheOutputDirectory = ""
 
 @dataclass(slots=True)
 class plStarterInit:
@@ -57,6 +62,7 @@ class plDrawSolidOptions:
 class plDrawLineOptions:
     uColor: int = 0xFFFFFFFF  # default white
     fThickness: float = 1.0
+    tFlags: int = 0 # plDrawStrokeFlag (2D only), default: centered stroke
 
 @dataclass(slots=True)
 class plDrawInit:
@@ -85,10 +91,11 @@ class plFontConfig:
 
 class plResourceManagerInit:
     ptDevice: plDevice
-    pcCacheDirectory: str = "../cache"
+    uMaxTextureResolution: int = 1024
 
 @dataclass(slots=True)
 class plWindowDesc:
+    tMode: int = 0 # PL_WINDOW_PRESENTATION_MODE_GRAPHICS_API
     tFlags: int = 0
     pcTitle: str = "Untitled Window"
     uWidth: int = 500

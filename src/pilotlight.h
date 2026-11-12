@@ -50,9 +50,32 @@ static PyObject* gpt##ARG = NULL; \
 gpt##ARG = PyType_FromSpec(&gtSpec##ARG); \
 PyModule_AddObject(ptModule, #ARG, gpt##ARG);
 
+// boilerplate for simple bindings
+
+// void f(void)
+#define PL_PY_BIND_VOID(FUNC_NAME, CALL) \
+static PyObject* FUNC_NAME(PyObject* self, PyObject* unused) { (void)self; (void)unused; CALL; Py_RETURN_NONE; }
+
+// key f(void)
+#define PL_PY_BIND_KEY(FUNC_NAME, CALL) \
+static PyObject* FUNC_NAME(PyObject* self, PyObject* unused) { (void)self; (void)unused; return PyLong_FromUnsignedLong((unsigned long)(CALL)); }
+
+// void f(plComponentLibrary*) (use with METH_O, "ptLibrary" available to CALL)
+// (pl_library_from_py is declared in pl_py_types.h)
+#define PL_PY_BIND_LIBRARY(FUNC_NAME, CALL) \
+static PyObject* FUNC_NAME(PyObject* self, PyObject* ptPyLibrary) \
+{ \
+    (void)self; \
+    plComponentLibrary* ptLibrary = pl_library_from_py(ptPyLibrary); \
+    if(ptLibrary == NULL) return NULL; \
+    CALL; \
+    Py_RETURN_NONE; \
+}
+
 //-----------------------------------------------------------------------------
 // [SECTION] public api
 //-----------------------------------------------------------------------------
+
 
 bool pl_parse_args(char* formatstring, const char** keywords, PyObject* args, PyObject* kwargs, const char* message, ...);
 
