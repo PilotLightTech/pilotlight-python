@@ -130,6 +130,11 @@ with pl.project("pilotlight_python"):
                     pl.add_include_directories("../dependencies/cpython/PC/", "%VULKAN_SDK%\\Include")
                     pl.set_output_binary_extension(".pyd")
                     pl.add_static_link_libraries("vulkan-1")
+                    # delay load the vulkan loader so the module imports without it
+                    # (i.e. asset tools on machines without a vulkan driver); it is
+                    # only loaded when graphics are initialized (see plStarterI.initialize)
+                    pl.add_static_link_libraries("delayimp")
+                    pl.add_linker_flags("-DELAYLOAD:vulkan-1.dll")
                     pl.add_static_link_libraries("user32", "Shell32", "Ole32", "gdi32", "ucrtd")
                     pl.add_static_link_libraries("shaderc_combined", "spirv-cross-c", "spirv-cross-core", "spirv-cross-cpp",
                         "spirv-cross-glsl", "spirv-cross-hlsl", "spirv-cross-msl", "spirv-cross-reflect", "spirv-cross-util")
@@ -176,6 +181,11 @@ with pl.project("pilotlight_python"):
                     pl.add_link_directories("%PL_PYTHON_LIBS%", '%VULKAN_SDK%\\Lib')
                     pl.set_output_binary_extension(".pyd")
                     pl.add_static_link_libraries("vulkan-1")
+                    # delay load the vulkan loader so the module imports without it
+                    # (i.e. asset tools on machines without a vulkan driver); it is
+                    # only loaded when graphics are initialized (see plStarterI.initialize)
+                    pl.add_static_link_libraries("delayimp")
+                    pl.add_linker_flags("-DELAYLOAD:vulkan-1.dll")
                     pl.add_static_link_libraries("shaderc_combined", "spirv-cross-c", "spirv-cross-core", "spirv-cross-cpp",
                         "spirv-cross-glsl", "spirv-cross-hlsl", "spirv-cross-msl", "spirv-cross-reflect", "spirv-cross-util")
                     pl.add_static_link_libraries("user32", "Shell32", "Ole32", "gdi32", "ucrt")

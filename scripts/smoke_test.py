@@ -10,14 +10,6 @@ import shutil
 import tempfile
 import subprocess
 
-# windows: python doesn't search PATH for extension module dependencies, so
-# point it at the Vulkan SDK's loader if one is installed (CI machines may not
-# have a GPU driver providing vulkan-1.dll)
-if sys.platform == "win32" and "VULKAN_SDK" in os.environ:
-    sdk_bin = os.path.join(os.environ["VULKAN_SDK"], "Bin")
-    if os.path.isdir(sdk_bin):
-        os.add_dll_directory(sdk_bin)
-
 import pilotlight
 import pilotlight.pilotlight as pl
 import pilotlight.enums
@@ -51,6 +43,15 @@ expected_package_files = [
 missing = [f for f in expected_package_files if not os.path.isfile(os.path.join(package_dir, f))]
 if missing:
     sys.exit(f"FAIL: missing package files: {missing}")
+
+# windows: the C++ runtime must be bundled (delvewheel) since a machine with
+# only python installed doesn't have msvcp140.dll
+if sys.platform == "win32":
+    libs_dir = os.path.join(os.path.dirname(package_dir), "pilotlight.libs")
+    bundled = os.listdir(libs_dir) if os.path.isdir(libs_dir) else []
+    if not any(name.lower().startswith("msvcp140") for name in bundled):
+        sys.exit(f"FAIL: msvcp140.dll isn't bundled in pilotlight.libs ({bundled})")
+    print("bundled dlls:", bundled)
 
 # project generator
 with tempfile.TemporaryDirectory() as temp_dir:

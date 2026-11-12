@@ -79,6 +79,10 @@ static PyObject* FUNC_NAME(PyObject* self, PyObject* ptPyLibrary) \
 
 bool pl_parse_args(char* formatstring, const char** keywords, PyObject* args, PyObject* kwargs, const char* message, ...);
 
+// defined in pl_main.c: false (and name of the missing library) if the graphics
+// backend's runtime library can't be loaded (windows: vulkan-1.dll is delay loaded)
+bool pl__python_graphics_runtime_available(const char** ppcMissingOut);
+
 //-----------------------------------------------------------------------------
 // [SECTION] structs
 //-----------------------------------------------------------------------------
@@ -89,4 +93,4 @@ typedef struct _plPythonIntConstantPair
    int         iValue;
 } plPythonIntConstantPair;
 
-#endif // PILOTLIGHT_H
+#endif // PILOTLIGHT_H

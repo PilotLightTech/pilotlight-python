@@ -488,6 +488,25 @@ pl__python_run(PyObject* ptApp)
     return bHadError ? 1 : 0;
 }
 
+bool
+pl__python_graphics_runtime_available(const char** ppcMissingOut)
+{
+    // windows: the vulkan loader is delay loaded (see scripts/gen_build.py) so
+    // the module imports without it. Check before anything calls into vulkan,
+    // since a failed delay load is a crash rather than an error.
+    #if defined(_WIN32) && defined(PL_VULKAN_BACKEND)
+        HMODULE tVulkanLoader = LoadLibraryA("vulkan-1.dll");
+        if(tVulkanLoader == NULL)
+        {
+            *ppcMissingOut = "vulkan-1.dll";
+            return false;
+        }
+        FreeLibrary(tVulkanLoader);
+    #endif
+    (void)ppcMissingOut;
+    return true;
+}
+
 void
 pl__python_shutdown(void)
 {

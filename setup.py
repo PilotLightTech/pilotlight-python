@@ -30,7 +30,7 @@ def setup_package():
 
     metadata = dict(
         name='pilotlight',
-        version="0.1.23",
+        version="0.2.0",
         author="Jonathan Hoffstadt",
         author_email="jonathanhoffstadt@yahoo.com",
         description='Python bindings and project tools for the Pilot Light real-time application framework',

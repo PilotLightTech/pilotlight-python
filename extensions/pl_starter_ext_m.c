@@ -36,6 +36,17 @@ starter_initialize(PyObject* self, PyObject* ptInit)
         tStarterInit.ptWindow = PyCapsule_GetPointer(ptPythonOption, "plWindow");
         Py_DECREF(ptPythonOption);
     }
+
+    // the graphics backend's runtime is loaded on first use (see pl_main.c)
+    const char* pcMissingLibrary = NULL;
+    if(!pl__python_graphics_runtime_available(&pcMissingLibrary))
+    {
+        PyErr_Format(PyExc_RuntimeError,
+            "Pilot Light graphics require %s, which could not be loaded. Install or update your GPU driver (Vulkan support is required).",
+            pcMissingLibrary);
+        return NULL;
+    }
+
     gptStarter->initialize(tStarterInit);
     Py_RETURN_NONE;
 }

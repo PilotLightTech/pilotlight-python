@@ -73,11 +73,24 @@ jobs:
         cd %GITHUB_WORKSPACE%
         python -m build --wheel --outdir dist
 
+    - name: Bundle Runtime DLLs
+      shell: pwsh
+      run: |
+        # vendor the dlls a fresh machine with only python won't have (i.e.
+        # msvcp140.dll from the C++ code in shaderc/SPIRV-Cross). Python already
+        # provides vcruntime140(_1).dll & the vulkan loader comes from the GPU
+        # driver (and is delay loaded).
+        python -m pip install delvewheel
+        $wheel = (Get-ChildItem "$env:GITHUB_WORKSPACE/dist/*.whl").FullName
+        python -m delvewheel show $wheel --exclude vulkan-1.dll
+        if ($LASTEXITCODE -ne 0) { exit 1 }
+        python -m delvewheel repair $wheel --wheel-dir "$env:GITHUB_WORKSPACE/wheelhouse" --exclude vulkan-1.dll
+        if ($LASTEXITCODE -ne 0) { exit 1 }
+
     - name: Smoke Test Wheel
       shell: pwsh
       run: |
-        $env:VULKAN_SDK = "D:/a/VulkanSDK"
-        python -m pip install (Get-ChildItem "$env:GITHUB_WORKSPACE/dist/*.whl").FullName
+        python -m pip install (Get-ChildItem "$env:GITHUB_WORKSPACE/wheelhouse/*.whl").FullName
         cd $env:RUNNER_TEMP
         python "$env:GITHUB_WORKSPACE/scripts/smoke_test.py"
         if ($LASTEXITCODE -ne 0) { exit 1 }
@@ -86,7 +99,7 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: windowsbuild${{ matrix.python-version }}
-        path: ${{ github.workspace }}/dist/*.whl
+        path: ${{ github.workspace }}/wheelhouse/*.whl
         overwrite: true
         
   build-linux-wheels:
