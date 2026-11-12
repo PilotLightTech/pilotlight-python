@@ -1,10 +1,7 @@
 """
 pl_script_camera
   * fly camera controls (python version of pilot light's pl_script_camera.c)
-  * used two ways:
-      - as a script component: scenes that reference "pl_script_camera" load
-        this module & call setup()/run() for the entity (see plScriptI)
-      - directly: call pl_script_run(camera) every frame with a plCamera
+  * call pl_script_run(camera) every frame with a plCamera
 
 Controls:
   * LMB + Drag: Moves camera forward & backward and rotates left & right.
@@ -17,28 +14,6 @@ Controls:
 import math
 from pilotlight.pilotlight import *
 from pilotlight.enums import *
-
-#-----------------------------------------------------------------------------
-# script component interface
-#-----------------------------------------------------------------------------
-
-def setup(library, entity):
-    """called once when the script loads"""
-    camera = plEcsI.get_component(library, plCameraEcsI.get_ecs_type_key(), entity)
-    static = pl_script_run
-    static.fCameraTravelSpeed = 4.0
-    if camera is not None:
-        static.gfOriginalFOV = camera.fYFov
-
-def run(library, entity):
-    """called every update while the script is playing"""
-    camera = plEcsI.get_component(library, plCameraEcsI.get_ecs_type_key(), entity)
-    if camera is not None:
-        pl_script_run(camera)
-
-#-----------------------------------------------------------------------------
-# direct use
-#-----------------------------------------------------------------------------
 
 def pl_script_run(ptCamera: plCamera):
     
@@ -118,4 +93,4 @@ def pl_script_run(ptCamera: plCamera):
             ptCamera.tPosition = plVec3(xChange, ptCamera.tPosition.y, zChange)
             plIOI.reset_mouse_drag_delta(plMouseButton.PL_MOUSE_BUTTON_LEFT)
 
-    plCameraI.update(ptCamera)
+    plCameraI.update(ptCamera)

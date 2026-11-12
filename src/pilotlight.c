@@ -15,24 +15,19 @@ Index of this file:
 //-----------------------------------------------------------------------------
 
 #include "pl_py_types.c"
+#include "pl_internal_m.c"
 #include "pl_starter_ext_m.c"
 #include "pl_draw_ext_m.c"
 #include "pl_ui_ext_m.c"
 #include "pl_vfs_ext_m.c"
 #include "pl_graphics_ext_m.c"
 #include "pl_shader_ext_m.c"
-#include "pl_shader_library_ext_m.c"
 #include "pl_pak_ext_m.c"
 #include "pl_stats_ext_m.c"
 #include "pl_screen_log_ext_m.c"
 #include "pl_ecs_ext_m.c"
-#include "pl_animation_ext_m.c"
 #include "pl_camera_ext_m.c"
-#include "pl_material_ext_m.c"
 #include "pl_resource_ext_m.c"
-#include "pl_mesh_ext_m.c"
-#include "pl_physics_ext_m.c"
-#include "pl_renderer_ext_m.c"
 #include "pl_script_ext_m.c"
 #include "pl_job_ext_m.c"
 #include "pl_asset_ext_m.c"
@@ -40,9 +35,6 @@ Index of this file:
 #include "pl_platform_ext_m.c"
 #include "pl_gltf_ext_m.c"
 #include "pl_transform_ext_m.c"
-#include "pl_skeleton_ext_m.c"
-#include "pl_ik_ext_m.c"
-#include "pl_texture_ext_m.c"
 #include "pl_core_m.c"
 
 //-----------------------------------------------------------------------------
@@ -228,7 +220,6 @@ PyInit_pilotlight(void)
     PyModule_AddObject(ptModule, "plSwapchainInfo", gptSwapchainInfoType);
 
     PL_ADD_PYTHON_API(plCameraI);
-    PL_ADD_PYTHON_API(plCameraEcsI);
     PL_ADD_PYTHON_API(plUiI);
     PL_ADD_PYTHON_API(plVfsI);
     PL_ADD_PYTHON_API(plPakI);
@@ -238,26 +229,17 @@ PyInit_pilotlight(void)
     PL_ADD_PYTHON_API(plStarterI);
     PL_ADD_PYTHON_API(plIOI);
     PL_ADD_PYTHON_API(plShaderI);
-    PL_ADD_PYTHON_API(plShaderLibraryI);
     PL_ADD_PYTHON_API(plWindowI);
     PL_ADD_PYTHON_API(plScreenLogI);
     PL_ADD_PYTHON_API(plEcsI);
-    PL_ADD_PYTHON_API(plAnimationI);
-    PL_ADD_PYTHON_API(plMaterialI);
-    PL_ADD_PYTHON_API(plMeshI);
-    PL_ADD_PYTHON_API(plPhysicsI);
     PL_ADD_PYTHON_API(plScriptI);
-    PL_ADD_PYTHON_API(plRendererI);
     PL_ADD_PYTHON_API(plResourceI);
     PL_ADD_PYTHON_API(plJobI);
     PL_ADD_PYTHON_API(plTransformI);
-    PL_ADD_PYTHON_API(plSkeletonI);
-    PL_ADD_PYTHON_API(plIkI);
-    PL_ADD_PYTHON_API(plTextureI);
     PL_ADD_PYTHON_API(plAssetI);
     PL_ADD_PYTHON_API(plGltfI);
     PL_ADD_PYTHON_API(plTerrainI);
     PL_ADD_PYTHON_API(plFileI);
 
     return ptModule;
-}
+}

@@ -50,6 +50,7 @@ starter_finalize(PyObject* self)
 PyObject*
 starter_cleanup(PyObject* self)
 {
+    pl__internal_cleanup(); // hidden renderer (see pl_internal_m.c)
     gptStarter->cleanup();
     Py_RETURN_NONE;
 }
@@ -259,4 +260,4 @@ static PyMethodDef gatCommandsplStarterI[] =
     {NULL, NULL, 0, NULL}
 };
 
-PL_NEW_PYTHON_API(plStarterI)
+PL_NEW_PYTHON_API(plStarterI)

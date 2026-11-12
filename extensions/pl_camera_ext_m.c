@@ -1,5 +1,6 @@
 /*
    pl_camera_ext_m.c
+     * plCameraI
 */
 
 /*
@@ -88,74 +89,6 @@ pl__get_camera_ortho_desc(PyObject* ptPythonDesc, plCameraOrthographicDesc* ptDe
         ptDescOut->fFarZ = (float)PyFloat_AsDouble(ptPythonOption);
         Py_DECREF(ptPythonOption);
     }
-}
-
-PyObject*
-camera_register_ecs_components(PyObject* self)
-{
- 
-    gptCameraEcs->register_ecs_components();
-    Py_RETURN_NONE;
-}
-
-PyObject*
-camera_get_ecs_type_key(PyObject* self)
-{
- 
-    plEcsTypeKey tKey = gptCameraEcs->get_ecs_type_key();
-    return PyLong_FromUInt32(tKey);
-}
-
-PyObject*
-camera_ecs_run_ecs(PyObject* self, PyObject* args)
-{
-    static const char* apcKeywords[] = {
-        "library",
-        NULL,
-    };
-
-    PyObject* ptPyLibrary = NULL;
-	if (!pl_parse_args("O", (const char**)apcKeywords, args, NULL, __FUNCTION__,
-        &ptPyLibrary))
-		return NULL;
-
-    plComponentLibrary* ptCompLibrary = pl_library_from_py(ptPyLibrary);
-    if(ptCompLibrary == NULL)
-        return NULL;
-
-    gptCameraEcs->run_ecs(ptCompLibrary);
-    Py_RETURN_NONE;
-}
-
-PyObject*
-camera_ecs_create_perspective(PyObject* self, PyObject* args, PyObject* kwargs)
-{
- 
-    PyObject* ptPyLibrary = NULL;
-    PyObject* ptPyDesc = NULL;
-
-    static const char* apcKeywords[] = {
-        "library",
-        "name",
-        "desc",
-        NULL,
-    };
-
-    const char* pcName = NULL;
-	if (!pl_parse_args("OsO", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
-        &ptPyLibrary, &pcName, &ptPyDesc))
-		return NULL;
-
-    plComponentLibrary* ptCompLibrary = pl_library_from_py(ptPyLibrary);
-    if(ptCompLibrary == NULL)
-        return NULL;
-
-    plCameraPerspectiveDesc tDesc = {0};
-    pl__get_camera_perspective_desc(ptPyDesc, &tDesc);
-
-    plEntity tCamera = gptCameraEcs->create_perspective(ptCompLibrary, pcName, &tDesc, NULL);
-
-    return pl_entity_to_py(gptCameraEcs->get_ecs_type_key(), tCamera);
 }
 
 PyObject*
@@ -631,14 +564,4 @@ static PyMethodDef gatCommandsplCameraI[] =
     {NULL, NULL, 0, NULL}
 };
 
-static PyMethodDef gatCommandsplCameraEcsI[] =
-{
-    {"register_ecs_components", (PyCFunction)camera_register_ecs_components, METH_NOARGS | METH_STATIC, NULL},
-    {"create_perspective", (PyCFunction)camera_ecs_create_perspective, METH_VARARGS | METH_KEYWORDS | METH_STATIC, NULL},
-    {"get_ecs_type_key", (PyCFunction)camera_get_ecs_type_key, METH_NOARGS | METH_STATIC, NULL},
-    {"run_ecs", (PyCFunction)camera_ecs_run_ecs, METH_VARARGS | METH_STATIC, NULL},
-    {NULL, NULL, 0, NULL}
-};
-
 PL_NEW_PYTHON_API(plCameraI)
-PL_NEW_PYTHON_API(plCameraEcsI)

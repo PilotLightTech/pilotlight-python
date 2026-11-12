@@ -21,13 +21,21 @@ Index of this file:
 //-----------------------------------------------------------------------------
 
 PL_PY_BIND_VOID(ecs_initialize,           gptEcs->initialize((plEcsInit){0}))
-PL_PY_BIND_VOID(ecs_finalize,             gptEcs->finalize())
 PL_PY_BIND_VOID(ecs_cleanup,              gptEcs->cleanup())
 PL_PY_BIND_VOID(ecs_register_asset_types, gptEcs->register_asset_types())
 PL_PY_BIND_KEY(ecs_get_asset_type_key,    gptEcs->get_asset_type_key())
 PL_PY_BIND_KEY(ecs_get_ecs_type_key_tag,  gptEcs->get_ecs_type_key_tag())
 PL_PY_BIND_LIBRARY(ecs_destroy_library,   gptEcs->destroy_library(ptLibrary))
 PL_PY_BIND_LIBRARY(ecs_clear_changes,     gptEcs->clear_changes(ptLibrary))
+
+static PyObject*
+ecs_finalize(PyObject* self, PyObject* unused)
+{
+    // ecs components of unstable extensions used by gltf & terrain (see pl_internal_m.c)
+    pl__internal_register_ecs_components();
+    gptEcs->finalize();
+    Py_RETURN_NONE;
+}
 
 static PyObject*
 ecs_create_library(PyObject* self, PyObject* unused)
@@ -121,43 +129,6 @@ ecs_has_component(PyObject* self, PyObject* args, PyObject* kwargs)
     if(ptLibrary == NULL)
         return NULL;
     return PyBool_FromLong(gptEcs->has_component(ptLibrary, uEcsKey, pl_get_entity_from_python(ptPyEntity).tEntity));
-}
-
-static PyObject*
-ecs_get_component(PyObject* self, PyObject* args, PyObject* kwargs)
-{
-    static const char* apcKeywords[] = {
-        "library",
-        "key",
-        "entity",
-        NULL,
-    };
-
-    PyObject* ptPyLibrary = NULL;
-    uint32_t uEcsKey = 0;
-    PyObject* ptPyEntity = NULL;
-	if (!pl_parse_args("OIO", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
-        &ptPyLibrary, &uEcsKey, &ptPyEntity))
-		return NULL;
-
-    plComponentLibrary* ptLibrary = pl_library_from_py(ptPyLibrary);
-    if(ptLibrary == NULL)
-        return NULL;
-    plPythonEntity tPyEntity = pl_get_entity_from_python(ptPyEntity);
-
-    void* pComponent = gptEcs->get_component(ptLibrary, uEcsKey, tPyEntity.tEntity);
-    if(pComponent == NULL)
-        Py_RETURN_NONE;
-
-    // only cameras are currently exposed as python types
-    if(uEcsKey == gptCameraEcs->get_ecs_type_key())
-    {
-        pyplCamera* obj = (pyplCamera*)PyObject_CallObject(gptCameraType, NULL);
-        free(obj->ptCamera);
-        obj->ptCamera = pComponent;
-        return (PyObject*)obj;
-    }
-    Py_RETURN_NONE;
 }
 
 // returns list of entities that have the component
@@ -260,7 +231,6 @@ static PyMethodDef gatCommandsplEcsI[] =
     {"remove_entity",        (PyCFunction)ecs_remove_entity,        METH_VARARGS | METH_KEYWORDS | METH_STATIC, NULL},
     {"is_entity_valid",      (PyCFunction)ecs_is_entity_valid,      METH_VARARGS | METH_KEYWORDS | METH_STATIC, NULL},
     {"has_component",        (PyCFunction)ecs_has_component,        METH_VARARGS | METH_KEYWORDS | METH_STATIC, NULL},
-    {"get_component",        (PyCFunction)ecs_get_component,        METH_VARARGS | METH_KEYWORDS | METH_STATIC, NULL},
     {"get_components",       (PyCFunction)ecs_get_components,       METH_VARARGS | METH_KEYWORDS | METH_STATIC, NULL},
     {"copy_component",       (PyCFunction)ecs_copy_component,       METH_VARARGS | METH_KEYWORDS | METH_STATIC, NULL},
     {"clone_entity",         (PyCFunction)ecs_clone_entity,         METH_VARARGS | METH_KEYWORDS | METH_STATIC, NULL},

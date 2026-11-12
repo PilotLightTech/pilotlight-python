@@ -19,8 +19,6 @@ plSwapchain = NewType("plSwapchain", object)
 plComponentLibrary = NewType("plComponentLibrary", object)
 plPakFile = NewType("plPakFile", object)
 plDoublePointer = NewType("plDoublePointer", object)
-plScene = NewType("plScene", object)
-plView = NewType("plView", object)
 
 # (ecs type key, entity index, entity generation)
 type plEntity = Tuple[int, int, int]
@@ -147,4 +145,4 @@ class plCameraOrthographicDesc:
     fWidth: float
     fHeight: float
     fNearZ: float
-    fFarZ: float
+    fFarZ: float

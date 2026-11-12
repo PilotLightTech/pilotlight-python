@@ -36,6 +36,13 @@ gltf_import(PyObject* self, PyObject* args, PyObject* kwargs)
         &pcPath, &iFlags))
 		return NULL;
 
+    // gltf import adds renderer object components (see pl_internal_m.c)
+    if(!gbPyRendererInitialized)
+    {
+        PyErr_SetString(PyExc_RuntimeError, "gltf import requires plStarterI to be initialized before plAssetI.finalize()");
+        return NULL;
+    }
+
     const plGltfImportOptions tOptions = {
         .eFlags = iFlags
     };

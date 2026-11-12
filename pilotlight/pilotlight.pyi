@@ -930,10 +930,6 @@ class plEcsI:
         ...
 
     @staticmethod
-    def get_component(library: plComponentLibrary, key: int, entity: plEntity) -> plCamera | None:
-        ...
-
-    @staticmethod
     def get_components(library: plComponentLibrary, key: int) -> List[plEntity]:
         ...
 
@@ -1147,120 +1143,6 @@ class plCameraI:
 # [SECTION] unstable apis
 ########################################################################################################################
 
-class plAnimationI:
-
-    @staticmethod
-    def register_ecs_components():
-        ...
-
-    @staticmethod
-    def register_asset_types():
-        ...
-
-    @staticmethod
-    def get_asset_type_key() -> int:
-        ...
-
-    @staticmethod
-    def get_ecs_type_key_animation() -> int:
-        ...
-
-    @staticmethod
-    def get_ecs_type_key_humanoid() -> int:
-        ...
-
-    @staticmethod
-    def run_animation_update_system(library: plComponentLibrary, deltaTime: float):
-        ...
-
-class plSkeletonI:
-
-    @staticmethod
-    def register_asset_types():
-        ...
-
-    @staticmethod
-    def register_ecs_components():
-        ...
-
-    @staticmethod
-    def get_asset_type_key_skeleton() -> int:
-        ...
-
-    @staticmethod
-    def get_asset_type_key_skin() -> int:
-        ...
-
-    @staticmethod
-    def get_ecs_type_key_skin() -> int:
-        ...
-
-    @staticmethod
-    def run_skin_update_system(library: plComponentLibrary):
-        ...
-
-class plIkI:
-
-    @staticmethod
-    def register_ecs_components():
-        ...
-
-    @staticmethod
-    def get_ecs_type_key() -> int:
-        ...
-
-    @staticmethod
-    def run_ecs_update_system(library: plComponentLibrary):
-        ...
-
-class plCameraEcsI:
-
-    @staticmethod
-    def register_ecs_components():
-        ...
-
-    @staticmethod
-    def get_ecs_type_key() -> int:
-        ...
-
-    @staticmethod
-    def create_perspective(library: plComponentLibrary, name: str, desc: plCameraPerspectiveDesc):
-        ...
-
-    @staticmethod
-    def run_ecs(library: plComponentLibrary):
-        ...
-
-class plMaterialI:
-
-    @staticmethod
-    def register_asset_types():
-        ...
-
-    @staticmethod
-    def get_asset_type_key() -> int:
-        ...
-
-class plTextureI:
-
-    @staticmethod
-    def register_asset_types():
-        ...
-
-    @staticmethod
-    def get_asset_type_key() -> int:
-        ...
-
-class plMeshI:
-
-    @staticmethod
-    def register_asset_types():
-        ...
-
-    @staticmethod
-    def get_asset_type_key() -> int:
-        ...
-
 class plTerrainI:
 
     @staticmethod
@@ -1279,44 +1161,6 @@ class plJobI:
 
     @staticmethod
     def cleanup():
-        ...
-
-class plPhysicsI:
-
-    @staticmethod
-    def initialize():
-        ...
-
-    @staticmethod
-    def cleanup():
-        ...
-
-    @staticmethod
-    def reset():
-        ...
-
-    @staticmethod
-    def register_ecs_components():
-        ...
-
-    @staticmethod
-    def wake_up_all():
-        ...
-
-    @staticmethod
-    def sleep_all():
-        ...
-
-    @staticmethod
-    def get_ecs_type_key_rigid_body_physics() -> int:
-        ...
-
-    @staticmethod
-    def get_ecs_type_key_force_field() -> int:
-        ...
-
-    @staticmethod
-    def update(deltaTime: float, library: plComponentLibrary, drawlist: plDrawList3D | None = None):
         ...
 
 class plScriptI:
@@ -1358,12 +1202,6 @@ class plScriptI:
         """(re)loads an entity's script"""
         ...
 
-class plShaderLibraryI:
-
-    @staticmethod
-    def initialize(device: plDevice):
-        ...
-
 class plAssetI:
 
     @staticmethod
@@ -1372,6 +1210,7 @@ class plAssetI:
 
     @staticmethod
     def finalize():
+        """also registers the asset types gltf & terrain rely on (texture, material, mesh, etc.)"""
         ...
 
     @staticmethod
@@ -1426,120 +1265,7 @@ class plGltfI:
 
     @staticmethod
     def import_file(path: str, flags: plGltfImportFlags = plGltfImportFlags.PL_GLTF_IMPORT_FLAGS_IMPORT_ALL_ASSETS) -> bool:
-        ...
-
-class plRendererI:
-
-    @staticmethod
-    def initialize(device: plDevice, swapchain: plSwapchain) -> bool:
-        ...
-
-    @staticmethod
-    def cleanup():
-        ...
-
-    @staticmethod
-    def create_scene() -> plScene:
-        ...
-
-    @staticmethod
-    def destroy_scene(scene: plScene):
-        ...
-
-    @staticmethod
-    def load_component_library(scene: plScene, library: plComponentLibrary):
-        ...
-
-    @staticmethod
-    def create_view(scene: plScene, dims: plVec2Like) -> plView:
-        ...
-
-    @staticmethod
-    def destroy_view(view: plView):
-        ...
-
-    @staticmethod
-    def resize_view(view: plView, dims: plVec2Like):
-        ...
-
-    @staticmethod
-    def get_view_color_bind_group(view: plView) -> Tuple[int, float, float]:
-        ...
-
-    @staticmethod
-    def get_drawlist(view: plView) -> plDrawList3D:
-        ...
-
-    @staticmethod
-    def begin_frame() -> bool:
-        ...
-
-    @staticmethod
-    def prepare_scene(scene: plScene, cameras: List[plCamera]):
-        ...
-
-    @staticmethod
-    def prepare_view(view: plView, camera: plCamera):
-        ...
-
-    @staticmethod
-    def render_view(view: plView, camera: plCamera):
-        ...
-
-    @staticmethod
-    def register_asset_types():
-        ...
-
-    @staticmethod
-    def register_ecs_components():
-        ...
-
-    @staticmethod
-    def get_asset_type_key_environment() -> int:
-        ...
-
-    @staticmethod
-    def get_asset_type_key_settings() -> int:
-        ...
-
-    @staticmethod
-    def get_ecs_type_key_object() -> int:
-        ...
-
-    @staticmethod
-    def get_ecs_type_key_light() -> int:
-        ...
-
-    @staticmethod
-    def get_ecs_type_key_environment_probe() -> int:
-        ...
-
-    @staticmethod
-    def get_ecs_type_key_terrain() -> int:
-        ...
-
-    @staticmethod
-    def get_ecs_type_key_environment() -> int:
-        ...
-
-    @staticmethod
-    def get_ecs_type_key_renderer() -> int:
-        ...
-
-    @staticmethod
-    def get_ecs_type_key_decal() -> int:
-        ...
-
-    @staticmethod
-    def run_light_update_system(library: plComponentLibrary):
-        ...
-
-    @staticmethod
-    def run_object_update_system(library: plComponentLibrary):
-        ...
-
-    @staticmethod
-    def run_environment_probe_update_system(library: plComponentLibrary):
+        """requires plStarterI to be initialized before plAssetI.finalize()"""
         ...
 
 class plResourceI:
@@ -1566,4 +1292,4 @@ class plResourceI:
 
     @staticmethod
     def get_texture(handle: int) -> int:
-        ...
+        ...

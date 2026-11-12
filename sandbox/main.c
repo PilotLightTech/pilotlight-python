@@ -2,6 +2,10 @@
    main.c
      - embedded python application for testing, debugging, &
        general development of the python bindings
+     - behaves like "python <app> [args...]": __file__, sys.argv, and
+       sys.path[0] (the script's directory) are all set by Py_RunMain()
+
+     usage: pilotlight_python [app.py] [args...]   (default: ../sandbox/app.py)
 */
 
 /*
@@ -27,7 +31,7 @@ Index of this file:
 // [SECTION] forward declarations
 //-----------------------------------------------------------------------------
 
-int pl_init_python();
+int pl_init_python(const char* pcAppName, int iArgc, char* apcArgv[]);
 
 //-----------------------------------------------------------------------------
 // [SECTION] entry point
@@ -38,57 +42,51 @@ int main(int argc, char *argv[])
 
     const char* pcAppName = "../sandbox/app.py";
 
+    // remaining arguments are passed to the app (sys.argv[1:])
+    int iAppArgc = 0;
+    char** apcAppArgv = NULL;
     if(argc > 1)
-        pcAppName = argv[1];
-
-   if(pl_init_python() != 0)
-   {
-        printf("Error initializing Python interpreter\n");
-        return -1;
-   }
-
-	// initialize python
-	Py_Initialize();
-	if (!Py_IsInitialized())
-	{
-		printf("Error initializing Python interpreter\n");
-		return 1;
-	}
-
-    FILE* ptDataFile = fopen(pcAppName, "rb");
-
-    // obtain file size
-    fseek(ptDataFile, 0, SEEK_END);
-    size_t szSize = ftell(ptDataFile);
-    fseek(ptDataFile, 0, SEEK_SET);
-
-    // copy the file into the buffer:
-    char* pcFileBuffer = malloc(szSize + 1);
-    memset(pcFileBuffer, 0, szSize + 1);
-    size_t szResult = fread(pcFileBuffer, sizeof(char), szSize, ptDataFile);
-    if (szResult != szSize)
     {
-        if (feof(ptDataFile))
-            printf("Error reading app.py: unexpected end of file\n");
-        else if (ferror(ptDataFile))
-            perror("Error reading app.py");
+        pcAppName = argv[1];
+        iAppArgc = argc - 2;
+        apcAppArgv = &argv[2];
+    }
+
+    FILE* ptAppFile = fopen(pcAppName, "rb");
+    if(ptAppFile == NULL)
+    {
+        printf("Error opening app: %s\n", pcAppName);
         return -1;
     }
-    fclose(ptDataFile);
+    fclose(ptAppFile);
 
-    int iResult = PyRun_SimpleString(pcFileBuffer);
+    if(pl_init_python(pcAppName, iAppArgc, apcAppArgv) != 0)
+    {
+        printf("Error initializing Python interpreter\n");
+        return -1;
+    }
 
-	// check if error occurred
-	if (PyErr_Occurred())
-		PyErr_Print();
+    // runs the app like "python app.py" (prints uncaught exceptions,
+    // handles SystemExit) then finalizes the interpreter
+    return Py_RunMain();
 }
 
 //-----------------------------------------------------------------------------
 // [SECTION] helpers
 //-----------------------------------------------------------------------------
 
+static int
+pl__python_init_error(PyInitConfig* ptConfig)
+{
+    const char* pcErrMsg = NULL;
+    (void)PyInitConfig_GetError(ptConfig, &pcErrMsg);
+    printf("PYTHON INIT ERROR: %s\n", pcErrMsg);
+    PyInitConfig_Free(ptConfig);
+    return -1;
+}
+
 int
-pl_init_python()
+pl_init_python(const char* pcAppName, int iArgc, char* apcArgv[])
 {
     PyInitConfig* ptConfig = PyInitConfig_Create();
     if (ptConfig == NULL)
@@ -99,19 +97,9 @@ pl_init_python()
 
     // Enable the Python Development Mode
     if (PyInitConfig_SetInt(ptConfig, "dev_mode", 1) < 0)
-    {
-        // Display the error message.
-        //
-        // This uncommon braces style is used, because you cannot make
-        // goto targets point to variable declarations.
-        const char* pcErrMsg = NULL;
-        (void)PyInitConfig_GetError(ptConfig, &pcErrMsg);
-        printf("PYTHON INIT ERROR: %s\n", pcErrMsg);
-        PyInitConfig_Free(ptConfig);
-        return -1;
-    }
+        return pl__python_init_error(ptConfig);
 
-    char* const acModulePaths[] = { 
+    char* const acModulePaths[] = {
     #ifdef _WIN32
         "../dependencies/cpython/PCbuild/amd64",
 
@@ -128,31 +116,40 @@ pl_init_python()
     };
 
     if (PyInitConfig_SetStrList(ptConfig, "module_search_paths", PL_ARRAYSIZE(acModulePaths), acModulePaths) < 0)
+        return pl__python_init_error(ptConfig);
+
+    // script to run with Py_RunMain() (sets __file__ & prepends the script's
+    // directory to sys.path)
+    if (PyInitConfig_SetStr(ptConfig, "run_filename", pcAppName) < 0)
+        return pl__python_init_error(ptConfig);
+
+    // the init config is isolated by default, which implies safe_path (the
+    // script's directory isn't prepended to sys.path). Turn isolation off but
+    // keep its other effects (ignore PYTHON* env vars & user site-packages).
+    const char* apcIsolationOptions[] = {"isolated", "safe_path", "use_environment", "user_site_directory"};
+    for(int i = 0; i < PL_ARRAYSIZE(apcIsolationOptions); i++)
     {
-        // Display the error message.
-        //
-        // This uncommon braces style is used, because you cannot make
-        // goto targets point to variable declarations.
-        const char* pcErrMsg = NULL;
-        (void)PyInitConfig_GetError(ptConfig, &pcErrMsg);
-        printf("PYTHON INIT ERROR: %s\n", pcErrMsg);
-        PyInitConfig_Free(ptConfig);
-        return -1;
+        if (PyInitConfig_SetInt(ptConfig, apcIsolationOptions[i], 0) < 0)
+            return pl__python_init_error(ptConfig);
     }
+
+    // sys.argv = [app, args...] (taken as-is, not parsed as python options)
+    if (PyInitConfig_SetInt(ptConfig, "parse_argv", 0) < 0)
+        return pl__python_init_error(ptConfig);
+
+    char** apcPyArgv = malloc(sizeof(char*) * (size_t)(iArgc + 1));
+    apcPyArgv[0] = (char*)pcAppName;
+    for(int i = 0; i < iArgc; i++)
+        apcPyArgv[i + 1] = apcArgv[i];
+    const int iSetArgvResult = PyInitConfig_SetStrList(ptConfig, "argv", (size_t)(iArgc + 1), apcPyArgv);
+    free(apcPyArgv);
+    if (iSetArgvResult < 0)
+        return pl__python_init_error(ptConfig);
 
     // Initialize Python with the configuration
     if (Py_InitializeFromInitConfig(ptConfig) < 0)
-    {
-        // Display the error message.
-        //
-        // This uncommon braces style is used, because you cannot make
-        // goto targets point to variable declarations.
-        const char* pcErrMsg = NULL;
-        (void)PyInitConfig_GetError(ptConfig, &pcErrMsg);
-        printf("PYTHON INIT ERROR: %s\n", pcErrMsg);
-        PyInitConfig_Free(ptConfig);
-        return -1;
-    }
+        return pl__python_init_error(ptConfig);
+
     PyInitConfig_Free(ptConfig);
     return 0;
 }

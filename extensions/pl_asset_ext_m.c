@@ -40,10 +40,18 @@ pl__asset_handle_to_py(plAssetHandle tHandle)
 //-----------------------------------------------------------------------------
 
 PL_PY_BIND_VOID(asset_initialize,    gptAsset->initialize((plAssetInit){0}))
-PL_PY_BIND_VOID(asset_finalize,      gptAsset->finalize())
 PL_PY_BIND_VOID(asset_cleanup,       gptAsset->cleanup())
 PL_PY_BIND_VOID(asset_clear_assets,  gptAsset->clear_assets())
 PL_PY_BIND_VOID(asset_clear_changes, gptAsset->clear_changes())
+
+static PyObject*
+asset_finalize(PyObject* self, PyObject* unused)
+{
+    // asset types of unstable extensions used by gltf & terrain (see pl_internal_m.c)
+    pl__internal_register_asset_types();
+    gptAsset->finalize();
+    Py_RETURN_NONE;
+}
 
 static PyObject*
 asset_load(PyObject* self, PyObject* args, PyObject* kwargs)
