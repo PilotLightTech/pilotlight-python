@@ -29,7 +29,7 @@
 # [SECTION] imports
 ########################################################################################################################
 
-from typing import List, Dict, Tuple, overload, NewType, Callable
+from typing import List, Dict, Tuple, Sequence, overload, NewType, Callable
 from enum import IntEnum, IntFlag
 import pilotlight.pilotlight as pl
 from pilotlight.types import *
@@ -51,10 +51,24 @@ PL_COLOR_32_MAGENTA: int
 PL_COLOR_32_CYAN: int
 PL_COLOR_32_GREY: int
 PL_COLOR_32_LIGHT_GREY: int
+PILOT_LIGHT_VERSION_STRING: str
 
 ########################################################################################################################
 # [SECTION] custom types
 ########################################################################################################################
+
+class plUiClipper:
+    """For large lists of evenly spaced rows (see plUiI.step_clipper)."""
+    uItemCount: int
+    uDisplayStart: int  # read-only
+    uDisplayEnd: int    # read-only
+    def __init__(self, uItemCount: int = 0) -> None: ...
+
+class plUiTextFilter:
+    """Case-insensitive: spaces AND terms, commas OR groups, -term excludes.
+    Call plUiI.text_filter_build(filter) after changing acInputBuffer."""
+    acInputBuffer: str  # max 255 UTF-8 bytes
+    def __init__(self, acInputBuffer: str = "") -> None: ...
 
 class plVec2:
     x: float
@@ -307,6 +321,40 @@ class plWindowI:
 
     @staticmethod
     def destroy(window: plWindow | None):
+        ...
+
+    @staticmethod
+    def set_app_id(app_id: str) -> bool:
+        """Windows: sets the process AppUserModelID so the taskbar groups the app
+        under its own identity and shows the icon from set_icon() instead of
+        python.exe's. Process wide; call once at startup before creating/showing
+        any window (e.g. "Company.Product"). No-op elsewhere.
+        """
+        ...
+
+    @staticmethod
+    def get_capabilities() -> int:
+        """Returns plWindowCapabilityFlags for the current platform backend."""
+        ...
+
+    @staticmethod
+    def set_icon(window: plWindow, icons: Sequence[plWindowIcon | str] | None = None) -> bool:
+        """Sets the window icon (Win32/X11) or application/Dock icon (Cocoa).
+
+        Each entry is either a plWindowIcon (RGBA8 pixels) or a VFS image path
+        loaded through plImageI. Up to 16 sizes; each dimension 1..256.
+        None or an empty list restores the OS default. Pixels are copied.
+        Returns False if unsupported (check WINDOW_ICON / APP_ICON capabilities).
+        """
+        ...
+
+    @staticmethod
+    def set_title_bar(window: plWindow, desc: plWindowTitleBarDesc | None = None) -> bool:
+        """Sets the title bar presentation (Win32 custom frame, Cocoa accessory,
+        X11 native title text only). None restores the native title bar.
+        The descriptor is copied; call again to update (e.g. status text).
+        Returns False if unsupported (check CUSTOM_TITLE_BAR / TITLE_BAR_TEXT capabilities).
+        """
         ...
 
 ########################################################################################################################
@@ -811,28 +859,215 @@ class plScreenLogI:
 ########################################################################################################################
 
 class plUiI:
+    """Immediate mode UI (pl_ui_ext.h).
+
+    Differences from the C API:
+      * values passed by pointer in C are returned, e.g. (changed, value)
+      * text functions take an already formatted str (*_v variants are not bound)
+      * multi-component values accept sequences (or plVec2/3/4) and return lists
+    """
+
+    # setup/shutdown & render data
 
     @staticmethod
-    def text(text: str) -> None:
+    def initialize() -> None:
         ...
 
     @staticmethod
-    def separator() -> None:
+    def cleanup() -> None:
         ...
 
     @staticmethod
-    def slider_float(label: str, value: float, minValue: float, maxValue: float, flags: int = 0) -> Tuple[bool, float]:
-        """returns (changed, value)"""
+    def get_draw_lists() -> List[plDrawList2D]:
         ...
 
     @staticmethod
-    def slider_int(label: str, value: int, minValue: int, maxValue: int, flags: int = 0) -> Tuple[bool, int]:
-        """returns (changed, value)"""
+    def get_debug_draw_list() -> plDrawList2D:
         ...
 
     @staticmethod
-    def radio_button(text: str, current: int, value: int) -> Tuple[bool, int]:
-        """returns (pressed, current selection)"""
+    def get_debug_draw_layer() -> plDrawLayer2D:
+        ...
+
+    # main
+
+    @staticmethod
+    def begin_frame() -> None:
+        ...
+
+    @staticmethod
+    def end_frame() -> None:
+        ...
+
+    # mouse/keyboard ownership
+
+    @staticmethod
+    def wants_mouse_capture() -> bool:
+        ...
+
+    @staticmethod
+    def wants_keyboard_capture() -> bool:
+        ...
+
+    @staticmethod
+    def wants_text_input() -> bool:
+        ...
+
+    @staticmethod
+    def set_wants_mouse_capture_next_frame(value: bool) -> None:
+        ...
+
+    @staticmethod
+    def set_wants_keyboard_capture_next_frame(value: bool) -> None:
+        ...
+
+    # tools
+
+    @staticmethod
+    def show_debug_window(open: bool | None = None) -> bool | None:
+        """returns open (None if open was None)"""
+        ...
+
+    @staticmethod
+    def show_style_editor_window(open: bool | None = None) -> bool | None:
+        """returns open (None if open was None)"""
+        ...
+
+    # styling & fonts
+
+    @staticmethod
+    def set_light_theme() -> None:
+        ...
+
+    @staticmethod
+    def set_dark_theme() -> None:
+        ...
+
+    @staticmethod
+    def push_theme_color(colorIndex: plUiColor, color: plVec4Like) -> None:
+        ...
+
+    @staticmethod
+    def pop_theme_color(count: int = 1) -> None:
+        ...
+
+    @staticmethod
+    def set_default_font(font: plFont) -> None:
+        ...
+
+    @staticmethod
+    def get_default_font() -> plFont | None:
+        ...
+
+    # windows
+
+    @overload
+    @staticmethod
+    def begin_window(name: str, open: None = None, flags: plUiWindowFlags = 0) -> bool: ...
+    @overload
+    @staticmethod
+    def begin_window(name: str, open: bool, flags: plUiWindowFlags = 0) -> Tuple[bool, bool]:
+        """only call end_window() if visible; with open, returns (visible, open) (close button shown)"""
+        ...
+
+    @staticmethod
+    def end_window() -> None:
+        ...
+
+    # popups
+
+    @staticmethod
+    def open_popup(name: str, flags: int = 0) -> None:
+        ...
+
+    @staticmethod
+    def open_popup_id(id: int, flags: int = 0) -> None:
+        ...
+
+    @staticmethod
+    def close_current_popup() -> None:
+        ...
+
+    @staticmethod
+    def is_popup_open(name: str) -> bool:
+        ...
+
+    @staticmethod
+    def is_popup_open_id(id: int) -> bool:
+        ...
+
+    @staticmethod
+    def begin_popup(name: str, flags: plUiWindowFlags = 0) -> bool:
+        ...
+
+    @staticmethod
+    def begin_popup_id(id: int, flags: plUiWindowFlags = 0) -> bool:
+        ...
+
+    @staticmethod
+    def end_popup() -> None:
+        ...
+
+    # window utilities
+
+    @staticmethod
+    def get_window_fg_drawlayer() -> plDrawLayer2D:
+        ...
+
+    @staticmethod
+    def get_window_bg_drawlayer() -> plDrawLayer2D:
+        ...
+
+    @staticmethod
+    def get_cursor_pos() -> plVec2:
+        ...
+
+    @staticmethod
+    def begin_child(name: str, childFlags: int = 0, windowFlags: plUiWindowFlags = 0) -> bool:
+        ...
+
+    @staticmethod
+    def end_child() -> None:
+        ...
+
+    @staticmethod
+    def begin_tooltip() -> None:
+        ...
+
+    @staticmethod
+    def end_tooltip() -> None:
+        ...
+
+    @staticmethod
+    def is_window_appearing() -> bool:
+        ...
+
+    @staticmethod
+    def is_window_hovered() -> bool:
+        ...
+
+    @staticmethod
+    def get_window_pos() -> plVec2:
+        ...
+
+    @staticmethod
+    def get_window_size() -> plVec2:
+        ...
+
+    @staticmethod
+    def get_window_scroll() -> plVec2:
+        ...
+
+    @staticmethod
+    def get_window_scroll_max() -> plVec2:
+        ...
+
+    @staticmethod
+    def get_content_region_available() -> plVec2:
+        ...
+
+    @staticmethod
+    def set_window_scroll(scroll: plVec2Like) -> None:
         ...
 
     @staticmethod
@@ -844,31 +1079,643 @@ class plUiI:
         ...
 
     @staticmethod
-    def begin_window(name : str, **kwargs):
+    def set_next_window_collapse(collapsed: bool, condition: plUiCondition = plUiCondition.PL_UI_COND_ONCE) -> None:
+        ...
+
+    # widgets
+
+    @staticmethod
+    def button(name: str) -> bool:
         ...
 
     @staticmethod
-    def end_window(**kwargs) -> None:
+    def selectable(text: str, value: bool = False, flags: int = 0) -> Tuple[bool, bool]:
+        """returns (pressed, value)"""
         ...
 
     @staticmethod
-    def button(name : str, **kwargs) -> bool:
+    def checkbox(name: str, value: bool | None = None) -> Tuple[bool, bool | None]:
+        """returns (pressed, value)"""
         ...
 
     @staticmethod
-    def checkbox(name, value: bool) ->Tuple[bool, bool]:
+    def checkbox_flags(text: str, flags: int, value: int) -> Tuple[bool, int]:
+        """toggles the value bit(s) in flags; returns (pressed, flags)"""
         ...
 
     @staticmethod
-    def input_text(name, value, **kwargs):
+    def radio_button(text: str, current: int, value: int) -> Tuple[bool, int]:
+        """returns (pressed, current selection)"""
         ...
 
     @staticmethod
-    def wants_keyboard_capture() -> bool:
+    def image(textureID: int, size: plVec2Like) -> None:
         ...
 
     @staticmethod
-    def wants_mouse_capture() -> bool:
+    def image_ex(textureID: int, size: plVec2Like, uv0: plVec2Like = (0.0, 0.0), uv1: plVec2Like = (1.0, 1.0), tintColor: plVec4Like = (1.0, 1.0, 1.0, 1.0), borderColor: plVec4Like = (0.0, 0.0, 0.0, 0.0)) -> None:
+        ...
+
+    @staticmethod
+    def image_button(id: str, textureID: int, size: plVec2Like) -> bool:
+        ...
+
+    @staticmethod
+    def image_button_ex(id: str, textureID: int, size: plVec2Like, uv0: plVec2Like = (0.0, 0.0), uv1: plVec2Like = (1.0, 1.0), tintColor: plVec4Like = (1.0, 1.0, 1.0, 1.0), borderColor: plVec4Like = (0.0, 0.0, 0.0, 0.0)) -> bool:
+        ...
+
+    @staticmethod
+    def invisible_button(text: str, size: plVec2Like) -> bool:
+        ...
+
+    @staticmethod
+    def dummy(size: plVec2Like) -> None:
+        ...
+
+    @staticmethod
+    def progress_bar(fraction: float, size: plVec2Like = (-1.0, 0.0), overlay: str | None = None) -> None:
+        ...
+
+    # text
+
+    @staticmethod
+    def text(text: str) -> None:
+        ...
+
+    @staticmethod
+    def color_text(color: plVec4Like, text: str) -> None:
+        ...
+
+    @staticmethod
+    def labeled_text(label: str, text: str) -> None:
+        ...
+
+    # input
+
+    @staticmethod
+    def input_text(label: str, value: str, flags: plUiInputTextFlags = 0, bufferSize: int = 256) -> Tuple[bool, str]:
+        """returns (changed, value); bufferSize is in UTF-8 bytes (grown to fit value)"""
+        ...
+
+    @staticmethod
+    def input_text_hint(label: str, hint: str, value: str, flags: plUiInputTextFlags = 0, bufferSize: int = 256) -> Tuple[bool, str]:
+        """returns (changed, value)"""
+        ...
+
+    @staticmethod
+    def input_text_multiline(label: str, value: str, flags: plUiInputTextFlags = 0, bufferSize: int = 4096) -> Tuple[bool, str]:
+        """returns (changed, value); uses the current layout size"""
+        ...
+
+    @staticmethod
+    def input_float(label: str, value: float, fmt: str = "%.3f", flags: plUiInputTextFlags = 0) -> Tuple[bool, float]:
+        ...
+
+    @staticmethod
+    def input_float_ex(label: str, value: float, step: float, stepFast: float, fmt: str = "%.3f", flags: plUiInputTextFlags = 0) -> Tuple[bool, float]:
+        ...
+
+    @staticmethod
+    def input_float2(label: str, values: Sequence[float], fmt: str = "%.3f", flags: plUiInputTextFlags = 0) -> Tuple[bool, List[float]]:
+        ...
+
+    @staticmethod
+    def input_float3(label: str, values: Sequence[float], fmt: str = "%.3f", flags: plUiInputTextFlags = 0) -> Tuple[bool, List[float]]:
+        ...
+
+    @staticmethod
+    def input_float4(label: str, values: Sequence[float], fmt: str = "%.3f", flags: plUiInputTextFlags = 0) -> Tuple[bool, List[float]]:
+        ...
+
+    @staticmethod
+    def input_int(label: str, value: int, flags: plUiInputTextFlags = 0) -> Tuple[bool, int]:
+        ...
+
+    @staticmethod
+    def input_int_ex(label: str, value: int, step: int, stepFast: int, flags: plUiInputTextFlags = 0) -> Tuple[bool, int]:
+        ...
+
+    @staticmethod
+    def input_int2(label: str, values: Sequence[int], flags: plUiInputTextFlags = 0) -> Tuple[bool, List[int]]:
+        ...
+
+    @staticmethod
+    def input_int3(label: str, values: Sequence[int], flags: plUiInputTextFlags = 0) -> Tuple[bool, List[int]]:
+        ...
+
+    @staticmethod
+    def input_int4(label: str, values: Sequence[int], flags: plUiInputTextFlags = 0) -> Tuple[bool, List[int]]:
+        ...
+
+    @staticmethod
+    def input_uint(label: str, value: int, flags: plUiInputTextFlags = 0) -> Tuple[bool, int]:
+        ...
+
+    @staticmethod
+    def input_uint_ex(label: str, value: int, step: int, stepFast: int, flags: plUiInputTextFlags = 0) -> Tuple[bool, int]:
+        ...
+
+    @staticmethod
+    def input_uint2(label: str, values: Sequence[int], flags: plUiInputTextFlags = 0) -> Tuple[bool, List[int]]:
+        ...
+
+    @staticmethod
+    def input_uint3(label: str, values: Sequence[int], flags: plUiInputTextFlags = 0) -> Tuple[bool, List[int]]:
+        ...
+
+    @staticmethod
+    def input_uint4(label: str, values: Sequence[int], flags: plUiInputTextFlags = 0) -> Tuple[bool, List[int]]:
+        ...
+
+    # sliders (returns (changed, value(s)); ctrl+click to type a value)
+
+    @staticmethod
+    def slider_float(label: str, value: float, minValue: float, maxValue: float, flags: int = 0) -> Tuple[bool, float]:
+        ...
+
+    @staticmethod
+    def slider_float_f(label: str, value: float, minValue: float, maxValue: float, fmt: str, flags: int = 0) -> Tuple[bool, float]:
+        ...
+
+    @staticmethod
+    def slider_float2(label: str, values: Sequence[float], minValue: float, maxValue: float, flags: int = 0) -> Tuple[bool, List[float]]:
+        ...
+
+    @staticmethod
+    def slider_float2_f(label: str, values: Sequence[float], minValue: float, maxValue: float, fmt: str, flags: int = 0) -> Tuple[bool, List[float]]:
+        ...
+
+    @staticmethod
+    def slider_float3(label: str, values: Sequence[float], minValue: float, maxValue: float, flags: int = 0) -> Tuple[bool, List[float]]:
+        ...
+
+    @staticmethod
+    def slider_float3_f(label: str, values: Sequence[float], minValue: float, maxValue: float, fmt: str, flags: int = 0) -> Tuple[bool, List[float]]:
+        ...
+
+    @staticmethod
+    def slider_float4(label: str, values: Sequence[float], minValue: float, maxValue: float, flags: int = 0) -> Tuple[bool, List[float]]:
+        ...
+
+    @staticmethod
+    def slider_float4_f(label: str, values: Sequence[float], minValue: float, maxValue: float, fmt: str, flags: int = 0) -> Tuple[bool, List[float]]:
+        ...
+
+    @staticmethod
+    def slider_int(label: str, value: int, minValue: int, maxValue: int, flags: int = 0) -> Tuple[bool, int]:
+        ...
+
+    @staticmethod
+    def slider_int_f(label: str, value: int, minValue: int, maxValue: int, fmt: str, flags: int = 0) -> Tuple[bool, int]:
+        ...
+
+    @staticmethod
+    def slider_int2(label: str, values: Sequence[int], minValue: int, maxValue: int, flags: int = 0) -> Tuple[bool, List[int]]:
+        ...
+
+    @staticmethod
+    def slider_int2_f(label: str, values: Sequence[int], minValue: int, maxValue: int, fmt: str, flags: int = 0) -> Tuple[bool, List[int]]:
+        ...
+
+    @staticmethod
+    def slider_int3(label: str, values: Sequence[int], minValue: int, maxValue: int, flags: int = 0) -> Tuple[bool, List[int]]:
+        ...
+
+    @staticmethod
+    def slider_int3_f(label: str, values: Sequence[int], minValue: int, maxValue: int, fmt: str, flags: int = 0) -> Tuple[bool, List[int]]:
+        ...
+
+    @staticmethod
+    def slider_int4(label: str, values: Sequence[int], minValue: int, maxValue: int, flags: int = 0) -> Tuple[bool, List[int]]:
+        ...
+
+    @staticmethod
+    def slider_int4_f(label: str, values: Sequence[int], minValue: int, maxValue: int, fmt: str, flags: int = 0) -> Tuple[bool, List[int]]:
+        ...
+
+    @staticmethod
+    def slider_uint(label: str, value: int, minValue: int, maxValue: int, flags: int = 0) -> Tuple[bool, int]:
+        ...
+
+    @staticmethod
+    def slider_uint_f(label: str, value: int, minValue: int, maxValue: int, fmt: str, flags: int = 0) -> Tuple[bool, int]:
+        ...
+
+    @staticmethod
+    def slider_uint2(label: str, values: Sequence[int], minValue: int, maxValue: int, flags: int = 0) -> Tuple[bool, List[int]]:
+        ...
+
+    @staticmethod
+    def slider_uint2_f(label: str, values: Sequence[int], minValue: int, maxValue: int, fmt: str, flags: int = 0) -> Tuple[bool, List[int]]:
+        ...
+
+    @staticmethod
+    def slider_uint3(label: str, values: Sequence[int], minValue: int, maxValue: int, flags: int = 0) -> Tuple[bool, List[int]]:
+        ...
+
+    @staticmethod
+    def slider_uint3_f(label: str, values: Sequence[int], minValue: int, maxValue: int, fmt: str, flags: int = 0) -> Tuple[bool, List[int]]:
+        ...
+
+    @staticmethod
+    def slider_uint4(label: str, values: Sequence[int], minValue: int, maxValue: int, flags: int = 0) -> Tuple[bool, List[int]]:
+        ...
+
+    @staticmethod
+    def slider_uint4_f(label: str, values: Sequence[int], minValue: int, maxValue: int, fmt: str, flags: int = 0) -> Tuple[bool, List[int]]:
+        ...
+
+    @staticmethod
+    def slider_angle(label: str, v_rad: float, v_degrees_min: float = -360.0, v_degrees_max: float = 360.0, format: str | None = None, flags: int = 0) -> Tuple[bool, float]:
+        """value in radians, displayed in degrees"""
+        ...
+
+    # drags (returns (changed, value(s)); ctrl+click to type a value)
+
+    @staticmethod
+    def drag_float(label: str, value: float, speed: float, minValue: float, maxValue: float, flags: int = 0) -> Tuple[bool, float]:
+        ...
+
+    @staticmethod
+    def drag_float_f(label: str, value: float, speed: float, minValue: float, maxValue: float, fmt: str, flags: int = 0) -> Tuple[bool, float]:
+        ...
+
+    @staticmethod
+    def drag_float2(label: str, values: Sequence[float], speed: float, minValue: float, maxValue: float, flags: int = 0) -> Tuple[bool, List[float]]:
+        ...
+
+    @staticmethod
+    def drag_float2_f(label: str, values: Sequence[float], speed: float, minValue: float, maxValue: float, fmt: str, flags: int = 0) -> Tuple[bool, List[float]]:
+        ...
+
+    @staticmethod
+    def drag_float3(label: str, values: Sequence[float], speed: float, minValue: float, maxValue: float, flags: int = 0) -> Tuple[bool, List[float]]:
+        ...
+
+    @staticmethod
+    def drag_float3_f(label: str, values: Sequence[float], speed: float, minValue: float, maxValue: float, fmt: str, flags: int = 0) -> Tuple[bool, List[float]]:
+        ...
+
+    @staticmethod
+    def drag_float4(label: str, values: Sequence[float], speed: float, minValue: float, maxValue: float, flags: int = 0) -> Tuple[bool, List[float]]:
+        ...
+
+    @staticmethod
+    def drag_float4_f(label: str, values: Sequence[float], speed: float, minValue: float, maxValue: float, fmt: str, flags: int = 0) -> Tuple[bool, List[float]]:
+        ...
+
+    @staticmethod
+    def drag_int(label: str, value: int, speed: float, minValue: int, maxValue: int, flags: int = 0) -> Tuple[bool, int]:
+        ...
+
+    @staticmethod
+    def drag_int_f(label: str, value: int, speed: float, minValue: int, maxValue: int, fmt: str, flags: int = 0) -> Tuple[bool, int]:
+        ...
+
+    @staticmethod
+    def drag_int2(label: str, values: Sequence[int], speed: float, minValue: int, maxValue: int, flags: int = 0) -> Tuple[bool, List[int]]:
+        ...
+
+    @staticmethod
+    def drag_int2_f(label: str, values: Sequence[int], speed: float, minValue: int, maxValue: int, fmt: str, flags: int = 0) -> Tuple[bool, List[int]]:
+        ...
+
+    @staticmethod
+    def drag_int3(label: str, values: Sequence[int], speed: float, minValue: int, maxValue: int, flags: int = 0) -> Tuple[bool, List[int]]:
+        ...
+
+    @staticmethod
+    def drag_int3_f(label: str, values: Sequence[int], speed: float, minValue: int, maxValue: int, fmt: str, flags: int = 0) -> Tuple[bool, List[int]]:
+        ...
+
+    @staticmethod
+    def drag_int4(label: str, values: Sequence[int], speed: float, minValue: int, maxValue: int, flags: int = 0) -> Tuple[bool, List[int]]:
+        ...
+
+    @staticmethod
+    def drag_int4_f(label: str, values: Sequence[int], speed: float, minValue: int, maxValue: int, fmt: str, flags: int = 0) -> Tuple[bool, List[int]]:
+        ...
+
+    @staticmethod
+    def drag_uint(label: str, value: int, speed: float, minValue: int, maxValue: int, flags: int = 0) -> Tuple[bool, int]:
+        ...
+
+    @staticmethod
+    def drag_uint_f(label: str, value: int, speed: float, minValue: int, maxValue: int, fmt: str, flags: int = 0) -> Tuple[bool, int]:
+        ...
+
+    @staticmethod
+    def drag_uint2(label: str, values: Sequence[int], speed: float, minValue: int, maxValue: int, flags: int = 0) -> Tuple[bool, List[int]]:
+        ...
+
+    @staticmethod
+    def drag_uint2_f(label: str, values: Sequence[int], speed: float, minValue: int, maxValue: int, fmt: str, flags: int = 0) -> Tuple[bool, List[int]]:
+        ...
+
+    @staticmethod
+    def drag_uint3(label: str, values: Sequence[int], speed: float, minValue: int, maxValue: int, flags: int = 0) -> Tuple[bool, List[int]]:
+        ...
+
+    @staticmethod
+    def drag_uint3_f(label: str, values: Sequence[int], speed: float, minValue: int, maxValue: int, fmt: str, flags: int = 0) -> Tuple[bool, List[int]]:
+        ...
+
+    @staticmethod
+    def drag_uint4(label: str, values: Sequence[int], speed: float, minValue: int, maxValue: int, flags: int = 0) -> Tuple[bool, List[int]]:
+        ...
+
+    @staticmethod
+    def drag_uint4_f(label: str, values: Sequence[int], speed: float, minValue: int, maxValue: int, fmt: str, flags: int = 0) -> Tuple[bool, List[int]]:
+        ...
+
+    # colors (returns (changed, color list))
+
+    @staticmethod
+    def color_picker3(label: str, colRGB: Sequence[float], flags: plUiColorEditFlags = 0) -> Tuple[bool, List[float]]:
+        ...
+
+    @staticmethod
+    def color_picker4(label: str, colRGBA: Sequence[float], flags: plUiColorEditFlags = 0, refColRGBA: Sequence[float] | None = None) -> Tuple[bool, List[float]]:
+        ...
+
+    @staticmethod
+    def color_edit3(label: str, colRGBA: Sequence[float], flags: plUiColorEditFlags = 0, refColRGBA: Sequence[float] | None = None) -> Tuple[bool, List[float]]:
+        """accepts 3 or 4 values (alpha passed through)"""
+        ...
+
+    @staticmethod
+    def color_edit4(label: str, colRGBA: Sequence[float], flags: plUiColorEditFlags = 0, refColRGBA: Sequence[float] | None = None) -> Tuple[bool, List[float]]:
+        ...
+
+    @staticmethod
+    def color_button(id: str, colRGBA: Sequence[float], flags: plUiColorEditFlags = 0, size: plVec2Like = (0.0, 0.0)) -> bool:
+        ...
+
+    # combo
+
+    @staticmethod
+    def begin_combo(label: str, preview: str | None, flags: plUiComboFlags = 0) -> bool:
+        ...
+
+    @staticmethod
+    def end_combo() -> None:
+        ...
+
+    # trees (only call tree_pop() if tree_node() returns True)
+
+    @staticmethod
+    def collapsing_header(text: str, flags: plUiTreeNodeFlags = 0) -> bool:
+        ...
+
+    @staticmethod
+    def tree_node(text: str, flags: plUiTreeNodeFlags = 0) -> bool:
+        ...
+
+    @staticmethod
+    def tree_node_f(fmt: str, flags: plUiTreeNodeFlags = 0) -> bool:
+        """same as tree_node (format in python)"""
+        ...
+
+    @staticmethod
+    def tree_pop() -> None:
+        ...
+
+    # tabs
+
+    @staticmethod
+    def begin_tab_bar(text: str, flags: int = 0) -> bool:
+        ...
+
+    @staticmethod
+    def end_tab_bar() -> None:
+        ...
+
+    @staticmethod
+    def begin_tab(text: str, flags: int = 0) -> bool:
+        ...
+
+    @staticmethod
+    def end_tab() -> None:
+        ...
+
+    # menus (shortcut strings are display-only)
+
+    @staticmethod
+    def begin_menu(label: str, enabled: bool = True) -> bool:
+        ...
+
+    @staticmethod
+    def end_menu() -> None:
+        ...
+
+    @staticmethod
+    def menu_item(label: str, shortcut: str | None = None, selected: bool = False, enabled: bool = True) -> bool:
+        ...
+
+    @staticmethod
+    def menu_item_toggle(label: str, shortcut: str | None = None, selected: bool = False, enabled: bool = True) -> Tuple[bool, bool]:
+        """returns (pressed, selected)"""
+        ...
+
+    @staticmethod
+    def begin_menu_bar() -> bool:
+        ...
+
+    @staticmethod
+    def end_menu_bar() -> None:
+        ...
+
+    @staticmethod
+    def begin_main_menu_bar() -> bool:
+        """full-width bar at the top of the main viewport; submit before other windows"""
+        ...
+
+    @staticmethod
+    def end_main_menu_bar() -> None:
+        ...
+
+    # misc.
+
+    @staticmethod
+    def separator_text(text: str) -> None:
+        ...
+
+    @staticmethod
+    def separator() -> None:
+        ...
+
+    @staticmethod
+    def vertical_spacing() -> None:
+        ...
+
+    @staticmethod
+    def indent(amount: float = 0.0) -> None:
+        """0.0 uses the style's indent size"""
+        ...
+
+    @staticmethod
+    def unindent(amount: float = 0.0) -> None:
+        ...
+
+    # text filter
+
+    @staticmethod
+    def text_filter_cleanup(filter: plUiTextFilter) -> None:
+        ...
+
+    @staticmethod
+    def text_filter_build(filter: plUiTextFilter) -> None:
+        ...
+
+    @staticmethod
+    def text_filter_pass(filter: plUiTextFilter, text: str) -> bool:
+        ...
+
+    @staticmethod
+    def text_filter_active(filter: plUiTextFilter) -> bool:
+        ...
+
+    # clipper
+
+    @staticmethod
+    def step_clipper(clipper: plUiClipper) -> bool:
+        """while step_clipper(c): for i in range(c.uDisplayStart, c.uDisplayEnd): ..."""
+        ...
+
+    # layout systems
+
+    @staticmethod
+    def layout_dynamic(height: float, widgetCount: int) -> None:
+        ...
+
+    @staticmethod
+    def layout_static(height: float, width: float, widgetCount: int) -> None:
+        ...
+
+    @staticmethod
+    def layout_row_begin(type: plUiLayoutRowType, height: float, widgetCount: int) -> None:
+        ...
+
+    @staticmethod
+    def layout_row_push(width: float) -> None:
+        ...
+
+    @staticmethod
+    def layout_row_end() -> None:
+        ...
+
+    @staticmethod
+    def layout_row(type: plUiLayoutRowType, height: float, widgetCount: int, sizesOrRatios: Sequence[float]) -> None:
+        ...
+
+    @staticmethod
+    def layout_template_begin(height: float) -> None:
+        ...
+
+    @staticmethod
+    def layout_template_push_dynamic() -> None:
+        ...
+
+    @staticmethod
+    def layout_template_push_variable(width: float) -> None:
+        ...
+
+    @staticmethod
+    def layout_template_push_static(width: float) -> None:
+        ...
+
+    @staticmethod
+    def layout_template_end() -> None:
+        ...
+
+    @staticmethod
+    def layout_space_begin(type: plUiLayoutRowType, height: float, widgetCount: int = 0xFFFFFFFF) -> None:
+        ...
+
+    @staticmethod
+    def layout_space_push(x: float, y: float, width: float, height: float) -> None:
+        ...
+
+    @staticmethod
+    def layout_space_end() -> None:
+        ...
+
+    @staticmethod
+    def stash_layout() -> None:
+        ...
+
+    @staticmethod
+    def apply_layout() -> None:
+        ...
+
+    # id stack
+
+    @staticmethod
+    def push_id_string(id: str) -> None:
+        ...
+
+    @staticmethod
+    def push_id_pointer(obj: object) -> None:
+        """uses the object's address; keep it alive while in use"""
+        ...
+
+    @staticmethod
+    def push_id_uint(id: int) -> None:
+        ...
+
+    @staticmethod
+    def pop_id() -> None:
+        ...
+
+    @staticmethod
+    def get_id(name: str) -> int:
+        ...
+
+    # state query & focus
+
+    @staticmethod
+    def was_last_item_hovered() -> bool:
+        ...
+
+    @staticmethod
+    def was_last_item_active() -> bool:
+        ...
+
+    @staticmethod
+    def set_keyboard_focus_last_item() -> None:
+        ...
+
+    # docking
+
+    @staticmethod
+    def dock_space(name: str, pos: plVec2Like, size: plVec2Like) -> int:
+        ...
+
+    @staticmethod
+    def dock_split(node: int, direction: int, ratio: float) -> Tuple[int, int]:
+        """direction: 0=left, 1=right, 2=up, 3=down; returns (node, opposite)"""
+        ...
+
+    @staticmethod
+    def set_next_window_dock(node: int, condition: plUiCondition = plUiCondition.PL_UI_COND_ONCE) -> None:
+        """node=0 undocks"""
+        ...
+
+    @staticmethod
+    def get_window_dock() -> int:
+        ...
+
+    @staticmethod
+    def set_docking_enabled(enabled: bool) -> None:
+        ...
+
+    @staticmethod
+    def set_settings_file(path: str | None) -> None:
+        """None disables persistence; call before the first frame"""
+        ...
+
+    @staticmethod
+    def save_settings() -> bool:
         ...
 
 ########################################################################################################################

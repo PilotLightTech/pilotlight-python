@@ -701,7 +701,7 @@ pl_vec2_to_py(plVec2 v)
 static PyObject*
 pl_vec3_to_py(plVec3 v)
 {
-    pyplVec3* obj = (pyplVec3*)PyObject_CallObject(gptVec2Type, NULL);
+    pyplVec3* obj = (pyplVec3*)PyObject_CallObject(gptVec3Type, NULL);
     if(!obj)
         return NULL;
 
@@ -827,7 +827,7 @@ pl_vec3_from_py(PyObject* obj, plVec3* out)
 static bool
 pl_vec4_from_py(PyObject* obj, plVec4* out)
 {
-    if(PyObject_TypeCheck(obj, (PyTypeObject*)gptVec2Type))
+    if(PyObject_TypeCheck(obj, (PyTypeObject*)gptVec4Type))
     {
         pyplVec4* v = (pyplVec4*)obj;
         *out = v->v;

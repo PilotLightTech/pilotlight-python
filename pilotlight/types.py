@@ -102,6 +102,26 @@ class plWindowDesc:
     iYPos: int = 200
 
 @dataclass(slots=True)
+class plWindowIcon:
+    # tightly packed, straight-alpha RGBA8 (len == uWidth * uHeight * 4); each dimension 1..256
+    uWidth: int = 0
+    uHeight: int = 0
+    pucPixels: bytes | bytearray | memoryview = b""
+
+@dataclass(slots=True)
+class plWindowTitleBarDesc:
+    uHeight: int = 0                  # logical pixels at 96 DPI; 0 = 32, otherwise 24..96
+    uBackgroundColor: int = 0         # colors: 0 = default; otherwise 0xAABBGGRR (PL_COLOR_32_RGBA), alpha ignored
+    uInactiveBackgroundColor: int = 0
+    uTextColor: int = 0
+    uAccentColor: int = 0             # thin window border and title-bar separator
+    uBrandColor: int = 0              # optional short accent below the brand
+    uStatusColor: int = 0             # status dot; 0 = muted teal
+    acBrand: str = ""                 # optional brand (max 63 UTF-8 bytes); enables left-aligned breadcrumb layout
+    acTitle: str = ""                 # optional title override (max 255 UTF-8 bytes); empty uses window title
+    acStatus: str = ""                # optional status (max 63 UTF-8 bytes); hidden when space is limited
+
+@dataclass(slots=True)
 class plSphere:
     fRadius: float
     tCenter: plVec3

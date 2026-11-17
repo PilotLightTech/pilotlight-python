@@ -5,6 +5,8 @@ Pilot Light Python sandbox
   * texture (plResourceI -> plDrawI)
   * 2D drawing demo (stroke modes, path api, etc.) drawn on the main view
     when toggled on
+  * window icon & custom title bar (plWindowI)
+  * main menu bar & UI demo (pilotlight.ui_demo, port of the C sandbox's demo)
 
 Camera controls (when the UI doesn't want the mouse/keyboard):
   * LMB + Drag: Moves camera forward & backward and rotates left & right.
@@ -14,6 +16,7 @@ Camera controls (when the UI doesn't want the mouse/keyboard):
   * Game style (when holding RMB): W/S/A/D move, Q/E down/up, Z/C zoom
 """
 
+import dataclasses
 import math
 from pathlib import Path
 
@@ -23,6 +26,7 @@ from pilotlight.pilotlight import *
 from pilotlight.enums import *
 from pilotlight.types import *
 from pilotlight.pl_script_camera import pl_script_run
+from pilotlight.ui_demo import show_ui_demo_window
 
 #-----------------------------------------------------------------------------
 # 2D drawing demo constants
@@ -45,6 +49,22 @@ COLOR_FILLED  = 0xc080d0ff
 COLOR_RECT    = 0xff805030
 COLOR_PANEL   = 0xe0201810
 
+# title bar (ABGR, same as the C sandbox)
+TITLE_BAR = plWindowTitleBarDesc(
+    uHeight=38,
+    uBackgroundColor=0xff1c1917,
+    uInactiveBackgroundColor=0xff201e1c,
+    uTextColor=0xffe5e2de,
+    uAccentColor=0xff383430,
+    uBrandColor=0xff46a6f2,
+    uStatusColor=0xffa3b85e,
+    acBrand="Pilot Light",
+    acTitle="Python Sandbox",
+)
+
+# icon sizes (vfs paths, /resources is mounted below)
+WINDOW_ICONS = ["/resources/pilot-light-32.png", "/resources/pilot-light-256.png"]
+
 class App:
 
     def __init__(self):
@@ -55,7 +75,14 @@ class App:
         self.counter = None
         self.texture_bg = None
 
+        # window decoration state
+        self.loading = False
+        self.custom_title_bar = True
+
         # ui state
+        self.show_ui_demo = False
+        self.show_ui_style = False
+        self.show_ui_debug = False
         self.show_scene = True
         self.show_grid = True
         self.show_texture = True
@@ -95,7 +122,10 @@ class App:
         window_desc.iYPos = 50
         window_desc.uWidth = 1500
         window_desc.uHeight = 900
+        plWindowI.set_app_id("PilotLight.PythonSandbox") # windows: taskbar uses our icon, not python.exe's
         _, self.ptWindow = plWindowI.create(window_desc)
+        self.set_window_icon()
+        self.set_loading(True)
         plWindowI.show(self.ptWindow)
 
         # starter (we initialize the shader extension ourselves so it can find
@@ -139,6 +169,8 @@ class App:
         # texture (resource extension is initialized by the starter)
         texture_resource = plResourceI.load("/resources/sprite_map.png", 0)
         self.texture_bg = plDrawI.create_bind_group_for_texture(plResourceI.get_texture(texture_resource))
+
+        self.set_loading(False)
 
     def pl_app_shutdown(self):
         plGraphicsI.flush_device(plStarterI.get_device())
@@ -213,6 +245,23 @@ class App:
 
     def show_ui(self):
 
+        # main menu bar (submit before other windows)
+        if plUiI.begin_main_menu_bar():
+            if plUiI.begin_menu("Tools"):
+                plUiI.separator_text("UI")
+                _, self.show_ui_demo = plUiI.menu_item_toggle("Demo", None, self.show_ui_demo)
+                _, self.show_ui_style = plUiI.menu_item_toggle("Style Editor", None, self.show_ui_style)
+                _, self.show_ui_debug = plUiI.menu_item_toggle("Debugger", None, self.show_ui_debug)
+                plUiI.end_menu()
+            plUiI.end_main_menu_bar()
+
+        if self.show_ui_demo:
+            self.show_ui_demo = show_ui_demo_window(self.show_ui_demo)
+        if self.show_ui_style:
+            self.show_ui_style = plUiI.show_style_editor_window(self.show_ui_style)
+        if self.show_ui_debug:
+            self.show_ui_debug = plUiI.show_debug_window(self.show_ui_debug)
+
         io = plIOI.get_io()
         plUiI.set_next_window_pos([io.tMainViewportSize.x - 420.0, 30.0], plUiCondition.PL_UI_COND_ONCE)
         plUiI.set_next_window_size([390.0, 560.0], plUiCondition.PL_UI_COND_ONCE)
@@ -245,6 +294,13 @@ class App:
                 _, self.rounding = plUiI.slider_float("Corner radius", self.rounding, 1.0, 16.0)
 
             plUiI.separator()
+            plUiI.text("Window")
+            _, self.show_ui_demo = plUiI.checkbox("UI demo", self.show_ui_demo)
+            changed, self.custom_title_bar = plUiI.checkbox("Custom title bar", self.custom_title_bar)
+            if changed:
+                self.update_title_bar()
+
+            plUiI.separator()
             plUiI.text("Misc")
             _, self.some_text = plUiI.input_text("Input", self.some_text)
             if plUiI.button("Increment stats counter"):
@@ -253,6 +309,39 @@ class App:
                 plScreenLogI.add_message(2.0, f"Logging from python: {self.some_text}")
 
             plUiI.end_window()
+
+    #-------------------------------------------------------------------------
+    # window icon & title bar
+    #-------------------------------------------------------------------------
+
+    def set_window_icon(self):
+        flags = plWindowI.get_capabilities()
+        if not flags & (plWindowCapabilityFlags.PL_WINDOW_CAPABILITY_FLAGS_WINDOW_ICON | plWindowCapabilityFlags.PL_WINDOW_CAPABILITY_FLAGS_APP_ICON):
+            return
+        try:
+            if not plWindowI.set_icon(self.ptWindow, WINDOW_ICONS):
+                print("Unable to set the Pilot Light window icon")
+        except (FileNotFoundError, ValueError) as e:
+            print(f"Unable to set the Pilot Light window icon: {e}")
+
+    def update_title_bar(self):
+        flags = plWindowI.get_capabilities()
+        if not flags & (plWindowCapabilityFlags.PL_WINDOW_CAPABILITY_FLAGS_CUSTOM_TITLE_BAR | plWindowCapabilityFlags.PL_WINDOW_CAPABILITY_FLAGS_TITLE_BAR_TEXT):
+            return
+
+        if not self.custom_title_bar:
+            plWindowI.set_title_bar(self.ptWindow, None) # restore native title bar
+            return
+
+        desc = dataclasses.replace(TITLE_BAR, acStatus="LOADING" if self.loading else "READY")
+        if self.loading:
+            desc.uStatusColor = desc.uBrandColor
+        if not plWindowI.set_title_bar(self.ptWindow, desc):
+            print("Custom title bar unavailable; using the native title bar")
+
+    def set_loading(self, loading: bool):
+        self.loading = loading
+        self.update_title_bar()
 
     #-------------------------------------------------------------------------
     # texture

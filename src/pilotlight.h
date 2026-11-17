@@ -83,6 +83,10 @@ bool pl_parse_args(char* formatstring, const char** keywords, PyObject* args, Py
 // backend's runtime library can't be loaded (windows: vulkan-1.dll is delay loaded)
 bool pl__python_graphics_runtime_available(const char** ppcMissingOut);
 
+// defined in pl_main.c: windows taskbar identity (AppUserModelID) for the
+// process so the taskbar shows the window icon; no-op elsewhere
+bool pl__python_set_app_id(const char* pcAppId);
+
 //-----------------------------------------------------------------------------
 // [SECTION] structs
 //-----------------------------------------------------------------------------

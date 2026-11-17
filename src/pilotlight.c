@@ -160,6 +160,7 @@ PyInit_pilotlight(void)
     PL_ADD_UINT_CONSTANT(ptModule, PL_COLOR_32_CYAN);
     PL_ADD_UINT_CONSTANT(ptModule, PL_COLOR_32_GREY);
     PL_ADD_UINT_CONSTANT(ptModule, PL_COLOR_32_LIGHT_GREY);
+    PyModule_AddStringConstant(ptModule, "PILOT_LIGHT_VERSION_STRING", PILOT_LIGHT_VERSION_STRING);
 
     // add constants
     for(uint32_t i = 0; i < PL_ARRAYSIZE(gatCoreIntPairs); i++)
@@ -240,6 +241,9 @@ PyInit_pilotlight(void)
     PL_ADD_PYTHON_API(plGltfI);
     PL_ADD_PYTHON_API(plTerrainI);
     PL_ADD_PYTHON_API(plFileI);
+
+    if(pl__ui_add_python_types(ptModule) < 0)
+        return NULL;
 
     return ptModule;
 }

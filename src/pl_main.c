@@ -488,6 +488,38 @@ pl__python_run(PyObject* ptApp)
     return bHadError ? 1 : 0;
 }
 
+// windows: python apps run inside python.exe, so by default the taskbar groups
+// the window under python.exe and shows its icon instead of the one set with
+// plWindowI.set_icon(). An explicit AppUserModelID gives the process its own
+// taskbar identity, so the taskbar uses the window's icon. Process wide, so
+// it's opt-in (plWindowI.set_app_id) and must be called before any window is
+// shown. (no-op on other platforms)
+bool
+pl__python_set_app_id(const char* pcAppId)
+{
+    #ifdef _WIN32
+        if(pcAppId == NULL || pcAppId[0] == 0)
+            return false;
+
+        // shell32 is resolved at runtime so no extra link dependency is needed
+        typedef HRESULT (WINAPI *plSetAppIdFn)(PCWSTR);
+        HMODULE tShell32 = LoadLibraryW(L"shell32.dll");
+        if(tShell32 == NULL)
+            return false;
+        plSetAppIdFn ptSetAppId = (plSetAppIdFn)(void*)GetProcAddress(tShell32, "SetCurrentProcessExplicitAppUserModelID");
+        if(ptSetAppId == NULL)
+            return false;
+
+        wchar_t awcAppId[128] = {0}; // AppUserModelIDs are limited to 128 characters
+        if(MultiByteToWideChar(CP_UTF8, 0, pcAppId, -1, awcAppId, 128) == 0)
+            return false;
+        return SUCCEEDED(ptSetAppId(awcAppId));
+    #else
+        (void)pcAppId;
+        return true;
+    #endif
+}
+
 bool
 pl__python_graphics_runtime_available(const char** ppcMissingOut)
 {
