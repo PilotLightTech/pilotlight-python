@@ -249,30 +249,6 @@ io_is_mouse_dragging(PyObject* self, PyObject* args)
 }
 
 PyObject*
-io_is_mouse_hovering_rect(PyObject* self, PyObject* args)
-{
-    static const char* apcKeywords[] = {
-        "minvec",
-        "maxvec",
-        NULL,
-    };
-
-    PyObject* ptPythonMinVec = NULL;
-    PyObject* ptPythonMaxVec = NULL;
-
-	if (!pl_parse_args("OO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
-        &ptPythonMinVec, &ptPythonMaxVec))
-		return NULL;
-
-    plVec2 tMinVec = {0};
-    plVec2 tMaxVec = {0};
-    pl_vec2_from_py(ptPythonMinVec, &tMinVec);
-    pl_vec2_from_py(ptPythonMaxVec, &tMaxVec);
-    bool bResult = gptIOI->is_mouse_hovering_rect(tMinVec, tMaxVec);
-    return PyBool_FromLong(bResult);
-}
-
-PyObject*
 io_reset_mouse_drag_delta(PyObject* self, PyObject* args)
 {
     static const char* apcKeywords[] = {
@@ -384,8 +360,24 @@ io_get_io(PyObject* self, PyObject* arg)
     return (PyObject*)obj;
 }
 
+static PyObject*
+io_is_mouse_hovering_rect(PyObject* self, PyObject* args, PyObject* kwargs)
+{
+    static const char* apcKeywords[] = {"minVec", "maxVec", NULL};
+    PyObject* ptPyMin = NULL;
+    PyObject* ptPyMax = NULL;
+    if(!pl_parse_args("OO", (const char**)apcKeywords, args, kwargs, __FUNCTION__, &ptPyMin, &ptPyMax))
+        return NULL;
+    plVec2 tMin = {0};
+    plVec2 tMax = {0};
+    if(!pl_vec2_from_py(ptPyMin, &tMin) || !pl_vec2_from_py(ptPyMax, &tMax))
+        return NULL;
+    return PyBool_FromLong(gptIOI->is_mouse_hovering_rect(tMin, tMax));
+}
+
 static PyMethodDef gatCommandsplIOI[] =
 {
+    {"is_mouse_hovering_rect", (PyCFunction)io_is_mouse_hovering_rect, METH_VARARGS | METH_KEYWORDS | METH_STATIC, NULL},
     {"get_version_string", (PyCFunction)io_get_version_string, METH_NOARGS | METH_STATIC, NULL},
     {"get_io", (PyCFunction)io_get_io, METH_NOARGS | METH_STATIC, NULL},
     {"new_frame", (PyCFunction)io_new_frame, METH_NOARGS | METH_STATIC, NULL},

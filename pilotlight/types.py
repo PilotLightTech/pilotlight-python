@@ -107,6 +107,11 @@ class plLogExtChannelInit:
     uEntryCount: int = 0   # buffer entry capacity (0 = 1024)
 
 @dataclass(slots=True)
+class plFullScreenDesc:
+    tMode: int = 0      # plFullScreenMode (PL_FULLSCREEN_MODE_NONE leaves fullscreen)
+    iMonitor: int = -1  # -1 = automatic
+
+@dataclass(slots=True)
 class plWindowIcon:
     # tightly packed, straight-alpha RGBA8 (len == uWidth * uHeight * 4); each dimension 1..256
     uWidth: int = 0

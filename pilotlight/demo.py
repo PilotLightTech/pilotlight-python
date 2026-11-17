@@ -359,9 +359,6 @@ class App:
             plUiI.separator()
             plUiI.text("Window")
             _, self.show_ui_demo = plUiI.checkbox("UI demo", self.show_ui_demo)
-            changed, self.custom_title_bar = plUiI.checkbox("Custom title bar", self.custom_title_bar)
-            if changed:
-                self.update_title_bar()
 
             plUiI.separator()
             plUiI.text("Misc")

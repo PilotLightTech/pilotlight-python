@@ -11,6 +11,7 @@
 #      - io api
 #      - window api
 #      - stats api
+#      - timer api
 #      - log api
 #      - profile api
 #      - console api
@@ -248,6 +249,10 @@ def pl_destroy_pointer(pointer: plPointer | None):
 class plIOI:
 
     @staticmethod
+    def is_mouse_hovering_rect(minVec: plVec2Like, maxVec: plVec2Like) -> bool:
+        ...
+
+    @staticmethod
     def get_io() -> plIO:
         ...
 
@@ -296,10 +301,6 @@ class plIOI:
         ...
 
     @staticmethod
-    def is_mouse_hovering_rect(minvec: List[float], maxvec: List[float]) -> bool:
-        ...
-
-    @staticmethod
     def reset_mouse_drag_delta(button: plMouseButton) -> None:
         ...
 
@@ -328,6 +329,32 @@ class plIOI:
 ########################################################################################################################
 
 class plWindowI:
+
+    @staticmethod
+    def set_attribute(window: plWindow, attribute: plWindowAttribute, value: bool | Tuple[int, int] | Tuple[int, int, int, int]) -> bool:
+        """SIZE: (width, height), POSITION: (x, y), SIZE_LIMITS: (minW, minH, maxW, maxH), others: bool"""
+        ...
+
+    @staticmethod
+    def get_attribute(window: plWindow, attribute: plWindowAttribute) -> bool | Tuple[int, int] | Tuple[int, int, int, int] | None:
+        """None if unsupported"""
+        ...
+
+    @staticmethod
+    def set_cursor_mode(window: plWindow, mode: plCursorMode) -> bool:
+        ...
+
+    @staticmethod
+    def get_cursor_mode(window: plWindow) -> int:
+        ...
+
+    @staticmethod
+    def set_raw_mouse_input(window: plWindow, enabled: bool) -> bool:
+        ...
+
+    @staticmethod
+    def set_fullscreen(window: plWindow, desc: plFullScreenDesc) -> bool:
+        ...
 
     @staticmethod
     def create(desc: plWindowDesc) -> Tuple[int, plWindow]:
@@ -382,11 +409,39 @@ class plWindowI:
 class plStatsI:
 
     @staticmethod
+    def get_names() -> List[str]:
+        ...
+
+    @staticmethod
+    def set_max_frames(maxFrames: int) -> None:
+        ...
+
+    @staticmethod
+    def get_max_frames() -> int:
+        ...
+
+    @staticmethod
     def new_frame():
         ...
 
     @staticmethod
     def get_counter(name: str) -> plDoublePointer:
+        ...
+
+########################################################################################################################
+# [SECTION] timer api
+########################################################################################################################
+
+class plTimerI:
+
+    @staticmethod
+    def get_time() -> float:
+        """seconds"""
+        ...
+
+    @staticmethod
+    def get_raw_time() -> float:
+        """seconds"""
         ...
 
 ########################################################################################################################
@@ -576,9 +631,106 @@ class plFileI:
         ...
 
 class plVfsI:
+    """Virtual file system (pl_vfs_ext.h). File handles are ints."""
 
     @staticmethod
-    def mount_directory(directory, physical_directory, **kwargs) -> None:
+    def mount_directory(directory: str, physical_directory: str, flags: int = 0) -> bool:
+        ...
+
+    @staticmethod
+    def mount_pak(directory: str, pakFilePath: str, flags: int = 0) -> bool:
+        ...
+
+    @staticmethod
+    def mount_memory(directory: str, flags: int = 0) -> bool:
+        ...
+
+    @staticmethod
+    def unmount(directory: str) -> bool:
+        """fails while files on the mount are open; invalidates registered handles"""
+        ...
+
+    @staticmethod
+    def does_file_exist(file: str) -> bool:
+        ...
+
+    @staticmethod
+    def get_file_size_str(file: str) -> int:
+        ...
+
+    @staticmethod
+    def register_file(file: str, mustExist: bool = False) -> int:
+        ...
+
+    @staticmethod
+    def open_file(file: str, mode: plVfsFileMode = plVfsFileMode.PL_VFS_FILE_MODE_READ) -> int:
+        """write/append modes don't work with pak files"""
+        ...
+
+    @staticmethod
+    def close_file(handle: int) -> None:
+        ...
+
+    @staticmethod
+    def delete_file(handle: int) -> bool:
+        ...
+
+    @staticmethod
+    def is_file_open(handle: int) -> bool:
+        ...
+
+    @staticmethod
+    def get_real_path(handle: int) -> str | None:
+        ...
+
+    @staticmethod
+    def is_file_valid(handle: int) -> bool:
+        ...
+
+    @staticmethod
+    def read_file(handle: int) -> bytes | None:
+        """whole file contents; None on failure"""
+        ...
+
+    @staticmethod
+    def write_file(handle: int, data: bytes | bytearray | memoryview) -> int:
+        """returns bytes written"""
+        ...
+
+    @staticmethod
+    def get_file_stream_position(handle: int) -> int:
+        ...
+
+    @staticmethod
+    def reset_file_stream_position(handle: int) -> None:
+        ...
+
+    @staticmethod
+    def set_file_stream_position(handle: int, position: int) -> bool:
+        ...
+
+    @staticmethod
+    def increment_file_stream_position(handle: int, amount: int) -> bool:
+        ...
+
+    @staticmethod
+    def read_file_stream(handle: int, elementSize: int, elementCount: int) -> bytes:
+        """complete elements read (len = elements * elementSize)"""
+        ...
+
+    @staticmethod
+    def write_file_stream(handle: int, elementSize: int, data: bytes | bytearray | memoryview) -> int:
+        """len(data) must be a multiple of elementSize; returns elements written"""
+        ...
+
+    @staticmethod
+    def read_all(file: str) -> bytes | None:
+        """python addition: open, read & close; None if missing/unreadable"""
+        ...
+
+    @staticmethod
+    def write_all(file: str, data: bytes | bytearray | memoryview) -> bool:
+        """python addition: open (truncate), write & close"""
         ...
 
 ########################################################################################################################
@@ -631,6 +783,15 @@ class plGraphicsI:
 ########################################################################################################################
 
 class plShaderI:
+
+    @staticmethod
+    def set_options(options: plShaderOptions) -> None:
+        """replaces the default options (directories/macros are copied)"""
+        ...
+
+    @staticmethod
+    def get_options() -> plShaderOptions | None:
+        ...
 
     @staticmethod
     def initialize(options):
@@ -1067,6 +1228,19 @@ class plDrawI:
 ########################################################################################################################
 
 class plScreenLogI:
+
+    @staticmethod
+    def add_message_ex(key: int, timeToDisplay: float, color: int, textScale: float, message: str) -> None:
+        """messages with the same non-zero key replace each other; color 0 = white"""
+        ...
+
+    @staticmethod
+    def set_flags(flags: plScreenLogFlags) -> None:
+        ...
+
+    @staticmethod
+    def get_flags() -> int:
+        ...
 
     @staticmethod
     def clear():
@@ -2015,6 +2189,26 @@ class plEcsI:
 class plTransformI:
 
     @staticmethod
+    def create_transform(library: plComponentLibrary, name: str | None = None) -> plEntity:
+        ...
+
+    @staticmethod
+    def attach_component(library: plComponentLibrary, entity: plEntity, parent: plEntity) -> None:
+        ...
+
+    @staticmethod
+    def detach_component(library: plComponentLibrary, entity: plEntity) -> None:
+        ...
+
+    @staticmethod
+    def compute_parent_transform(library: plComponentLibrary, entity: plEntity) -> plMat4:
+        ...
+
+    @staticmethod
+    def set_world_transform(library: plComponentLibrary, entity: plEntity, transform: plMat4) -> None:
+        ...
+
+    @staticmethod
     def register_ecs_components():
         ...
 
@@ -2039,6 +2233,22 @@ class plTransformI:
 ########################################################################################################################
 
 class plStarterI:
+
+    @staticmethod
+    def activate_depth_buffer() -> None:
+        ...
+
+    @staticmethod
+    def deactivate_depth_buffer() -> None:
+        ...
+
+    @staticmethod
+    def set_default_font(font: plFont) -> None:
+        ...
+
+    @staticmethod
+    def get_default_font() -> plFont | None:
+        ...
 
     @staticmethod
     def activate_msaa() -> None:
@@ -2139,6 +2349,10 @@ class plStarterI:
 ########################################################################################################################
 
 class plCameraI:
+
+    @staticmethod
+    def set_orthographic_size(camera: plCamera, width: float, height: float) -> None:
+        ...
 
     @staticmethod
     def init(camera: plCamera):
@@ -2338,6 +2552,28 @@ class plGltfI:
         ...
 
 class plResourceI:
+
+    @staticmethod
+    def load_ex(file: str, flags: plResourceLoadFlags = plResourceLoadFlags.PL_RESOURCE_LOAD_FLAG_NONE, fileData: bytes | bytearray | memoryview | None = None, containerFileName: str | None = None, fileBytesOffset: int = 0) -> int:
+        """fileData is used during the call (copied when retained)"""
+        ...
+
+    @staticmethod
+    def unload(handle: int) -> None:
+        ...
+
+    @staticmethod
+    def is_valid(handle: int) -> bool:
+        ...
+
+    @staticmethod
+    def is_loaded(file: str) -> bool:
+        ...
+
+    @staticmethod
+    def get_file_data(handle: int) -> bytes | None:
+        """retained data (PL_RESOURCE_LOAD_FLAG_RETAIN_FILE_DATA)"""
+        ...
 
     @staticmethod
     def initialize(init: plResourceManagerInit):

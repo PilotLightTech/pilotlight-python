@@ -542,8 +542,27 @@ camera_init(PyObject* self, PyObject* args, PyObject* kwargs)
     Py_RETURN_NONE;
 }
 
+static PyObject*
+camera_set_orthographic_size(PyObject* self, PyObject* args, PyObject* kwargs)
+{
+    static const char* apcKeywords[] = {"camera", "width", "height", NULL};
+    PyObject* ptPyCamera = NULL;
+    float fWidth = 0.0f;
+    float fHeight = 0.0f;
+    if(!pl_parse_args("Off", (const char**)apcKeywords, args, kwargs, __FUNCTION__, &ptPyCamera, &fWidth, &fHeight))
+        return NULL;
+    if(!PyObject_TypeCheck(ptPyCamera, (PyTypeObject*)gptCameraType))
+    {
+        PyErr_SetString(PyExc_TypeError, "expected plCamera");
+        return NULL;
+    }
+    gptCamera->set_orthographic_size(((pyplCamera*)ptPyCamera)->ptCamera, fWidth, fHeight);
+    Py_RETURN_NONE;
+}
+
 static PyMethodDef gatCommandsplCameraI[] =
 {
+    {"set_orthographic_size", (PyCFunction)camera_set_orthographic_size, METH_VARARGS | METH_KEYWORDS | METH_STATIC, NULL},
     {"init", (PyCFunction)camera_init, METH_VARARGS | METH_KEYWORDS | METH_STATIC, NULL},
     {"look_at", (PyCFunction)camera_look_at, METH_VARARGS | METH_KEYWORDS | METH_STATIC, NULL},
     {"set_depth_mode", (PyCFunction)camera_set_depth_mode, METH_VARARGS | METH_KEYWORDS | METH_STATIC, NULL},

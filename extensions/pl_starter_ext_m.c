@@ -243,8 +243,45 @@ starter_deactivate_vsync(PyObject* self, PyObject* unused)
     Py_RETURN_NONE;
 }
 
+static PyObject*
+starter_activate_depth_buffer(PyObject* self, PyObject* unused)
+{
+    gptStarter->activate_depth_buffer();
+    Py_RETURN_NONE;
+}
+
+static PyObject*
+starter_deactivate_depth_buffer(PyObject* self, PyObject* unused)
+{
+    gptStarter->deactivate_depth_buffer();
+    Py_RETURN_NONE;
+}
+
+static PyObject*
+starter_set_default_font(PyObject* self, PyObject* arg)
+{
+    plFont* ptFont = PyCapsule_GetPointer(arg, "plFont");
+    if(ptFont == NULL)
+        return NULL;
+    gptStarter->set_default_font(ptFont);
+    Py_RETURN_NONE;
+}
+
+static PyObject*
+starter_get_default_font(PyObject* self, PyObject* unused)
+{
+    plFont* ptFont = gptStarter->get_default_font();
+    if(ptFont == NULL)
+        Py_RETURN_NONE;
+    return PyCapsule_New(ptFont, "plFont", NULL);
+}
+
 static PyMethodDef gatCommandsplStarterI[] =
 {
+    {"activate_depth_buffer", (PyCFunction)starter_activate_depth_buffer, METH_NOARGS | METH_STATIC, NULL},
+    {"deactivate_depth_buffer", (PyCFunction)starter_deactivate_depth_buffer, METH_NOARGS | METH_STATIC, NULL},
+    {"set_default_font", (PyCFunction)starter_set_default_font, METH_O | METH_STATIC, NULL},
+    {"get_default_font", (PyCFunction)starter_get_default_font, METH_NOARGS | METH_STATIC, NULL},
     {"activate_msaa", (PyCFunction)starter_activate_msaa, METH_NOARGS | METH_STATIC, NULL},
     {"deactivate_msaa", (PyCFunction)starter_deactivate_msaa, METH_NOARGS | METH_STATIC, NULL},
     {"activate_vsync", (PyCFunction)starter_activate_vsync, METH_NOARGS | METH_STATIC, NULL},

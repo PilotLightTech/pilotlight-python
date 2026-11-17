@@ -122,8 +122,93 @@ resource_get_texture(PyObject* self, PyObject* args)
     return PyLong_FromUInt32(tTextureHandle.uData);
 }
 
+// fileData: optional bytes-like file contents (used during the call; copied if
+// PL_RESOURCE_LOAD_FLAG_RETAIN_FILE_DATA is set)
+static PyObject*
+resource_load_ex(PyObject* self, PyObject* args, PyObject* kwargs)
+{
+    static const char* apcKeywords[] = {"file", "flags", "fileData", "containerFileName", "fileBytesOffset", NULL};
+    const char* pcFile = NULL;
+    int iFlags = PL_RESOURCE_LOAD_FLAG_NONE;
+    Py_buffer tData = {0};
+    const char* pcContainer = NULL;
+    Py_ssize_t szOffset = 0;
+    if(!pl_parse_args("s|iz*zn", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+        &pcFile, &iFlags, &tData, &pcContainer, &szOffset))
+        return NULL;
+    if(szOffset < 0)
+    {
+        PyBuffer_Release(&tData);
+        PyErr_SetString(PyExc_ValueError, "fileBytesOffset must be >= 0");
+        return NULL;
+    }
+    plResourceHandle tHandle = gptResource->load_ex(pcFile, iFlags, (uint8_t*)tData.buf, tData.buf ? (size_t)tData.len : 0, pcContainer, (size_t)szOffset);
+    PyBuffer_Release(&tData);
+    return PyLong_FromUnsignedLongLong(tHandle.ulData);
+}
+
+// single "handle" argument
+static bool
+pl__resource_parse_handle(PyObject* args, PyObject* kwargs, plResourceHandle* ptHandleOut)
+{
+    static const char* apcKeywords[] = {"handle", NULL};
+    unsigned long long ulData = 0;
+    if(!pl_parse_args("K", (const char**)apcKeywords, args, kwargs, __FUNCTION__, &ulData))
+        return false;
+    ptHandleOut->ulData = ulData;
+    return true;
+}
+
+static PyObject*
+resource_unload(PyObject* self, PyObject* args, PyObject* kwargs)
+{
+    plResourceHandle tHandle = {0};
+    if(!pl__resource_parse_handle(args, kwargs, &tHandle))
+        return NULL;
+    gptResource->unload(tHandle);
+    Py_RETURN_NONE;
+}
+
+static PyObject*
+resource_is_valid(PyObject* self, PyObject* args, PyObject* kwargs)
+{
+    plResourceHandle tHandle = {0};
+    if(!pl__resource_parse_handle(args, kwargs, &tHandle))
+        return NULL;
+    return PyBool_FromLong(gptResource->is_valid(tHandle));
+}
+
+static PyObject*
+resource_is_loaded(PyObject* self, PyObject* args, PyObject* kwargs)
+{
+    static const char* apcKeywords[] = {"file", NULL};
+    const char* pcFile = NULL;
+    if(!pl_parse_args("s", (const char**)apcKeywords, args, kwargs, __FUNCTION__, &pcFile))
+        return NULL;
+    return PyBool_FromLong(gptResource->is_loaded(pcFile));
+}
+
+// retained file data (PL_RESOURCE_LOAD_FLAG_RETAIN_FILE_DATA) as bytes, or None
+static PyObject*
+resource_get_file_data(PyObject* self, PyObject* args, PyObject* kwargs)
+{
+    plResourceHandle tHandle = {0};
+    if(!pl__resource_parse_handle(args, kwargs, &tHandle))
+        return NULL;
+    size_t szSize = 0;
+    const uint8_t* puData = gptResource->get_file_data(tHandle, &szSize);
+    if(puData == NULL)
+        Py_RETURN_NONE;
+    return PyBytes_FromStringAndSize((const char*)puData, (Py_ssize_t)szSize);
+}
+
 static PyMethodDef gatCommandsplResourceI[] =
 {
+    {"load_ex", (PyCFunction)resource_load_ex, METH_VARARGS | METH_KEYWORDS | METH_STATIC, NULL},
+    {"unload", (PyCFunction)resource_unload, METH_VARARGS | METH_KEYWORDS | METH_STATIC, NULL},
+    {"is_valid", (PyCFunction)resource_is_valid, METH_VARARGS | METH_KEYWORDS | METH_STATIC, NULL},
+    {"is_loaded", (PyCFunction)resource_is_loaded, METH_VARARGS | METH_KEYWORDS | METH_STATIC, NULL},
+    {"get_file_data", (PyCFunction)resource_get_file_data, METH_VARARGS | METH_KEYWORDS | METH_STATIC, NULL},
     {"new_frame", (PyCFunction)resource_new_frame, METH_NOARGS | METH_STATIC, NULL},
     {"cleanup", (PyCFunction)resource_cleanup, METH_NOARGS | METH_STATIC, NULL},
     {"clear", (PyCFunction)resource_clear, METH_NOARGS | METH_STATIC, NULL},
@@ -134,3 +219,9 @@ static PyMethodDef gatCommandsplResourceI[] =
 };
 
 PL_NEW_PYTHON_API(plResourceI)
+plPythonIntConstantPair gatResourceIntPairs[] = {
+    PL_ADD_INT_CONSTANT(PL_RESOURCE_LOAD_FLAG_NONE),
+    PL_ADD_INT_CONSTANT(PL_RESOURCE_LOAD_FLAG_RETAIN_FILE_DATA),
+    PL_ADD_INT_CONSTANT(PL_RESOURCE_LOAD_FLAG_BLOCK_COMPRESSED),
+    PL_ADD_INT_CONSTANT(PL_RESOURCE_LOAD_FLAG_NO_CACHING),
+};

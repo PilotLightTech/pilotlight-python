@@ -199,6 +199,15 @@ PyInit_pilotlight(void)
     for(uint32_t i = 0; i < PL_ARRAYSIZE(gatLogIntPairs); i++)
         PyModule_AddIntConstant(ptModule, gatLogIntPairs[i].pcName, gatLogIntPairs[i].iValue);
 
+    for(uint32_t i = 0; i < PL_ARRAYSIZE(gatVfsIntPairs); i++)
+        PyModule_AddIntConstant(ptModule, gatVfsIntPairs[i].pcName, gatVfsIntPairs[i].iValue);
+
+    for(uint32_t i = 0; i < PL_ARRAYSIZE(gatScreenLogIntPairs); i++)
+        PyModule_AddIntConstant(ptModule, gatScreenLogIntPairs[i].pcName, gatScreenLogIntPairs[i].iValue);
+
+    for(uint32_t i = 0; i < PL_ARRAYSIZE(gatResourceIntPairs); i++)
+        PyModule_AddIntConstant(ptModule, gatResourceIntPairs[i].pcName, gatResourceIntPairs[i].iValue);
+
     // load core apis & extensions so APIs can be used before pl_run()
     pl__python_setup();
     const plApiRegistryI* ptApiRegistry = pl__python_load();
@@ -250,6 +259,7 @@ PyInit_pilotlight(void)
     PL_ADD_PYTHON_API(plLogI);
     PL_ADD_PYTHON_API(plProfileI);
     PL_ADD_PYTHON_API(plConsoleI);
+    PL_ADD_PYTHON_API(plTimerI);
 
     if(pl__log_add_python_types(ptModule) < 0 || pl__profile_add_python_types(ptModule) < 0)
         return NULL;

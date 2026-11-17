@@ -376,6 +376,169 @@ window_set_title_bar(PyObject* self, PyObject* args, PyObject* kwargs)
     return PyBool_FromLong(gptWindow->set_title_bar(ptWindow, &tDesc));
 }
 
+// window attribute values by type:
+//   SIZE         -> (width, height)        (uint)
+//   POSITION     -> (x, y)                 (int)
+//   SIZE_LIMITS  -> (minWidth, minHeight, maxWidth, maxHeight) (uint)
+//   others       -> bool
+static PyObject*
+window_set_attribute(PyObject* self, PyObject* args, PyObject* kwargs)
+{
+    static const char* apcKeywords[] = {"window", "attribute", "value", NULL};
+    PyObject* ptPyWindow = NULL;
+    int iAttribute = 0;
+    PyObject* ptValue = NULL;
+    if(!pl_parse_args("OiO", (const char**)apcKeywords, args, kwargs, __FUNCTION__, &ptPyWindow, &iAttribute, &ptValue))
+        return NULL;
+    plWindow* ptWindow = PyCapsule_GetPointer(ptPyWindow, "plWindow");
+    if(ptWindow == NULL)
+        return NULL;
+
+    plWindowAttributeValue tValue = {0};
+    switch(iAttribute)
+    {
+        case PL_WINDOW_ATTRIBUTE_SIZE:
+            if(!PyArg_ParseTuple(ptValue, "II;SIZE expects (width, height)", &tValue.tuVec2.x, &tValue.tuVec2.y))
+                return NULL;
+            break;
+        case PL_WINDOW_ATTRIBUTE_POSITION:
+            if(!PyArg_ParseTuple(ptValue, "ii;POSITION expects (x, y)", &tValue.tiVec2.x, &tValue.tiVec2.y))
+                return NULL;
+            break;
+        case PL_WINDOW_ATTRIBUTE_SIZE_LIMITS:
+            if(!PyArg_ParseTuple(ptValue, "IIII;SIZE_LIMITS expects (minWidth, minHeight, maxWidth, maxHeight)",
+                &tValue.tuVec4.x, &tValue.tuVec4.y, &tValue.tuVec4.z, &tValue.tuVec4.w))
+                return NULL;
+            break;
+        default:
+        {
+            if(iAttribute < 0 || iAttribute >= PL_WINDOW_ATTRIBUTE_COUNT)
+            {
+                PyErr_Format(PyExc_ValueError, "unknown window attribute %d", iAttribute);
+                return NULL;
+            }
+            const int iTruth = PyObject_IsTrue(ptValue);
+            if(iTruth < 0)
+                return NULL;
+            tValue.bValue = iTruth != 0;
+            break;
+        }
+    }
+    return PyBool_FromLong(gptWindow->set_attribute(ptWindow, iAttribute, &tValue));
+}
+
+// returns the value (see window_set_attribute) or None if unsupported
+static PyObject*
+window_get_attribute(PyObject* self, PyObject* args, PyObject* kwargs)
+{
+    static const char* apcKeywords[] = {"window", "attribute", NULL};
+    PyObject* ptPyWindow = NULL;
+    int iAttribute = 0;
+    if(!pl_parse_args("Oi", (const char**)apcKeywords, args, kwargs, __FUNCTION__, &ptPyWindow, &iAttribute))
+        return NULL;
+    plWindow* ptWindow = PyCapsule_GetPointer(ptPyWindow, "plWindow");
+    if(ptWindow == NULL)
+        return NULL;
+    if(iAttribute < 0 || iAttribute >= PL_WINDOW_ATTRIBUTE_COUNT)
+    {
+        PyErr_Format(PyExc_ValueError, "unknown window attribute %d", iAttribute);
+        return NULL;
+    }
+
+    plWindowAttributeValue tValue = {0};
+    if(!gptWindow->get_attribute(ptWindow, iAttribute, &tValue))
+        Py_RETURN_NONE;
+    switch(iAttribute)
+    {
+        case PL_WINDOW_ATTRIBUTE_SIZE:        return Py_BuildValue("(II)", tValue.tuVec2.x, tValue.tuVec2.y);
+        case PL_WINDOW_ATTRIBUTE_POSITION:    return Py_BuildValue("(ii)", tValue.tiVec2.x, tValue.tiVec2.y);
+        case PL_WINDOW_ATTRIBUTE_SIZE_LIMITS: return Py_BuildValue("(IIII)", tValue.tuVec4.x, tValue.tuVec4.y, tValue.tuVec4.z, tValue.tuVec4.w);
+        default:                              return PyBool_FromLong(tValue.bValue);
+    }
+}
+
+static PyObject*
+window_set_cursor_mode(PyObject* self, PyObject* args, PyObject* kwargs)
+{
+    static const char* apcKeywords[] = {"window", "mode", NULL};
+    PyObject* ptPyWindow = NULL;
+    int iMode = 0;
+    if(!pl_parse_args("Oi", (const char**)apcKeywords, args, kwargs, __FUNCTION__, &ptPyWindow, &iMode))
+        return NULL;
+    plWindow* ptWindow = PyCapsule_GetPointer(ptPyWindow, "plWindow");
+    if(ptWindow == NULL)
+        return NULL;
+    return PyBool_FromLong(gptWindow->set_cursor_mode(ptWindow, iMode));
+}
+
+static PyObject*
+window_get_cursor_mode(PyObject* self, PyObject* arg)
+{
+    plWindow* ptWindow = PyCapsule_GetPointer(arg, "plWindow");
+    if(ptWindow == NULL)
+        return NULL;
+    return PyLong_FromLong((long)gptWindow->get_cursor_mode(ptWindow));
+}
+
+static PyObject*
+window_set_raw_mouse_input(PyObject* self, PyObject* args, PyObject* kwargs)
+{
+    static const char* apcKeywords[] = {"window", "enabled", NULL};
+    PyObject* ptPyWindow = NULL;
+    int iEnabled = 0;
+    if(!pl_parse_args("Op", (const char**)apcKeywords, args, kwargs, __FUNCTION__, &ptPyWindow, &iEnabled))
+        return NULL;
+    plWindow* ptWindow = PyCapsule_GetPointer(ptPyWindow, "plWindow");
+    if(ptWindow == NULL)
+        return NULL;
+    return PyBool_FromLong(gptWindow->set_raw_mouse_input(ptWindow, iEnabled != 0));
+}
+
+// desc: plFullScreenDesc (tMode, iMonitor; -1 = automatic)
+static PyObject*
+window_set_fullscreen(PyObject* self, PyObject* args, PyObject* kwargs)
+{
+    static const char* apcKeywords[] = {"window", "desc", NULL};
+    PyObject* ptPyWindow = NULL;
+    PyObject* ptPyDesc = NULL;
+    if(!pl_parse_args("OO", (const char**)apcKeywords, args, kwargs, __FUNCTION__, &ptPyWindow, &ptPyDesc))
+        return NULL;
+    plWindow* ptWindow = PyCapsule_GetPointer(ptPyWindow, "plWindow");
+    if(ptWindow == NULL)
+        return NULL;
+    uint32_t uMode = 0;
+    if(!pl__get_u32_attr(ptPyDesc, "tMode", &uMode))
+        return NULL;
+    plFullScreenDesc tDesc = {.tMode = (plFullScreenMode)uMode, .iMonitor = -1};
+    if(PyObject_HasAttrString(ptPyDesc, "iMonitor"))
+    {
+        PyObject* ptMonitor = PyObject_GetAttrString(ptPyDesc, "iMonitor");
+        if(ptMonitor == NULL)
+            return NULL;
+        tDesc.iMonitor = (int)PyLong_AsLong(ptMonitor);
+        Py_DECREF(ptMonitor);
+        if(PyErr_Occurred())
+            return NULL;
+    }
+    return PyBool_FromLong(gptWindow->set_fullscreen(ptWindow, &tDesc));
+}
+
+//-----------------------------------------------------------------------------
+// [SECTION] timer api
+//-----------------------------------------------------------------------------
+
+static PyObject*
+timer_get_time(PyObject* self, PyObject* unused)
+{
+    return PyFloat_FromDouble(gptTimer->get_time());
+}
+
+static PyObject*
+timer_get_raw_time(PyObject* self, PyObject* unused)
+{
+    return PyFloat_FromDouble(gptTimer->get_raw_time());
+}
+
 //-----------------------------------------------------------------------------
 // [SECTION] file api
 //-----------------------------------------------------------------------------
@@ -495,11 +658,25 @@ static PyMethodDef gatCommandsplWindowI[] =
     {"get_capabilities", (PyCFunction)window_get_capabilities, METH_NOARGS | METH_STATIC, NULL},
     {"set_icon", (PyCFunction)window_set_icon, METH_VARARGS | METH_KEYWORDS | METH_STATIC, NULL},
     {"set_title_bar", (PyCFunction)window_set_title_bar, METH_VARARGS | METH_KEYWORDS | METH_STATIC, NULL},
+    {"set_attribute", (PyCFunction)window_set_attribute, METH_VARARGS | METH_KEYWORDS | METH_STATIC, NULL},
+    {"get_attribute", (PyCFunction)window_get_attribute, METH_VARARGS | METH_KEYWORDS | METH_STATIC, NULL},
+    {"set_cursor_mode", (PyCFunction)window_set_cursor_mode, METH_VARARGS | METH_KEYWORDS | METH_STATIC, NULL},
+    {"get_cursor_mode", (PyCFunction)window_get_cursor_mode, METH_O | METH_STATIC, NULL},
+    {"set_raw_mouse_input", (PyCFunction)window_set_raw_mouse_input, METH_VARARGS | METH_KEYWORDS | METH_STATIC, NULL},
+    {"set_fullscreen", (PyCFunction)window_set_fullscreen, METH_VARARGS | METH_KEYWORDS | METH_STATIC, NULL},
+    {NULL, NULL, 0, NULL}
+};
+
+static PyMethodDef gatCommandsplTimerI[] =
+{
+    {"get_time",     (PyCFunction)timer_get_time,     METH_NOARGS | METH_STATIC, NULL},
+    {"get_raw_time", (PyCFunction)timer_get_raw_time, METH_NOARGS | METH_STATIC, NULL},
     {NULL, NULL, 0, NULL}
 };
 
 PL_NEW_PYTHON_API(plWindowI)
 PL_NEW_PYTHON_API(plFileI)
+PL_NEW_PYTHON_API(plTimerI)
 
 //-----------------------------------------------------------------------------
 // [SECTION] constants
@@ -520,4 +697,22 @@ plPythonIntConstantPair gatPlatformIntPairs[] = {
     PL_ADD_INT_CONSTANT(PL_WINDOW_CAPABILITY_FLAGS_APP_ICON),
     PL_ADD_INT_CONSTANT(PL_WINDOW_CAPABILITY_FLAGS_CUSTOM_TITLE_BAR),
     PL_ADD_INT_CONSTANT(PL_WINDOW_CAPABILITY_FLAGS_TITLE_BAR_TEXT),
+    PL_ADD_INT_CONSTANT(PL_WINDOW_ATTRIBUTE_SIZE),
+    PL_ADD_INT_CONSTANT(PL_WINDOW_ATTRIBUTE_POSITION),
+    PL_ADD_INT_CONSTANT(PL_WINDOW_ATTRIBUTE_RESIZABLE),
+    PL_ADD_INT_CONSTANT(PL_WINDOW_ATTRIBUTE_DECORATED),
+    PL_ADD_INT_CONSTANT(PL_WINDOW_ATTRIBUTE_TOP_MOST),
+    PL_ADD_INT_CONSTANT(PL_WINDOW_ATTRIBUTE_MINIMIZED),
+    PL_ADD_INT_CONSTANT(PL_WINDOW_ATTRIBUTE_MAXIMIZED),
+    PL_ADD_INT_CONSTANT(PL_WINDOW_ATTRIBUTE_VISIBLE),
+    PL_ADD_INT_CONSTANT(PL_WINDOW_ATTRIBUTE_FOCUSED),
+    PL_ADD_INT_CONSTANT(PL_WINDOW_ATTRIBUTE_HOVERED),
+    PL_ADD_INT_CONSTANT(PL_WINDOW_ATTRIBUTE_SIZE_LIMITS),
+    PL_ADD_INT_CONSTANT(PL_CURSOR_MODE_NORMAL),
+    PL_ADD_INT_CONSTANT(PL_CURSOR_MODE_HIDDEN),
+    PL_ADD_INT_CONSTANT(PL_CURSOR_MODE_CAPTURED),
+    PL_ADD_INT_CONSTANT(PL_CURSOR_MODE_DISABLED),
+    PL_ADD_INT_CONSTANT(PL_FULLSCREEN_MODE_NONE),
+    PL_ADD_INT_CONSTANT(PL_FULLSCREEN_MODE_EXCLUSIVE),
+    PL_ADD_INT_CONSTANT(PL_FULLSCREEN_MODE_BORDERLESS),
 };
