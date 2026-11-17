@@ -35,6 +35,9 @@ Index of this file:
 #include "pl_platform_ext_m.c"
 #include "pl_gltf_ext_m.c"
 #include "pl_transform_ext_m.c"
+#include "pl_log_ext_m.c"
+#include "pl_profile_ext_m.c"
+#include "pl_console_ext_m.c"
 #include "pl_core_m.c"
 
 //-----------------------------------------------------------------------------
@@ -193,6 +196,9 @@ PyInit_pilotlight(void)
     for(uint32_t i = 0; i < PL_ARRAYSIZE(gatPlatformIntPairs); i++)
         PyModule_AddIntConstant(ptModule, gatPlatformIntPairs[i].pcName, gatPlatformIntPairs[i].iValue);
 
+    for(uint32_t i = 0; i < PL_ARRAYSIZE(gatLogIntPairs); i++)
+        PyModule_AddIntConstant(ptModule, gatLogIntPairs[i].pcName, gatLogIntPairs[i].iValue);
+
     // load core apis & extensions so APIs can be used before pl_run()
     pl__python_setup();
     const plApiRegistryI* ptApiRegistry = pl__python_load();
@@ -241,6 +247,12 @@ PyInit_pilotlight(void)
     PL_ADD_PYTHON_API(plGltfI);
     PL_ADD_PYTHON_API(plTerrainI);
     PL_ADD_PYTHON_API(plFileI);
+    PL_ADD_PYTHON_API(plLogI);
+    PL_ADD_PYTHON_API(plProfileI);
+    PL_ADD_PYTHON_API(plConsoleI);
+
+    if(pl__log_add_python_types(ptModule) < 0 || pl__profile_add_python_types(ptModule) < 0)
+        return NULL;
 
     if(pl__ui_add_python_types(ptModule) < 0)
         return NULL;

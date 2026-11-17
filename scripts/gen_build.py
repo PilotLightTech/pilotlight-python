@@ -283,6 +283,8 @@ package_files = {
     ],
     "resources": [
         "Cousine-Regular.ttf", # SIL OFL 1.1 (see THIRD_PARTY_NOTICES.md)
+        "pilot-light-32.png",  # demo window icon & texture (pilotlight.demo)
+        "pilot-light-256.png",
     ],
 }
 

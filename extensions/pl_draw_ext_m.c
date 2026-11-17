@@ -412,6 +412,106 @@ draw_add_default_font(PyObject* self, PyObject* arg)
     return PyCapsule_New(gptDraw->add_default_font(ptAtlas), "plFont", NULL);
 }
 
+// fills a plFontConfig from a python plFontConfig; free with pl__draw_font_config_free
+static bool
+pl__draw_font_config_from_py(PyObject* ptPythonConfig, plFontConfig* ptConfig)
+{
+    memset(ptConfig, 0, sizeof(plFontConfig));
+
+    PyObject* ptPythonConfigSize = PyObject_GetAttrString(ptPythonConfig, "fSize");
+    if(ptPythonConfigSize == NULL)
+        return false;
+    ptConfig->fSize = (float)PyFloat_AsDouble(ptPythonConfigSize);
+    Py_DECREF(ptPythonConfigSize);
+
+    PyObject* ptPythonOptionV = PyObject_GetAttrString(ptPythonConfig, "uVOverSampling");
+    if(ptPythonOptionV == NULL)
+        return false;
+    PyLong_AsUInt32(ptPythonOptionV, &ptConfig->uVOverSampling);
+    Py_DECREF(ptPythonOptionV);
+
+    PyObject* ptPythonOptionH = PyObject_GetAttrString(ptPythonConfig, "uHOverSampling");
+    if(ptPythonOptionH == NULL)
+        return false;
+    PyLong_AsUInt32(ptPythonOptionH, &ptConfig->uHOverSampling);
+    Py_DECREF(ptPythonOptionH);
+
+    PyObject* ptPythonOptionMergeFont = PyObject_GetAttrString(ptPythonConfig, "ptMergeFont");
+    if(ptPythonOptionMergeFont == NULL)
+        return false;
+    if(!Py_IsNone(ptPythonOptionMergeFont))
+        ptConfig->ptMergeFont = PyCapsule_GetPointer(ptPythonOptionMergeFont, "plFont");
+    Py_DECREF(ptPythonOptionMergeFont);
+    if(PyErr_Occurred())
+        return false;
+
+    plFontRange* sbtRanges = NULL;
+    PyObject* ptPythonRanges = PyObject_GetAttrString(ptPythonConfig, "ptRanges");
+    if(ptPythonRanges == NULL)
+        return false;
+    if (PyList_Check(ptPythonRanges))
+    {
+        Py_ssize_t pySize = PyList_Size(ptPythonRanges);
+        pl_sb_resize(sbtRanges, (uint32_t)pySize);
+        for (Py_ssize_t i = 0; i < pySize; ++i)
+        {
+            PyObject* ptFontRange = PyList_GetItem(ptPythonRanges, i);
+
+            plFontRange tRange = {0};
+
+            PyObject* ptPythonIFirstCodePoint = PyObject_GetAttrString(ptFontRange, "iFirstCodePoint");
+            PyLong_AsInt32(ptPythonIFirstCodePoint, &tRange.iFirstCodePoint);
+            Py_XDECREF(ptPythonIFirstCodePoint);
+
+            PyObject* ptPythonCharCount = PyObject_GetAttrString(ptFontRange, "uCharCount");
+            PyLong_AsUInt32(ptPythonCharCount, &tRange.uCharCount);
+            Py_XDECREF(ptPythonCharCount);
+
+            sbtRanges[i] = tRange;
+        }
+    }
+    Py_DECREF(ptPythonRanges);
+
+    int* sbiChars = NULL;
+    PyObject* ptPythonIndividualChars = PyObject_GetAttrString(ptPythonConfig, "piIndividualChars");
+    if(ptPythonIndividualChars == NULL)
+    {
+        pl_sb_free(sbtRanges);
+        return false;
+    }
+    if (PyList_Check(ptPythonIndividualChars))
+    {
+        Py_ssize_t pySize = PyList_Size(ptPythonIndividualChars);
+        pl_sb_resize(sbiChars, (uint32_t)pySize);
+        for (Py_ssize_t i = 0; i < pySize; ++i)
+            PyLong_AsInt32(PyList_GetItem(ptPythonIndividualChars, i), &sbiChars[i]);
+    }
+    Py_DECREF(ptPythonIndividualChars);
+
+    ptConfig->uRangeCount = pl_sb_size(sbtRanges);
+    ptConfig->uIndividualCharCount = pl_sb_size(sbiChars);
+    ptConfig->ptRanges = sbtRanges;
+    ptConfig->piIndividualChars = sbiChars;
+    if(PyErr_Occurred())
+    {
+        pl_sb_free(sbtRanges);
+        pl_sb_free(sbiChars);
+        return false;
+    }
+    return true;
+}
+
+static void
+pl__draw_font_config_free(plFontConfig* ptConfig)
+{
+    plFontRange* sbtRanges = (plFontRange*)ptConfig->ptRanges;
+    int* sbiChars = (int*)ptConfig->piIndividualChars;
+    pl_sb_free(sbtRanges);
+    pl_sb_free(sbiChars);
+    ptConfig->ptRanges = NULL;
+    ptConfig->piIndividualChars = NULL;
+}
+
 PyObject*
 draw_add_font_from_file_ttf(PyObject* self, PyObject* args)
 {
@@ -431,75 +531,56 @@ draw_add_font_from_file_ttf(PyObject* self, PyObject* args)
 		return NULL;
 
     plFontAtlas* ptAtlas = PyCapsule_GetPointer(ptPythonFontAtlas, "plFontAtlas");
+    if(ptAtlas == NULL)
+        return NULL;
 
     plFontConfig tConfig = {0};
-
-    PyObject* ptPythonConfigSize = PyObject_GetAttrString(ptPythonConfig, "fSize");
-    tConfig.fSize = (float)PyFloat_AsDouble(ptPythonConfigSize);
-    Py_DECREF(ptPythonConfigSize);
-
-    PyObject* ptPythonOptionV = PyObject_GetAttrString(ptPythonConfig, "uVOverSampling");
-    PyLong_AsUInt32(ptPythonOptionV, &tConfig.uVOverSampling);
-    Py_DECREF(ptPythonOptionV);
-
-    PyObject* ptPythonOptionH = PyObject_GetAttrString(ptPythonConfig, "uHOverSampling");
-    PyLong_AsUInt32(ptPythonOptionH, &tConfig.uHOverSampling);
-    Py_DECREF(ptPythonOptionH);
-
-    PyObject* ptPythonOptionMergeFont = PyObject_GetAttrString(ptPythonConfig, "ptMergeFont");
-    if(!Py_IsNone(ptPythonOptionMergeFont))
-    {
-        tConfig.ptMergeFont = PyCapsule_GetPointer(ptPythonConfig, "plFont");
-        Py_DECREF(ptPythonOptionMergeFont);
-    }
-    
-    PyObject* ptPythonRanges = PyObject_GetAttrString(ptPythonConfig, "ptRanges");
-    plFontRange* sbtRanges = NULL;
-    if (PyList_Check(ptPythonRanges))
-    {
-        Py_ssize_t pySize = PyList_Size(ptPythonRanges);
-        pl_sb_resize(sbtRanges, (uint32_t)pySize);
-        for (Py_ssize_t i = 0; i < pySize; ++i)
-        {
-            PyObject* ptFontRange = PyList_GetItem(ptPythonRanges, i);
-
-            plFontRange tRange = {0};
-
-            PyObject* ptPythonIFirstCodePoint = PyObject_GetAttrString(ptFontRange, "iFirstCodePoint");
-            PyLong_AsInt32(ptPythonIFirstCodePoint, &tRange.iFirstCodePoint);
-            Py_DECREF(ptPythonIFirstCodePoint);
-
-            PyObject* ptPythonCharCount = PyObject_GetAttrString(ptFontRange, "uCharCount");
-            PyLong_AsUInt32(ptPythonCharCount, &tRange.uCharCount);
-            Py_DECREF(ptPythonCharCount);
-
-            sbtRanges[i] = tRange;
-
-        }
-    }
-    Py_DECREF(ptPythonRanges);
-
-    PyObject* ptPythonIndividualChars = PyObject_GetAttrString(ptPythonConfig, "piIndividualChars");
-    int* sbiChars = NULL;
-    if (PyList_Check(ptPythonIndividualChars))
-    {
-        Py_ssize_t pySize = PyList_Size(ptPythonIndividualChars);
-        pl_sb_resize(sbiChars, (uint32_t)pySize);
-        for (Py_ssize_t i = 0; i < pySize; ++i)
-        {
-            PyObject* ptFontRange = PyList_GetItem(ptPythonIndividualChars, i);
-            PyLong_AsInt32(ptFontRange, &sbiChars[i]);
-        }
-    }
-    Py_DECREF(ptPythonIndividualChars);
-
-    tConfig.uRangeCount = pl_sb_size(sbtRanges);
-    tConfig.uIndividualCharCount = pl_sb_size(sbiChars);
-    tConfig.ptRanges = sbtRanges;
-    tConfig.piIndividualChars = sbiChars;
+    if(!pl__draw_font_config_from_py(ptPythonConfig, &tConfig))
+        return NULL;
     plFont* ptFont = gptDraw->add_font_from_file_ttf(ptAtlas, tConfig, pcFile);
-    pl_sb_free(sbtRanges);
-    pl_sb_free(sbiChars);
+    pl__draw_font_config_free(&tConfig);
+    if(ptFont == NULL)
+        Py_RETURN_NONE;
+    return PyCapsule_New(ptFont, "plFont", NULL);
+}
+
+// data: bytes-like TTF; copied (the atlas owns the copy and frees it when built)
+PyObject*
+draw_add_font_from_memory_ttf(PyObject* self, PyObject* args, PyObject* kwargs)
+{
+    static const char* apcKeywords[] = {"atlas", "config", "data", NULL};
+    PyObject* ptPythonFontAtlas = NULL;
+    PyObject* ptPythonConfig = NULL;
+    Py_buffer tData = {0};
+    if(!pl_parse_args("OOy*", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+        &ptPythonFontAtlas, &ptPythonConfig, &tData))
+        return NULL;
+
+    plFontAtlas* ptAtlas = PyCapsule_GetPointer(ptPythonFontAtlas, "plFontAtlas");
+    if(ptAtlas == NULL || tData.len <= 0)
+    {
+        if(ptAtlas && tData.len <= 0)
+            PyErr_SetString(PyExc_ValueError, "add_font_from_memory_ttf(): data is empty");
+        PyBuffer_Release(&tData);
+        return NULL;
+    }
+
+    plFontConfig tConfig = {0};
+    if(!pl__draw_font_config_from_py(ptPythonConfig, &tConfig))
+    {
+        PyBuffer_Release(&tData);
+        return NULL;
+    }
+
+    // same allocator as add_font_from_file_ttf, which hands the atlas ownership
+    void* pData = gptMemory->tracked_realloc(NULL, (size_t)tData.len, __FILE__, __LINE__);
+    memcpy(pData, tData.buf, (size_t)tData.len);
+    PyBuffer_Release(&tData);
+
+    plFont* ptFont = gptDraw->add_font_from_memory_ttf(ptAtlas, tConfig, pData);
+    pl__draw_font_config_free(&tConfig);
+    if(ptFont == NULL)
+        Py_RETURN_NONE;
     return PyCapsule_New(ptFont, "plFont", NULL);
 }
 
@@ -516,7 +597,7 @@ draw_calculate_text_size(PyObject* self, PyObject* args)
         NULL,
     };
 
-	if (!pl_parse_args("OOsO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
+	if (!pl_parse_args("sO", (const char**)apcKeywords, args, NULL, __FUNCTION__,
         &pcText, &ptPythonOptions))
 		return NULL;
 
@@ -2871,8 +2952,237 @@ draw_add_image_rounded(PyObject* self, PyObject* args)
     Py_RETURN_NONE;
 }
 
+//-----------------------------------------------------------------------------
+// text bounds, gradients, image _ex forms & clip rects
+//-----------------------------------------------------------------------------
+
+// rect argument: ((x0, y0), (x1, y1)) or (x0, y0, x1, y1)
+static bool
+pl__draw_rect_from_py(PyObject* ptObj, plRect* ptRectOut)
+{
+    PyObject* ptSeq = PySequence_Fast(ptObj, "expected a rect: ((x0, y0), (x1, y1)) or (x0, y0, x1, y1)");
+    if(ptSeq == NULL)
+        return false;
+    const Py_ssize_t szCount = PySequence_Fast_GET_SIZE(ptSeq);
+    bool bResult = false;
+    if(szCount == 2)
+    {
+        bResult = pl_vec2_from_py(PySequence_Fast_GET_ITEM(ptSeq, 0), &ptRectOut->tMin) &&
+                  pl_vec2_from_py(PySequence_Fast_GET_ITEM(ptSeq, 1), &ptRectOut->tMax);
+    }
+    else if(szCount == 4)
+    {
+        ptRectOut->tMin.x = (float)PyFloat_AsDouble(PySequence_Fast_GET_ITEM(ptSeq, 0));
+        ptRectOut->tMin.y = (float)PyFloat_AsDouble(PySequence_Fast_GET_ITEM(ptSeq, 1));
+        ptRectOut->tMax.x = (float)PyFloat_AsDouble(PySequence_Fast_GET_ITEM(ptSeq, 2));
+        ptRectOut->tMax.y = (float)PyFloat_AsDouble(PySequence_Fast_GET_ITEM(ptSeq, 3));
+        bResult = !PyErr_Occurred();
+    }
+    else
+        PyErr_SetString(PyExc_ValueError, "expected a rect: ((x0, y0), (x1, y1)) or (x0, y0, x1, y1)");
+    Py_DECREF(ptSeq);
+    return bResult;
+}
+
+static PyObject*
+pl__draw_rect_to_py(plRect tRect)
+{
+    return Py_BuildValue("(NN)", pl_vec2_to_py(tRect.tMin), pl_vec2_to_py(tRect.tMax));
+}
+
+// returns (min, max)
+PyObject*
+draw_calculate_text_bb(PyObject* self, PyObject* args, PyObject* kwargs)
+{
+    static const char* apcKeywords[] = {"p", "text", "options", NULL};
+    PyObject* ptPythonP = NULL;
+    const char* pcText = NULL;
+    PyObject* ptPythonOptions = NULL;
+    if(!pl_parse_args("OsO", (const char**)apcKeywords, args, kwargs, __FUNCTION__, &ptPythonP, &pcText, &ptPythonOptions))
+        return NULL;
+    plVec2 tP = {0};
+    if(!pl_vec2_from_py(ptPythonP, &tP))
+        return NULL;
+    plDrawTextOptions tOptions = {0};
+    pl__get_draw_text_options(ptPythonOptions, &tOptions);
+    if(PyErr_Occurred())
+        return NULL;
+    return pl__draw_rect_to_py(gptDraw->calculate_text_bb(tP, pcText, tOptions));
+}
+
+PyObject*
+draw_add_triangle_filled_gradient(PyObject* self, PyObject* args, PyObject* kwargs)
+{
+    static const char* apcKeywords[] = {"layer", "p0", "p1", "p2", "color0", "color1", "color2", NULL};
+    PyObject* ptPythonLayer = NULL;
+    PyObject* aptP[3] = {0};
+    uint32_t auColors[3] = {0};
+    if(!pl_parse_args("OOOOIII", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+        &ptPythonLayer, &aptP[0], &aptP[1], &aptP[2], &auColors[0], &auColors[1], &auColors[2]))
+        return NULL;
+    plDrawLayer2D* ptLayer = pl__draw_layer_from_py(ptPythonLayer);
+    plVec2 atP[3] = {0};
+    if(ptLayer == NULL || !pl_vec2_from_py(aptP[0], &atP[0]) || !pl_vec2_from_py(aptP[1], &atP[1]) || !pl_vec2_from_py(aptP[2], &atP[2]))
+        return NULL;
+    gptDraw->add_triangle_filled_gradient(ptLayer, atP[0], atP[1], atP[2], auColors[0], auColors[1], auColors[2]);
+    Py_RETURN_NONE;
+}
+
+PyObject*
+draw_add_rect_filled_gradient(PyObject* self, PyObject* args, PyObject* kwargs)
+{
+    static const char* apcKeywords[] = {"layer", "minP", "maxP", "topLeftColor", "topRightColor", "bottomLeftColor", "bottomRightColor", NULL};
+    PyObject* ptPythonLayer = NULL;
+    PyObject* ptPythonMinP = NULL;
+    PyObject* ptPythonMaxP = NULL;
+    uint32_t auColors[4] = {0};
+    if(!pl_parse_args("OOOIIII", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+        &ptPythonLayer, &ptPythonMinP, &ptPythonMaxP, &auColors[0], &auColors[1], &auColors[2], &auColors[3]))
+        return NULL;
+    plDrawLayer2D* ptLayer = pl__draw_layer_from_py(ptPythonLayer);
+    plVec2 tMinP = {0};
+    plVec2 tMaxP = {0};
+    if(ptLayer == NULL || !pl_vec2_from_py(ptPythonMinP, &tMinP) || !pl_vec2_from_py(ptPythonMaxP, &tMaxP))
+        return NULL;
+    gptDraw->add_rect_filled_gradient(ptLayer, tMinP, tMaxP, auColors[0], auColors[1], auColors[2], auColors[3]);
+    Py_RETURN_NONE;
+}
+
+// C argument order (add_image already accepts the optional UVs & color)
+PyObject*
+draw_add_image_ex(PyObject* self, PyObject* args, PyObject* kwargs)
+{
+    static const char* apcKeywords[] = {"layer", "textureID", "minP", "maxP", "minUV", "maxUV", "color", NULL};
+    PyObject* ptPythonLayer = NULL;
+    uint32_t uTextureId = 0;
+    PyObject* aptPoints[4] = {0};
+    uint32_t uColor = 0;
+    if(!pl_parse_args("OIOOOOI", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+        &ptPythonLayer, &uTextureId, &aptPoints[0], &aptPoints[1], &aptPoints[2], &aptPoints[3], &uColor))
+        return NULL;
+    plDrawLayer2D* ptLayer = pl__draw_layer_from_py(ptPythonLayer);
+    if(ptLayer == NULL)
+        return NULL;
+    plVec2 atPoints[4] = {0};
+    for(uint32_t i = 0; i < 4; i++)
+    {
+        if(!pl_vec2_from_py(aptPoints[i], &atPoints[i]))
+            return NULL;
+    }
+    gptDraw->add_image_ex(ptLayer, uTextureId, atPoints[0], atPoints[1], atPoints[2], atPoints[3], uColor);
+    Py_RETURN_NONE;
+}
+
+// C argument order (add_image_quad already accepts the optional UVs & color)
+PyObject*
+draw_add_image_quad_ex(PyObject* self, PyObject* args, PyObject* kwargs)
+{
+    static const char* apcKeywords[] = {"layer", "textureID", "p0", "p1", "p2", "p3", "p0UV", "p1UV", "p2UV", "p3UV", "color", NULL};
+    PyObject* ptPythonLayer = NULL;
+    uint32_t uTextureId = 0;
+    PyObject* aptPoints[8] = {0};
+    uint32_t uColor = 0;
+    if(!pl_parse_args("OIOOOOOOOOI", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+        &ptPythonLayer, &uTextureId, &aptPoints[0], &aptPoints[1], &aptPoints[2], &aptPoints[3],
+        &aptPoints[4], &aptPoints[5], &aptPoints[6], &aptPoints[7], &uColor))
+        return NULL;
+    plDrawLayer2D* ptLayer = pl__draw_layer_from_py(ptPythonLayer);
+    if(ptLayer == NULL)
+        return NULL;
+    plVec2 atPoints[8] = {0};
+    for(uint32_t i = 0; i < 8; i++)
+    {
+        if(!pl_vec2_from_py(aptPoints[i], &atPoints[i]))
+            return NULL;
+    }
+    gptDraw->add_image_quad_ex(ptLayer, uTextureId, atPoints[0], atPoints[1], atPoints[2], atPoints[3],
+        atPoints[4], atPoints[5], atPoints[6], atPoints[7], uColor);
+    Py_RETURN_NONE;
+}
+
+// C argument order (add_image_rounded takes radius first with optional UVs & color)
+PyObject*
+draw_add_image_rounded_ex(PyObject* self, PyObject* args, PyObject* kwargs)
+{
+    static const char* apcKeywords[] = {"layer", "textureID", "minP", "maxP", "minUV", "maxUV", "color", "radius", "segments", "flags", NULL};
+    PyObject* ptPythonLayer = NULL;
+    uint32_t uTextureId = 0;
+    PyObject* aptPoints[4] = {0};
+    uint32_t uColor = 0;
+    float fRadius = 0.0f;
+    uint32_t uSegments = 0;
+    int iFlags = 0;
+    if(!pl_parse_args("OIOOOOIf|Ii", (const char**)apcKeywords, args, kwargs, __FUNCTION__,
+        &ptPythonLayer, &uTextureId, &aptPoints[0], &aptPoints[1], &aptPoints[2], &aptPoints[3], &uColor, &fRadius, &uSegments, &iFlags))
+        return NULL;
+    plDrawLayer2D* ptLayer = pl__draw_layer_from_py(ptPythonLayer);
+    if(ptLayer == NULL)
+        return NULL;
+    plVec2 atPoints[4] = {0};
+    for(uint32_t i = 0; i < 4; i++)
+    {
+        if(!pl_vec2_from_py(aptPoints[i], &atPoints[i]))
+            return NULL;
+    }
+    gptDraw->add_image_rounded_ex(ptLayer, uTextureId, atPoints[0], atPoints[1], atPoints[2], atPoints[3], uColor, fRadius, uSegments, iFlags);
+    Py_RETURN_NONE;
+}
+
+// clip rects belong to a 2D drawlist (not a layer); push_clip_rect_pt is the same
+// call from python (the C api takes a pointer)
+PyObject*
+draw_push_clip_rect(PyObject* self, PyObject* args, PyObject* kwargs)
+{
+    static const char* apcKeywords[] = {"drawlist", "rect", "accumulate", NULL};
+    PyObject* ptPythonDrawlist = NULL;
+    PyObject* ptPythonRect = NULL;
+    int iAccumulate = 0;
+    if(!pl_parse_args("OO|p", (const char**)apcKeywords, args, kwargs, __FUNCTION__, &ptPythonDrawlist, &ptPythonRect, &iAccumulate))
+        return NULL;
+    plDrawList2D* ptDrawlist = PyCapsule_GetPointer(ptPythonDrawlist, "plDrawList2D");
+    plRect tRect = {0};
+    if(ptDrawlist == NULL || !pl__draw_rect_from_py(ptPythonRect, &tRect))
+        return NULL;
+    gptDraw->push_clip_rect(ptDrawlist, tRect, iAccumulate != 0);
+    Py_RETURN_NONE;
+}
+
+PyObject*
+draw_pop_clip_rect(PyObject* self, PyObject* arg)
+{
+    plDrawList2D* ptDrawlist = PyCapsule_GetPointer(arg, "plDrawList2D");
+    if(ptDrawlist == NULL)
+        return NULL;
+    gptDraw->pop_clip_rect(ptDrawlist);
+    Py_RETURN_NONE;
+}
+
+// returns (min, max) or None when no clip rect is pushed
+PyObject*
+draw_get_clip_rect(PyObject* self, PyObject* arg)
+{
+    plDrawList2D* ptDrawlist = PyCapsule_GetPointer(arg, "plDrawList2D");
+    if(ptDrawlist == NULL)
+        return NULL;
+    const plRect* ptRect = gptDraw->get_clip_rect(ptDrawlist);
+    if(ptRect == NULL)
+        Py_RETURN_NONE;
+    return pl__draw_rect_to_py(*ptRect);
+}
+
 static PyMethodDef gatCommandsplDrawI[] =
 {
+    {"add_font_from_memory_ttf", (PyCFunction)draw_add_font_from_memory_ttf, METH_VARARGS | METH_KEYWORDS | METH_STATIC, NULL},
+    {"calculate_text_bb", (PyCFunction)draw_calculate_text_bb, METH_VARARGS | METH_KEYWORDS | METH_STATIC, NULL},
+    {"add_triangle_filled_gradient", (PyCFunction)draw_add_triangle_filled_gradient, METH_VARARGS | METH_KEYWORDS | METH_STATIC, NULL},
+    {"add_rect_filled_gradient", (PyCFunction)draw_add_rect_filled_gradient, METH_VARARGS | METH_KEYWORDS | METH_STATIC, NULL},
+    {"add_image_ex", (PyCFunction)draw_add_image_ex, METH_VARARGS | METH_KEYWORDS | METH_STATIC, NULL},
+    {"add_image_quad_ex", (PyCFunction)draw_add_image_quad_ex, METH_VARARGS | METH_KEYWORDS | METH_STATIC, NULL},
+    {"add_image_rounded_ex", (PyCFunction)draw_add_image_rounded_ex, METH_VARARGS | METH_KEYWORDS | METH_STATIC, NULL},
+    {"push_clip_rect", (PyCFunction)draw_push_clip_rect, METH_VARARGS | METH_KEYWORDS | METH_STATIC, NULL},
+    {"push_clip_rect_pt", (PyCFunction)draw_push_clip_rect, METH_VARARGS | METH_KEYWORDS | METH_STATIC, NULL},
+    {"pop_clip_rect", (PyCFunction)draw_pop_clip_rect, METH_O | METH_STATIC, NULL},
+    {"get_clip_rect", (PyCFunction)draw_get_clip_rect, METH_O | METH_STATIC, NULL},
     {"new_frame", (PyCFunction)draw_new_frame, METH_NOARGS | METH_STATIC, NULL},
     {"cleanup", (PyCFunction)draw_cleanup, METH_NOARGS | METH_STATIC, NULL},
     {"initialize", (PyCFunction)draw_initialize, METH_O | METH_STATIC, NULL},

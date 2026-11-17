@@ -3,9 +3,13 @@ import sys
 import shutil
 
 if len(sys.argv) <= 1:
-    print("Pilot Light - New Project Script");
+    print("Pilot Light");
     print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
     print("Usage: python -m pilotlight <command> [options]");
+    print("\nCommands:")
+    print("        help   -> how you got here")
+    print("        demo   -> opens a demo window (checks the install works)")
+    print("        new    -> generates new projects")
     exit()
 
 target_directory = ""
@@ -21,7 +25,12 @@ if operation == "--help" or operation == "":
     print("Usage: python -m pilotlight <command>");
     print("\nCommands:")
     print("        help   -> how you got here")
+    print("        demo   -> opens a demo window (checks the install works)")
     print("        new    -> generates new projects")
+
+elif operation == "demo":
+    from pilotlight.demo import main
+    main(sys.argv[2:])
     
 elif operation == "new":
     for i in range(2, len(sys.argv)):

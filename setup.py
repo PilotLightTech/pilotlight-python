@@ -30,7 +30,7 @@ def setup_package():
 
     metadata = dict(
         name='pilotlight',
-        version="0.2.0",
+        version="0.2.1",
         author="Jonathan Hoffstadt",
         author_email="jonathanhoffstadt@yahoo.com",
         description='Python bindings and project tools for the Pilot Light real-time application framework',
@@ -68,6 +68,11 @@ def setup_package():
             ]
         },
         include_package_data=False,
+        entry_points={
+            'console_scripts': [
+                'pilotlight-demo = pilotlight.demo:main', # same as python -m pilotlight demo
+            ],
+        },
         distclass=BinaryDistribution
     )
 

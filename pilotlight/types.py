@@ -102,6 +102,11 @@ class plWindowDesc:
     iYPos: int = 200
 
 @dataclass(slots=True)
+class plLogExtChannelInit:
+    tType: int = 0         # plLogChannelType (0 = PL_LOG_CHANNEL_TYPE_DEFAULT)
+    uEntryCount: int = 0   # buffer entry capacity (0 = 1024)
+
+@dataclass(slots=True)
 class plWindowIcon:
     # tightly packed, straight-alpha RGBA8 (len == uWidth * uHeight * 4); each dimension 1..256
     uWidth: int = 0

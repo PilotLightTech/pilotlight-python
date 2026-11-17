@@ -11,6 +11,9 @@
 #      - io api
 #      - window api
 #      - stats api
+#      - log api
+#      - profile api
+#      - console api
 #      - vfs api
 #      - pak api
 #      - graphics api
@@ -29,7 +32,7 @@
 # [SECTION] imports
 ########################################################################################################################
 
-from typing import List, Dict, Tuple, Sequence, overload, NewType, Callable
+from typing import List, Dict, Tuple, Sequence, NamedTuple, overload, NewType, Callable
 from enum import IntEnum, IntFlag
 import pilotlight.pilotlight as pl
 from pilotlight.types import *
@@ -52,10 +55,25 @@ PL_COLOR_32_CYAN: int
 PL_COLOR_32_GREY: int
 PL_COLOR_32_LIGHT_GREY: int
 PILOT_LIGHT_VERSION_STRING: str
+PL_LOG_ALL_CHANNELS: int
 
 ########################################################################################################################
 # [SECTION] custom types
 ########################################################################################################################
+
+class plLogChannelInfo(NamedTuple):
+    uID: int
+    tType: int                    # plLogChannelType
+    pcName: str
+    uEntryCount: int
+    uEntryCapacity: int
+    entries: List[Tuple[int, str]]  # (level, text), oldest first
+
+class plProfileCpuSample(NamedTuple):
+    dStartTime: float  # seconds since the start of the frame
+    dDuration: float   # seconds
+    pcName: str
+    uDepth: int        # nesting depth (0 = top level)
 
 class plUiClipper:
     """For large lists of evenly spaced rows (see plUiI.step_clipper)."""
@@ -372,6 +390,156 @@ class plStatsI:
         ...
 
 ########################################################################################################################
+# [SECTION] log api
+########################################################################################################################
+
+class plLogI:
+    """Engine log channels (pl_log_ext.h).
+
+    Messages are formatted python strs (the *_p / *_va variants are not bound).
+    See pilotlight.log for a logging.Handler that forwards to a channel.
+    """
+
+    @staticmethod
+    def add_channel(name: str, init: plLogExtChannelInit | None = None) -> int:
+        """returns the channel id"""
+        ...
+
+    @staticmethod
+    def set_level(channelId: int, level: plLogLevel) -> None:
+        ...
+
+    @staticmethod
+    def clear_channel(channelId: int) -> None:
+        ...
+
+    @staticmethod
+    def reset_channel(channelId: int) -> None:
+        ...
+
+    @staticmethod
+    def get_channel_id(name: str) -> int | None:
+        """None if no channel has that name"""
+        ...
+
+    @staticmethod
+    def get_channel_info(channelId: int) -> plLogChannelInfo | None:
+        """None for an invalid id; entries are (level, text), oldest first"""
+        ...
+
+    @staticmethod
+    def get_channel_count() -> int:
+        ...
+
+    @staticmethod
+    def custom(prefix: str, level: int, channelId: int, message: str) -> None:
+        ...
+
+    @staticmethod
+    def trace(channelId: int, message: str) -> None:
+        ...
+
+    @staticmethod
+    def debug(channelId: int, message: str) -> None:
+        ...
+
+    @staticmethod
+    def info(channelId: int, message: str) -> None:
+        ...
+
+    @staticmethod
+    def warn(channelId: int, message: str) -> None:
+        ...
+
+    @staticmethod
+    def error(channelId: int, message: str) -> None:
+        ...
+
+    @staticmethod
+    def fatal(channelId: int, message: str) -> None:
+        ...
+
+    @staticmethod
+    def set_file(channelId: int, path: str, flags: plLogFileFlags = plLogFileFlags.PL_LOG_FILE_FLAGS_NONE) -> bool:
+        """native filesystem path; channelId may be PL_LOG_ALL_CHANNELS"""
+        ...
+
+    @staticmethod
+    def flush_file(channelId: int) -> bool:
+        ...
+
+    @staticmethod
+    def close_file(channelId: int) -> bool:
+        ...
+
+    @staticmethod
+    def has_file_error(channelId: int) -> bool:
+        ...
+
+########################################################################################################################
+# [SECTION] profile api
+########################################################################################################################
+
+class plProfileI:
+    """CPU profiling (pl_profile_ext.h). Frames are driven by plStarterI.
+
+    See pilotlight.profile for "with profile_sample(...)".
+    """
+
+    @staticmethod
+    def begin_sample(threadIndex: int, name: str) -> None:
+        """python runs on thread 0"""
+        ...
+
+    @staticmethod
+    def end_sample(threadIndex: int) -> None:
+        """raises RuntimeError without a matching begin_sample"""
+        ...
+
+    @staticmethod
+    def get_last_frame_samples(threadIndex: int) -> List[plProfileCpuSample]:
+        ...
+
+    @staticmethod
+    def get_last_frame_overhead(threadIndex: int) -> float:
+        """seconds spent inside the profiler last frame"""
+        ...
+
+########################################################################################################################
+# [SECTION] console api
+########################################################################################################################
+
+class plConsoleI:
+    """Developer console (pl_console_ext.h); plStarterI drives it and F1 opens it.
+
+    Partial binding: open/close and existing bool/toggle variables, i.e. the
+    "t.*" tool windows (t.LogTool, t.ProfileTool, t.UiStyle, ...).
+    """
+
+    @staticmethod
+    def open() -> None:
+        """call during a UI frame"""
+        ...
+
+    @staticmethod
+    def close() -> None:
+        ...
+
+    @staticmethod
+    def get_bool(name: str) -> bool | None:
+        """value of a bool/toggle variable; None if it doesn't exist"""
+        ...
+
+    @staticmethod
+    def set_bool(name: str, value: bool) -> bool:
+        """sets a bool/toggle variable (callbacks don't run); False if it doesn't exist"""
+        ...
+
+    @staticmethod
+    def remove_variable(name: str) -> bool:
+        ...
+
+########################################################################################################################
 # [SECTION] vfs api
 ########################################################################################################################
 
@@ -542,6 +710,16 @@ class plDrawI:
     def calculate_text_size(text: str, options: plDrawTextOptions) -> plVec2:
         ...
 
+    @staticmethod
+    def add_font_from_memory_ttf(atlas: plFontAtlas, config: plFontConfig, data: bytes | bytearray | memoryview) -> plFont | None:
+        """data is copied (the atlas owns the copy)"""
+        ...
+
+    @staticmethod
+    def calculate_text_bb(p: plVec2Like, text: str, options: plDrawTextOptions) -> Tuple[plVec2, plVec2]:
+        """returns (min, max)"""
+        ...
+
     ####################################################################################################################
     # 2D
     ####################################################################################################################
@@ -705,6 +883,50 @@ class plDrawI:
     @staticmethod
     def path_fill_convex(layer: plDrawLayer2D, options: plDrawSolidOptions) -> None:
         """convex only, either winding"""
+        ...
+
+    @staticmethod
+    def add_triangle_filled_gradient(layer: plDrawLayer2D, p0: plVec2Like, p1: plVec2Like, p2: plVec2Like, color0: int, color1: int, color2: int) -> None:
+        ...
+
+    @staticmethod
+    def add_rect_filled_gradient(layer: plDrawLayer2D, minP: plVec2Like, maxP: plVec2Like, topLeftColor: int, topRightColor: int, bottomLeftColor: int, bottomRightColor: int) -> None:
+        ...
+
+    @staticmethod
+    def add_image_ex(layer: plDrawLayer2D, textureID: int, minP: plVec2Like, maxP: plVec2Like, minUV: plVec2Like, maxUV: plVec2Like, color: int) -> None:
+        """C argument order; add_image() takes the same optional arguments"""
+        ...
+
+    @staticmethod
+    def add_image_quad_ex(layer: plDrawLayer2D, textureID: int, p0: plVec2Like, p1: plVec2Like, p2: plVec2Like, p3: plVec2Like,
+                          p0UV: plVec2Like, p1UV: plVec2Like, p2UV: plVec2Like, p3UV: plVec2Like, color: int) -> None:
+        """C argument order; add_image_quad() takes the same optional arguments"""
+        ...
+
+    @staticmethod
+    def add_image_rounded_ex(layer: plDrawLayer2D, textureID: int, minP: plVec2Like, maxP: plVec2Like, minUV: plVec2Like, maxUV: plVec2Like,
+                             color: int, radius: float, segments: int = 0, flags: plDrawRectFlag = plDrawRectFlag.PL_DRAW_RECT_FLAG_NONE) -> None:
+        """C argument order (add_image_rounded() takes radius first)"""
+        ...
+
+    @staticmethod
+    def push_clip_rect(drawlist: plDrawList2D, rect: Tuple[plVec2Like, plVec2Like] | Tuple[float, float, float, float], accumulate: bool = False) -> None:
+        """rect: ((x0, y0), (x1, y1)) or (x0, y0, x1, y1); accumulate intersects with the current clip rect"""
+        ...
+
+    @staticmethod
+    def push_clip_rect_pt(drawlist: plDrawList2D, rect: Tuple[plVec2Like, plVec2Like] | Tuple[float, float, float, float], accumulate: bool = False) -> None:
+        """same as push_clip_rect (the C version takes a pointer)"""
+        ...
+
+    @staticmethod
+    def pop_clip_rect(drawlist: plDrawList2D) -> None:
+        ...
+
+    @staticmethod
+    def get_clip_rect(drawlist: plDrawList2D) -> Tuple[plVec2, plVec2] | None:
+        """returns (min, max), or None if no clip rect is pushed"""
         ...
 
     @staticmethod

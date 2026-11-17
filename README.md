@@ -67,6 +67,16 @@ Wheels are published for CPython 3.14 on:
 
 * **macOS** (Apple Silicon, macOS 15+) — uses Metal, no additional dependencies.
 
+### Check the installation
+
+Open the demo window (3D scene, UI demo, drawing, and the engine's profiling, logging and memory tools under **Tools**):
+
+```bash
+python -m pilotlight demo
+```
+
+`pilotlight-demo` does the same. Compiled shaders and window/tool settings are cached in your user cache folder (`--cache-dir` changes it).
+
 ## Quick Start - Project Generator
 
 The project generator is the recommended starting point for new applications:
